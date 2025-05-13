@@ -16,6 +16,7 @@ import jakarta.persistence.NamedAttributeNode;
 import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -54,10 +55,10 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, name = "username", unique = true)
+    @Column(nullable = false, name = "username", unique = true, length = 255)
     private String username;
 
-    @Column(nullable = false, name = "password")
+    @Column(nullable = false, name = "password", length = 3200)
     private String password;
 
     @ElementCollection(targetClass = RoleType.class, fetch = FetchType.LAZY)
@@ -82,4 +83,7 @@ public class User {
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     private Set<Account> userAccounts = new HashSet<>();
+
+    @Version
+    private Long version;
 }

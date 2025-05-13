@@ -7,8 +7,10 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.NamedAttributeNode;
+import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.Pattern;
+import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -21,6 +23,10 @@ import lombok.ToString;
 @Getter
 @Setter
 @Builder
+@NamedEntityGraph(
+        name = "account-with-email",
+        attributeNodes = @NamedAttributeNode("user")
+)
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
@@ -32,11 +38,12 @@ public class EmailData {
     private Long id;
 
     @Column(name = "email", unique = true)
-    @Pattern(regexp = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
-            flags = Pattern.Flag.CASE_INSENSITIVE, message = "Invalid email format")
     private String email;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @ToString.Exclude
     private User user;
+
+    @Version
+    private Long version;
 }

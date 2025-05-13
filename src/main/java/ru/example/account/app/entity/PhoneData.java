@@ -7,8 +7,10 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.NamedAttributeNode;
+import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.Pattern;
+import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -22,6 +24,10 @@ import lombok.ToString;
 @Setter
 @Builder
 @ToString
+@NamedEntityGraph(
+        name = "account-with-phone",
+        attributeNodes = @NamedAttributeNode("user")
+)
 @NoArgsConstructor
 @AllArgsConstructor
 public class PhoneData {
@@ -32,10 +38,12 @@ public class PhoneData {
     private Long id;
 
     @Column(name = "phone", unique = true)
-    @Pattern(regexp = "^\\+7\\d{13}$", message = "Invalid phone format")
     private String phone;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @ToString.Exclude
     private User user;
+
+    @Version
+    private Long version;
 }
