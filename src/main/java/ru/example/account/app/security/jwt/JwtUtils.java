@@ -6,6 +6,7 @@ import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -17,6 +18,7 @@ import java.util.Date;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class JwtUtils {
 
     @Value("${app.jwt.secret}")
@@ -25,17 +27,18 @@ public class JwtUtils {
     @Value("${app.jwt.tokenExpiration}")
     private Duration tokenExpiration;
 
-    public String generateJwtToken(String username) {
-        return this.generateTokenFromUsename(username);
+    public String generateJwtToken(String username, Long userId) {
+        return this.generateTokenFromUsername(username, userId);
     }
 
-    public String generateTokenFromUsename(String username) {
+    public String generateTokenFromUsername(String username, Long userId) {
 
         Instant iat = Instant.now();
         Date exp = Date.from(iat.plus(tokenExpiration));
 
         return Jwts.builder()
                 .subject(username)
+                .claim("userId", userId)
                 .issuedAt(Date.from(Instant.from(iat)))
                 .expiration(exp)
                 .signWith(this.generateKey())
@@ -82,5 +85,14 @@ public class JwtUtils {
 
     private SecretKey getSignKey() {
         return Keys.hmacShaKeyFor(Decoders.BASE64.decode(someSecretKey));
+    }
+
+    public Long getUserIdFromClaimJwt(String token) {
+
+        return Jwts.parser().verifyWith(this.getSignKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .get("userId", Long.class);
     }
 }

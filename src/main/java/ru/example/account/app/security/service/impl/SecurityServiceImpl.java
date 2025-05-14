@@ -59,7 +59,7 @@ public class SecurityServiceImpl implements SecurityService {
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getId());
 
         return new AuthResponse(user.getId(),
-                jwtUtils.generateJwtToken(user.getUsername()),
+                jwtUtils.generateJwtToken(user.getUsername(), user.getId()),
                 refreshToken.getTokenRefresh(),
                 user.getUsername(),
                 roles);
@@ -68,20 +68,18 @@ public class SecurityServiceImpl implements SecurityService {
     @Transactional()
     public RefreshTokenResponse refreshToken(RefreshTokenRequest request) {
 
-        String requestTokenRefresh = request.tokenRefresh();
-
-        return refreshTokenService.getByRefreshToken(requestTokenRefresh)
+        return refreshTokenService.getByRefreshToken(request.tokenRefresh())
                 .map(refreshTokenService::checkRefreshToken)
                 .map(RefreshToken::getUserId)
                 .map(userId -> {
                     User user = userRepository.findById(userId).orElseThrow(() ->
-                            new RefreshTokenException("Exception for userId: " + userId)); // падает
-
-                    String token = jwtUtils.generateTokenFromUsename(user.getUsername());
+                            new RefreshTokenException("User not found with userId: " + userId));
+                    refreshTokenService.deleteByUserId(userId);
+                    String token = jwtUtils.generateTokenFromUsername(user.getUsername(), userId);
                     return new RefreshTokenResponse(token,
                             refreshTokenService.createRefreshToken(user.getId()).getTokenRefresh());
                 })
-                .orElseThrow(() -> new RefreshTokenException("RefreshToken is not found!"));
+                .orElseThrow(() -> new RefreshTokenException("Invalid token"));
     }
 
     @Transactional()

@@ -15,6 +15,7 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.NamedAttributeNode;
 import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
@@ -79,10 +80,11 @@ public class User {
     @EqualsAndHashCode.Exclude
     Set<EmailData> userEmails = new HashSet<>();
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "account_id", unique = true, nullable = false)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    private Set<Account> userAccounts = new HashSet<>();
+    private Account userAccount;
 
     @Version
     private Long version;

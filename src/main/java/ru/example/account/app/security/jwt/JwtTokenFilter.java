@@ -49,7 +49,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
             }
         } catch (RuntimeException exception) {
-            log.error("Token invalid is %s".formatted(exception));
+            log.error("Token invalid is {})", exception.getMessage());
         }
 
         filterChain.doFilter(request, response);

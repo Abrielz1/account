@@ -21,7 +21,7 @@ import java.time.LocalDateTime;
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
-public class AuthControllerImpl {
+public class AuthController {
 
     private final SecurityService securityService;
 
@@ -29,24 +29,22 @@ public class AuthControllerImpl {
     @ResponseStatus(HttpStatus.OK)
     public AuthResponse login(@RequestBody LoginRequest loginRequest) {
 
-        log.info("%nVia AuthController User login with account %s at time:"
-                .formatted(loginRequest) +  LocalDateTime.now() + "\n");
+        log.info("User {} logged in at {}", loginRequest.username(), LocalDateTime.now());
         return securityService.authenticationUser(loginRequest);
     }
 
     @PostMapping("/refresh-token")
     @ResponseStatus(HttpStatus.OK)
     public RefreshTokenResponse refreshTokenRefresh(@RequestBody RefreshTokenRequest request) {
-        log.info("%nVia AuthController RefreshToken refreshed with token %s at time:"
-                .formatted(request) +  LocalDateTime.now() + "\n");
+        log.info("Via AuthController RefreshToken refreshed with token {}", request) ;
         return securityService.refreshToken(request);
     }
 
     @PostMapping("/logout")
     @ResponseStatus(HttpStatus.OK)
     public String logoutOfCurrentAccount() {
-        log.info("%nVia AuthController User logout from account at time:"
-                + LocalDateTime.now() + "\n");
+        log.info("Via AuthController User logout from account at time: "
+                + LocalDateTime.now());
         securityService.logout();
         return "User logged out!";
     }

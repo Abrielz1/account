@@ -11,7 +11,7 @@ import ru.example.account.app.entity.User;
 import ru.example.account.app.repository.UserRepository;
 import ru.example.account.app.security.service.impl.AppUserDetails;
 import ru.example.account.app.service.UserService;
-import ru.example.account.web.model.usr.request.UpdateUserAccountDetailRequestShortDto;
+import ru.example.account.web.model.usr.request.UpdateUserAccountDetailRequestDto;
 import ru.example.account.web.model.usr.response.UpdateUserAccountDetailResponseShortDto;
 import java.util.List;
 import java.util.Optional;
@@ -50,7 +50,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UpdateUserAccountDetailResponseShortDto editUserAccountDetail(Long userId,
-                                                                         UpdateUserAccountDetailRequestShortDto updateUser) {
+                                                                         UpdateUserAccountDetailRequestDto updateUser) {
         User userFromDb = this.getUserFromDbByUserId(userId);
 
         log.info("user account was updated via user service with userId: {}", userId);
@@ -98,7 +98,7 @@ public class UserServiceImpl implements UserService {
         return null;
     }
 
-    private User setupEntity(User userFromDb, UpdateUserAccountDetailRequestShortDto updateUser, PasswordEncoder passwordEncoder) {
+    private User setupEntity(User userFromDb, UpdateUserAccountDetailRequestDto updateUser, PasswordEncoder passwordEncoder) {
 
 //        Optional.ofNullable(updateUser.firstName()).ifPresent(userFromDb::setFirstName);
 //        Optional.ofNullable(updateUser.lastName()).ifPresent(userFromDb::setLastName);

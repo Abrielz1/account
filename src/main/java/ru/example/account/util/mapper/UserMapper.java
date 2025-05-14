@@ -1,9 +1,5 @@
 package ru.example.account.util.mapper;
 
-import ru.example.account.web.model.account.request.CreateUserRequest;
-
-import java.time.LocalDateTime;
-
 public class UserMapper {
 
     private UserMapper() {
