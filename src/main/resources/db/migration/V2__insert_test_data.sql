@@ -1,3 +1,13 @@
+
+INSERT INTO accounts(id, balance)
+VALUES (1, 10.0),
+       (2, 10.0),
+       (3, 10.0),
+       (4, 10.0),
+       (5, 10.0),
+       (6, 10.0),
+       (7, 10.0);
+
 INSERT INTO users(id, username, password, account_id)
 VALUES (1, 'john_shepard', '$2a$04$gHdOJO0XG6NdKZoDceWgoeu8FtP0IoOScxeaxS3zWOb1.hyPOw8gK', 1),
        (2, 'vlastimil_peterjela', '$2a$04$gHdOJO0XG6NdKZoDceWgoeu8FtP0IoOScxeaxS3zWOb1.hyPOw8gK', 2),
@@ -16,15 +26,6 @@ VALUES (1, 'ROLE_USER'),
        (5, 'ROLE_USER'),
        (6, 'ROLE_USER'),
        (7, 'ROLE_USER');
-
-INSERT INTO accounts(id, balance)
-VALUES (1, 10.0),
-       (2, 10.0),
-       (3, 10.0),
-       (4, 10.0),
-       (5, 10.0),
-       (6, 10.0),
-       (7, 10.0);
 
 
 INSERT INTO email_data(id, email, user_id)
