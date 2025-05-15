@@ -55,3 +55,15 @@ app:
     secret: $APP_SECRET
     tokenExpiration: 150m
     refreshTokenExpiration: 600m
+
+  cache:
+    expiryOfCashDuration: 60m
+
+springdoc:
+  show-actuator: true
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha

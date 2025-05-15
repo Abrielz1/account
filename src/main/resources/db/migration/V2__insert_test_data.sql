@@ -1,12 +1,12 @@
 
-INSERT INTO accounts(id, balance)
-VALUES (1, 10.0),
-       (2, 10.0),
-       (3, 10.0),
-       (4, 10.0),
-       (5, 10.0),
-       (6, 10.0),
-       (7, 10.0);
+INSERT INTO accounts(id, balance, initial_balance)
+VALUES (1, 10.0, 10.0),
+       (2, 10.0, 10.0),
+       (3, 10.0, 10.0),
+       (4, 10.0, 10.0),
+       (5, 10.0, 10.0),
+       (6, 10.0, 10.0),
+       (7, 10.0, 10.0);
 
 INSERT INTO users(id, username, password, account_id)
 VALUES (1, 'john_shepard', '$2a$04$gHdOJO0XG6NdKZoDceWgoeu8FtP0IoOScxeaxS3zWOb1.hyPOw8gK', 1),

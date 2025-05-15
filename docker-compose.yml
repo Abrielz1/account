@@ -8,6 +8,11 @@ services:
     networks:
       - app-network
     restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   account_db:
     image: postgres:14.6-alpine
@@ -29,6 +34,11 @@ services:
       - app-network
 
   account_service:
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
     image: account
     build:
       context: .

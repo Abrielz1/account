@@ -20,7 +20,10 @@ import ru.example.account.app.security.jwt.JwtAuthenticationEntryPoint;
 import ru.example.account.app.security.jwt.JwtTokenFilter;
 import ru.example.account.app.security.service.impl.AccessDeniedHandlerImpl;
 import java.util.List;
-
+/**
+ * Конфигурация безопасности Spring Security.
+ * Настраивает JWT-аутентификацию, CORS и политику сессий.
+ */
 @Configuration
 @EnableMethodSecurity
 @RequiredArgsConstructor
@@ -46,7 +49,12 @@ public class SecurityConfiguration {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
         return configuration.getAuthenticationManager();
     }
-
+    /**
+     * Настройка цепочки фильтров:
+     * - Разрешает доступ к эндпоинтам аутентификации
+     * - Требует роли USER для /api/v1/app/**
+     * - Отключает CSRF и сессии
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity security) throws Exception {
         security.authorizeHttpRequests(auth -> auth

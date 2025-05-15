@@ -1,5 +1,8 @@
 package ru.example.account.web.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -15,7 +18,12 @@ import ru.example.account.web.model.auth.request.RefreshTokenRequest;
 import ru.example.account.web.model.auth.response.AuthResponse;
 import ru.example.account.web.model.auth.response.RefreshTokenResponse;
 import java.time.LocalDateTime;
-
+/**
+ * Контроллер аутентификации и управления токенами.
+ *
+ * @endpoint /api/v1/auth
+ */
+@Tag(name = "Authentication", description = "User authentication and token management")
 @Slf4j
 @Validated
 @RestController
@@ -25,6 +33,24 @@ public class AuthController {
 
     private final SecurityService securityService;
 
+    /**
+     * Аутентификация пользователя.
+     *
+     * @param loginRequest Логин и пароль
+     * @return JWT-токены и данные пользователя
+     *
+     * @response 200 Успешная аутентификация
+     * @response 401 Неверные учетные данные
+     */
+
+    @Operation(
+            summary = "User login",
+            description = "Authenticate user and return JWT tokens",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Successfully authenticated"),
+                    @ApiResponse(responseCode = "401", description = "Invalid credentials")
+            }
+    )
     @PostMapping("/signing")
     @ResponseStatus(HttpStatus.OK)
     public AuthResponse login(@RequestBody LoginRequest loginRequest) {

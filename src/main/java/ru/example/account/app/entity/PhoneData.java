@@ -13,6 +13,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -24,6 +25,7 @@ import lombok.ToString;
 @Setter
 @Builder
 @ToString
+@EqualsAndHashCode
 @NamedEntityGraph(
         name = "account-with-phone",
         attributeNodes = @NamedAttributeNode("user")
@@ -37,6 +39,7 @@ public class PhoneData {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @EqualsAndHashCode.Include
     @Column(name = "phone", unique = true)
     private String phone;
 

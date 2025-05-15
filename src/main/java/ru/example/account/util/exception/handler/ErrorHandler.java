@@ -1,5 +1,6 @@
 package ru.example.account.util.exception.handler;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.PessimisticLockException;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +13,7 @@ import ru.example.account.util.exception.exceptions.AccessDeniedException;
 import ru.example.account.util.exception.exceptions.AlreadyExistsException;
 import ru.example.account.util.exception.exceptions.BadRequestException;
 import ru.example.account.util.exception.exceptions.UserNotFoundException;
+
 
 @Slf4j
 @RestControllerAdvice
