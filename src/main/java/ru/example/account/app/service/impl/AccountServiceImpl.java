@@ -64,7 +64,7 @@ public class AccountServiceImpl implements AccountService {
             }
     )
     @Override
-    @CacheEvict(value = {"accounts", "transfers"}, allEntries = true)
+    @CacheEvict(value = "users", key = "{#firstUser.id, #secondUser.id}")
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public CreateMoneyTransferResponse transferFromOneAccountToAnother(AppUserDetails currentUser,
                                                                        CreateMoneyTransferRequest request,
