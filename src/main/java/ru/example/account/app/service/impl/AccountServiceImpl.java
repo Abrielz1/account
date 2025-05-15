@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -19,6 +20,7 @@ import ru.example.account.app.security.service.impl.AppUserDetails;
 import ru.example.account.app.service.AccountService;
 import ru.example.account.util.exception.exceptions.BadRequestException;
 import ru.example.account.util.exception.exceptions.UserNotFoundException;
+import ru.example.account.web.AccountCacheDto;
 import ru.example.account.web.model.account.request.CreateMoneyTransferRequest;
 import ru.example.account.web.model.account.response.CreateMoneyTransferResponse;
 import java.math.BigDecimal;
@@ -26,7 +28,6 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 /**
  * Сервис управления банковскими операциями.
  * Реализует логику переводов и периодического начисления процентов.
@@ -168,8 +169,8 @@ public class AccountServiceImpl implements AccountService {
      *
      * @Cacheable Кэширует результат на 5 минут
      */
-    @CacheEvict(value = "accounts", key = "#account.id")
-    @Scheduled(fixedDelayString = "30", timeUnit = TimeUnit.SECONDS, fixedRate = 30_000)
+ //  @CacheEvict(value = "accounts", key = "#account.id")
+    @Scheduled(fixedRate = 30_000)
     @Transactional
     public void moneyRiser() {
 
@@ -190,5 +191,12 @@ public class AccountServiceImpl implements AccountService {
                     return balance;
                 })
                 .toList());
+    }
+
+    @Cacheable(value = "accounts", key = "#id")
+    public AccountCacheDto getAccountForCache(Long id) {
+        return accountRepository.findById(id)
+                .map(AccountCacheDto::fromEntity)
+                .orElse(null);
     }
 }

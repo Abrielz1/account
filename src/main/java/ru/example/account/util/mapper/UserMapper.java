@@ -1,33 +1,41 @@
 package ru.example.account.util.mapper;
 
+import ru.example.account.app.entity.EmailData;
+import ru.example.account.app.entity.PhoneData;
+import ru.example.account.app.entity.User;
+import ru.example.account.web.model.usr.request.UserSearchResponseDto;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 public class UserMapper {
 
     private UserMapper() {
     }
 
-//    public static User toUser(CreateUserRequest userRequest) {
-//        new User();
-//        return User.builder()
-//                .username(userRequest.username())
-//
-//                .password(userRequest.password())
-//
-//                .roles(userRequest.roles())
-//                .build();
-//    }
+    public static UserSearchResponseDto toUserSearchResponseDto(User user) {
 
-//    public static UserCreateResponse toUserCreateResponse(User newUser) {
-//
-//        return new UserCreateResponse(newUser.getId(),
-//                                      newUser.getEmail(),
-//                                      newUser.getRoles());
-//    }
-//    public static UpdateUserAccountDetailResponseShortDto toUpdateUserAccountDetailResponseShortDto(User user) {
-//
-//        return new UpdateUserAccountDetailResponseShortDto(
-//                user.getId(),
-//                user.getEmail(),
-//                user.getFirstName(),
-//                user.getLastName());
-//    }
+        return new UserSearchResponseDto(user.getUsername(), user.getDateOfBirth(),
+                                         toPhones(user.getUserPhones()),
+                                         toEmails(user.getUserEmails()));
+    }
+
+    private static Set<String> toPhones(Set<PhoneData> phoneData) {
+        if (phoneData.isEmpty()) {
+            return Set.of();
+        }
+
+            return phoneData.stream()
+                    .map(PhoneData::getPhone)
+                    .collect(Collectors.toSet());
+    }
+
+    private static Set<String> toEmails(Set<EmailData> emailData) {
+        if (emailData.isEmpty()) {
+            return Set.of();
+        }
+
+        return emailData.stream()
+                .map(EmailData::getEmail)
+                .collect(Collectors.toSet());
+    }
 }

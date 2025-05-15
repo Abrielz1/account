@@ -1,4 +1,7 @@
 spring:
+  jackson:
+    stream-read-constraints:
+      max-nesting-depth: 2048
   data:
     redis:
       host: localhost
@@ -10,25 +13,21 @@ spring:
     properties:
       hibernate:
         format_sql: true
-      dialect: org.hibernate.dialect.PostgreSQLDialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect
     generate-ddl: false
-
   datasource:
     url: jdbc:postgresql://localhost:5432/account
     username: root
     password: root
-#    url: jdbc:postgresql://account_db:5432/account # для docker
     hikari:
       connection-timeout: 30000
       validation-timeout: 5000
-
   flyway:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
     default-schema: public
     out-of-order: false
-
 
 logging:
   file:
@@ -37,16 +36,12 @@ logging:
     org:
       springframework:
         orm:
-          jpa:
-            INFO
-          JpaTransactionManager:
-            DEBUG
-        transaction:
-          INFO
-        interceptor:
-          TRACE
+          jpa: INFO
+          JpaTransactionManager: DEBUG
+        transaction: INFO
+        interceptor: TRACE
   logback:
-    rolling policy:
+    rollingpolicy:
       max-file-size: 50MB
       max-history: 1
 
@@ -55,7 +50,6 @@ app:
     secret: $APP_SECRET
     tokenExpiration: 150m
     refreshTokenExpiration: 600m
-
   cache:
     expiryOfCashDuration: 60m
 

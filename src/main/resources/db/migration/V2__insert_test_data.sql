@@ -8,14 +8,14 @@ VALUES (1, 10.0, 10.0),
        (6, 10.0, 10.0),
        (7, 10.0, 10.0);
 
-INSERT INTO users(id, username, password, account_id)
-VALUES (1, 'john_shepard', '$2a$04$gHdOJO0XG6NdKZoDceWgoeu8FtP0IoOScxeaxS3zWOb1.hyPOw8gK', 1),
-       (2, 'vlastimil_peterjela', '$2a$04$gHdOJO0XG6NdKZoDceWgoeu8FtP0IoOScxeaxS3zWOb1.hyPOw8gK', 2),
-       (3, 'hacku_yuki', '$2a$04$gHdOJO0XG6NdKZoDceWgoeu8FtP0IoOScxeaxS3zWOb1.hyPOw8gK', 3),
-       (4, 'tarja_turunen', '$2a$04$gHdOJO0XG6NdKZoDceWgoeu8FtP0IoOScxeaxS3zWOb1.hyPOw8gK', 4),
-       (5, 'nathatan_drake', '$2a$04$gHdOJO0XG6NdKZoDceWgoeu8FtP0IoOScxeaxS3zWOb1.hyPOw8gK', 5),
-       (6, 'nate_pinkerthon', '$2a$04$gHdOJO0XG6NdKZoDceWgoeu8FtP0IoOScxeaxS3zWOb1.hyPOw8gK', 6),
-       (7, 'shion_uzuki', '$2a$04$gHdOJO0XG6NdKZoDceWgoeu8FtP0IoOScxeaxS3zWOb1.hyPOw8gK', 7);
+INSERT INTO users(id, username, password, date_of_birth, account_id)
+VALUES (1, 'john_shepard', '$2a$04$gHdOJO0XG6NdKZoDceWgoeu8FtP0IoOScxeaxS3zWOb1.hyPOw8gK', '2006-06-06', 1),
+       (2, 'vlastimil_peterjela', '$2a$04$gHdOJO0XG6NdKZoDceWgoeu8FtP0IoOScxeaxS3zWOb1.hyPOw8gK','2007-07-07', 2),
+       (3, 'hacku_yuki', '$2a$04$gHdOJO0XG6NdKZoDceWgoeu8FtP0IoOScxeaxS3zWOb1.hyPOw8gK', '2008-06-06', 3),
+       (4, 'tarja_turunen', '$2a$04$gHdOJO0XG6NdKZoDceWgoeu8FtP0IoOScxeaxS3zWOb1.hyPOw8gK', '1970-07-01', 4),
+       (5, 'nathatan_drake', '$2a$04$gHdOJO0XG6NdKZoDceWgoeu8FtP0IoOScxeaxS3zWOb1.hyPOw8gK', '1980-11-11', 5),
+       (6, 'nate_pinkerthon', '$2a$04$gHdOJO0XG6NdKZoDceWgoeu8FtP0IoOScxeaxS3zWOb1.hyPOw8gK', '1920-12-01', 6),
+       (7, 'shion_uzuki', '$2a$04$gHdOJO0XG6NdKZoDceWgoeu8FtP0IoOScxeaxS3zWOb1.hyPOw8gK', '1999-10-10', 7);
 
 INSERT INTO user_roles
     (user_id, roles)

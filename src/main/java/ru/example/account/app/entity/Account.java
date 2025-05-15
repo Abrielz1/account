@@ -1,5 +1,6 @@
 package ru.example.account.app.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -65,6 +66,7 @@ public class Account {
     @OneToOne(mappedBy = "userAccount")
     @EqualsAndHashCode.Exclude()
     @ToString.Exclude
+    @JsonIgnore
     private User user;
 
     @Version

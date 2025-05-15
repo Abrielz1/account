@@ -1,5 +1,6 @@
 package ru.example.account.app.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -26,6 +27,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.proxy.HibernateProxy;
+
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -81,27 +84,35 @@ public class User {
     @Column(nullable = false, name = "password", length = 3200)
     private String password;
 
+    @EqualsAndHashCode.Include
+    @Column(nullable = false, name = "date_of_birth")
+    private LocalDate dateOfBirth;
+
     @ElementCollection(targetClass = RoleType.class, fetch = FetchType.LAZY)
     @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "roles", nullable = false)
     @Enumerated(EnumType.STRING)
     @Builder.Default
+    @JsonIgnore
     @EqualsAndHashCode.Exclude
     private Set<RoleType> roles = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
+    @JsonIgnore
     @EqualsAndHashCode.Exclude
     Set<PhoneData> userPhones = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
+    @JsonIgnore
     @EqualsAndHashCode.Exclude
     Set<EmailData> userEmails = new HashSet<>();
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id", unique = true, nullable = false)
     @ToString.Exclude
+    @JsonIgnore
     @EqualsAndHashCode.Exclude
     private Account userAccount;
 

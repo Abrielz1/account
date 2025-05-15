@@ -1,19 +1,11 @@
 package ru.example.account.app.service;
 
-import jakarta.validation.constraints.NotNull;
-import ru.example.account.app.security.service.impl.AppUserDetails;
-import ru.example.account.web.model.usr.request.UpdateUserAccountDetailRequestDto;
-import ru.example.account.web.model.usr.response.UpdateUserAccountDetailResponseShortDto;
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import ru.example.account.web.model.usr.request.UserSearchResponseDto;
+import java.time.LocalDate;
 
 public interface UserService {
 
-    List<UpdateUserAccountDetailResponseShortDto> getUserAccounts(Long cursor, Integer size, String sortOrder);
-
-    UpdateUserAccountDetailResponseShortDto getUserAccountByUserId(Long userId);
-
-    UpdateUserAccountDetailResponseShortDto editUserAccountDetail(Long userId,
-                                                                  UpdateUserAccountDetailRequestDto updateUser);
-
-    void userDelete(@NotNull AppUserDetails currentUser, String emailForPruning);
+    Page<UserSearchResponseDto> searchUsers(LocalDate dateOfBirth, String phone, String name, String email, PageRequest page);
 }
