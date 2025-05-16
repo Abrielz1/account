@@ -15,12 +15,10 @@ import ru.example.account.app.repository.UserRepository;
 import ru.example.account.app.security.jwt.JwtUtils;
 import ru.example.account.app.security.service.SecurityService;
 import ru.example.account.util.exception.exceptions.RefreshTokenException;
-import ru.example.account.util.exception.exceptions.UserNotFoundException;
 import ru.example.account.web.model.auth.request.LoginRequest;
 import ru.example.account.web.model.auth.request.RefreshTokenRequest;
 import ru.example.account.web.model.auth.response.AuthResponse;
 import ru.example.account.web.model.auth.response.RefreshTokenResponse;
-import java.util.List;
 
 @Slf4j
 @Service
@@ -41,28 +39,26 @@ public class SecurityServiceImpl implements SecurityService {
 
         Authentication authentication = authenticationManager
                 .authenticate(new UsernamePasswordAuthenticationToken(
-                        loginRequest.username(),
+                        loginRequest.email(),
                         loginRequest.password()
                 ));
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
-
         AppUserDetails userDetails = (AppUserDetails) authentication.getPrincipal();
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(
+                userDetails.getUser().getId()
+        );
 
-        List<String> roles = userDetails.getAuthorities()
-                .stream()
-                .map(GrantedAuthority::getAuthority)
-                .toList();
 
-        User user = this.getUserByUsername(userDetails.getUsername());
-
-        RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getId());
-
-        return new AuthResponse(user.getId(),
-                jwtUtils.generateJwtToken(user.getUsername(), user.getId()),
+        return new AuthResponse(
+                userDetails.getUser().getId(),
+                jwtUtils.generateJwtToken(userDetails.getEmail(), userDetails.getUser().getId()),
                 refreshToken.getTokenRefresh(),
-                user.getUsername(),
-                roles);
+                userDetails.getUsername(),
+                userDetails.getAuthorities()
+                        .stream()
+                        .map(GrantedAuthority::getAuthority)
+                        .toList());
     }
 
     @Transactional()
@@ -89,13 +85,5 @@ public class SecurityServiceImpl implements SecurityService {
         if (currentPrincipal instanceof AppUserDetails userDetails) {
             refreshTokenService.deleteByUserId(userDetails.getId());
         }
-    }
-
-    private User getUserByUsername(String username) {
-
-       return userRepository.findByUsername(username).orElseThrow(() -> {
-            log.error("No user in db");
-            return new UserNotFoundException("No user in db");
-        });
     }
 }

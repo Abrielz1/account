@@ -55,7 +55,7 @@ public class AuthController {
     @ResponseStatus(HttpStatus.OK)
     public AuthResponse login(@RequestBody LoginRequest loginRequest) {
 
-        log.info("User {} logged in at {}", loginRequest.username(), LocalDateTime.now());
+        log.info("User {} logged in at {}", loginRequest.email(), LocalDateTime.now());
         return securityService.authenticationUser(loginRequest);
     }
 

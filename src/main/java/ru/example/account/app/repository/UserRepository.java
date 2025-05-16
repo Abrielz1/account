@@ -22,7 +22,8 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {
 
     @Cacheable(key = "#username", unless = "#result.empty")
-    Optional<User> findByUsername(String username);
+    Optional<User> findByUserEmails(String username);
+
     /**
      * Поиск пользователя с блокировкой записи.
      *
@@ -33,4 +34,26 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT u FROM User u WHERE u.id = :id")
     Optional<User> findWithLockingById(@Param("id") Long id);
+
+
+    @Query(value = """
+          SELECT CASE WHEN COUNT(ue) > 0 THEN TRUE ELSE FALSE END
+          FROM User AS u JOIN u.userEmails AS ue
+          WHERE ue.email = :email
+          """)
+    boolean existsEmails(@Param("email") String email);
+
+
+    @Query(value = """
+          SELECT CASE WHEN COUNT(up) > 0 THEN TRUE  ELSE FALSE END
+          FROM User AS u JOIN u.userPhones AS up
+          WHERE up.phone = :phone
+          """)
+    boolean existsByPhones(@Param("phone")String phone);
+
+    @Query(value = """
+                   FROM User  AS u JOIN u.userEmails AS ue
+                   WHERE ue.email = :email
+                   """)
+    Optional<User> findByEmail(@Param("email") String email);
 }

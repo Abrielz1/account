@@ -1,6 +1,5 @@
 package ru.example.account.web.controller;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
@@ -9,18 +8,24 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import ru.example.account.app.security.service.impl.AppUserDetails;
 import ru.example.account.app.service.UserService;
-import ru.example.account.web.model.usr.request.UpdateUserAccountDetailRequestDto;
+import ru.example.account.web.model.usr.request.ManageUserEmailRequestDto;
+import ru.example.account.web.model.usr.request.ManageUserPhoneRequestDto;
 import ru.example.account.web.model.usr.request.UserSearchResponseDto;
-import ru.example.account.web.model.usr.response.UserShortResponseDto;
+import ru.example.account.web.model.usr.response.CreateUserAccountDetailResponseDto;
+import ru.example.account.web.model.usr.response.UserEmailResponseDto;
+import ru.example.account.web.model.usr.response.UserPhoneResponseDto;
 import java.time.LocalDate;
 
 @Slf4j
@@ -45,12 +50,35 @@ public class UserController {
         return userService.searchUsers(dateOfBirth, phone, name, email, PageRequest.of(page, size));
     }
 
-    @PutMapping
+    @PostMapping("/email")
+    @ResponseStatus(HttpStatus.CREATED)
+    public CreateUserAccountDetailResponseDto createUserEmailData(@AuthenticationPrincipal AppUserDetails currentUser,
+                                                                     @Validated @RequestBody ManageUserEmailRequestDto updateUser) {
+
+        return userService.createUserEmailData(currentUser, updateUser);
+    }
+
+    @PostMapping("/phone")
+    @ResponseStatus(HttpStatus.CREATED)
+    public CreateUserAccountDetailResponseDto createUserPhoneData(@AuthenticationPrincipal AppUserDetails currentUser,
+                                                                     @Validated @RequestBody ManageUserPhoneRequestDto updateUser) {
+
+        return userService.createUserPhoneData(currentUser, updateUser);
+    }
+
+    @PutMapping("/edit/email")
     @ResponseStatus(HttpStatus.OK)
-    public UserShortResponseDto updateUserData(@Validated @RequestBody UpdateUserAccountDetailRequestDto updateUser) {
-        // todo: UPDATE операции для пользователя. Пользователь может менять только собственные данные:
-        //       может удалить/сменить/добавить email если он не занят другим пользователям
-        //       может удалить/сменить/добавить phone если он не занят другим пользователям
-        return null;
+    public UserEmailResponseDto editUserEmailData(@AuthenticationPrincipal AppUserDetails currentUser,
+                                                  @Validated @RequestBody ManageUserEmailRequestDto updateUser) {
+
+        return userService.editUserEmailData(currentUser, updateUser);
+    }
+
+    @PutMapping("/edit/phone")
+    @ResponseStatus(HttpStatus.OK)
+    public UserPhoneResponseDto editUserPhoneData(@AuthenticationPrincipal AppUserDetails currentUser,
+                                                  @Validated @RequestBody ManageUserPhoneRequestDto updateUser) {
+
+        return userService.editUserPhoneData(currentUser, updateUser);
     }
 }

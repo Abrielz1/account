@@ -31,7 +31,7 @@ public class UserSpecification implements Specification<User> {
 
 
         if (dateOfBirth != null) {
-            predicates.add(cb.greaterThan(root.get("dateOfBirt"), dateOfBirth));
+            predicates.add(cb.greaterThan(root.get("dateOfBirth"), dateOfBirth));
         }
 
         if (StringUtils.hasText(name)) {

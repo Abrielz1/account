@@ -5,11 +5,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.example.account.app.entity.Account;
 import ru.example.account.app.entity.User;
@@ -35,6 +35,7 @@ import java.util.Objects;
 @Tag(name = "Transfer service", description = "Handles money transfers between accounts")
 @Slf4j
 @Service
+@CacheConfig(cacheNames = "accounts")
 @Transactional
 @RequiredArgsConstructor
 public class AccountServiceImpl implements AccountService {
@@ -66,7 +67,7 @@ public class AccountServiceImpl implements AccountService {
     )
     @Override
     @CacheEvict(value = "users", key = "{#firstUser.id, #secondUser.id}")
-    @Transactional(isolation = Isolation.SERIALIZABLE)
+    @Transactional()
     public CreateMoneyTransferResponse transferFromOneAccountToAnother(AppUserDetails currentUser,
                                                                        CreateMoneyTransferRequest request,
                                                                        String token) {
@@ -171,7 +172,7 @@ public class AccountServiceImpl implements AccountService {
      */
  //  @CacheEvict(value = "accounts", key = "#account.id")
     @Scheduled(fixedRate = 30_000)
-    @Transactional
+    @Transactional()
     public void moneyRiser() {
 
         List<Account> accountList = accountRepository.findAllNotBiggerThanMax(MAX_PERCENT);
@@ -193,9 +194,9 @@ public class AccountServiceImpl implements AccountService {
                 .toList());
     }
 
-    @Cacheable(value = "accounts", key = "#id")
+    @Cacheable(key = "#userId", unless = "#result == null")
     public AccountCacheDto getAccountForCache(Long id) {
-        return accountRepository.findById(id)
+        return accountRepository.findAccountById(id)
                 .map(AccountCacheDto::fromEntity)
                 .orElse(null);
     }

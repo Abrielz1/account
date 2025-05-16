@@ -12,16 +12,21 @@ import org.springframework.stereotype.Repository;
 import ru.example.account.app.entity.Account;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface AccountRepository extends JpaRepository<Account, Long> {
+
+    @Cacheable(key = "#accountId", unless = "#result == null")
+    @Query("SELECT a FROM Account a WHERE a.id = :accountId")
+    Optional<Account> findAccountById(@Param("accountId") Long accountId);
 
     @Query(value = """
     FROM Account AS a
     WHERE a.balance < (:maxPercent * a.initialBalance)
     """)
     @QueryHints(@QueryHint(name = "org.hibernate.fetchSize", value = "50"))
-    @Cacheable(cacheNames = "accounts", key = "#root.methodName + #maxPercent")
+    @Cacheable(key = "{#maxPercent}", unless = "#result.isEmpty()")
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     List<Account> findAllNotBiggerThanMax(@Param("maxPercent") BigDecimal maxPercent);
 }
