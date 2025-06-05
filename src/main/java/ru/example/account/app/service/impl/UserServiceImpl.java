@@ -184,11 +184,6 @@ public class UserServiceImpl implements UserService {
         return userFromDb;
     }
 
-    @CacheEvict(allEntries = true)
-    public void evictAllUsersCache() {
-        log.info("Evicting all users cache");
-    }
-
     private void userRightsValidator(Long userIdFromToken, Long userIdFromDb) {
 
         if (!Objects.equals(userIdFromToken, userIdFromDb)) {

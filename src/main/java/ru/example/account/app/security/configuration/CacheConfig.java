@@ -40,16 +40,4 @@ public class CacheConfig {
                                         .fromSerializer(new GenericJackson2JsonRedisSerializer()))
                 );
     }
-
-    abstract class UserMixin {
-        @JsonIgnore
-        abstract Set<PhoneData> getUserPhones();
-        @JsonIgnore
-        abstract Set<EmailData> getUserEmails();
-    }
-
-    abstract class AccountMixin {
-        @JsonIgnore
-        abstract User getUser();
-    }
 }

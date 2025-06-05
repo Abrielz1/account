@@ -177,7 +177,7 @@ public class AccountServiceImpl implements AccountService {
         List<Account> accountList = accountRepository.findAllNotBiggerThanMax(MAX_PERCENT);
 
         if (accountList.isEmpty()) {
-            log.info("no accounts to proceeded");
+            log.info("No accounts to process");
             return;
         }
 
@@ -185,6 +185,7 @@ public class AccountServiceImpl implements AccountService {
                 .map(balance -> {
 
                     if (balance.getBalance().signum() <= 0) {
+                     log.debug("Skipping account {} with zero/negative balance", balance.getId());
                         return balance;
                     }
 
@@ -192,7 +193,7 @@ public class AccountServiceImpl implements AccountService {
                     BigDecimal newBalance = balance.getBalance().multiply(INCREASE_RATE)
                             .setScale(SCALE, ROUNDING_MODE);
 
-                    balance.setBalance(newBalance.max(maxAllowed));
+                    balance.setBalance(newBalance.min(maxAllowed));
                     return balance;
                 })
                 .toList());

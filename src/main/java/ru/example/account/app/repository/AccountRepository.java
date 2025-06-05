@@ -25,7 +25,10 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     FROM Account AS a
     WHERE a.balance < (:maxPercent * a.initialBalance)
     """)
-    @QueryHints(@QueryHint(name = "org.hibernate.fetchSize", value = "50"))
+    @QueryHints({
+    @QueryHint(name = "org.hibernate.fetchSize", value = "50"),
+    @QueryHint(name = "jakarta.persistence.lock.timeout", value = "5000")
+    })
     @Cacheable(value = "accounts", key = "#maxPercent.toString()", unless = "#result.isEmpty()")
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     List<Account> findAllNotBiggerThanMax(@Param("maxPercent") BigDecimal maxPercent);
