@@ -3,7 +3,6 @@ package ru.example.account.app.repository;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.QueryHint;
 import org.springframework.cache.annotation.CacheConfig;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Lock;
@@ -21,8 +20,8 @@ import java.util.Optional;
 @CacheConfig(cacheNames = "users")
 public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {
 
-    @Cacheable(key = "#username", unless = "#result.empty")
-    Optional<User> findByUserEmails(String username);
+//    @Cacheable(key = "#username", unless = "#result.empty")
+//    Optional<User> findByUserEmails(String username);
 
     /**
      * Поиск пользователя с блокировкой записи.
@@ -52,7 +51,7 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     boolean existsByPhones(@Param("phone")String phone);
 
     @Query(value = """
-                   FROM User  AS u JOIN u.userEmails AS ue
+                   FROM User AS u JOIN u.userEmails AS ue
                    WHERE ue.email = :email
                    """)
     Optional<User> findByEmail(@Param("email") String email);

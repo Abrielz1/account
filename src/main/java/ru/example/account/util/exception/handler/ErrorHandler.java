@@ -1,6 +1,5 @@
 package ru.example.account.util.exception.handler;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.PessimisticLockException;
 import lombok.extern.slf4j.Slf4j;

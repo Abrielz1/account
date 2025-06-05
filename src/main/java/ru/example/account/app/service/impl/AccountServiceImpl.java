@@ -10,6 +10,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.example.account.app.entity.Account;
 import ru.example.account.app.entity.User;
@@ -67,7 +68,7 @@ public class AccountServiceImpl implements AccountService {
     )
     @Override
     @CacheEvict(value = "users", key = "{#firstUser.id, #secondUser.id}")
-    @Transactional()
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public CreateMoneyTransferResponse transferFromOneAccountToAnother(AppUserDetails currentUser,
                                                                        CreateMoneyTransferRequest request,
                                                                        String token) {
@@ -167,17 +168,20 @@ public class AccountServiceImpl implements AccountService {
     /**
      * Ежедневное начисление 10% на баланс (макс. 207% от депозита).
      * Запускается каждые 30 секунд (для демонстрации).
-     *
-     * @Cacheable Кэширует результат на 5 минут
      */
- //  @CacheEvict(value = "accounts", key = "#account.id")
     @Scheduled(fixedRate = 30_000)
+    @CacheEvict(cacheNames = "accounts", allEntries = true)
     @Transactional()
     public void moneyRiser() {
 
         List<Account> accountList = accountRepository.findAllNotBiggerThanMax(MAX_PERCENT);
 
-        accountRepository.saveAllAndFlush(accountList.stream()
+        if (accountList.isEmpty()) {
+            log.info("no accounts to proceeded");
+            return;
+        }
+
+        accountRepository.saveAll(accountList.stream()
                 .map(balance -> {
 
                     if (balance.getBalance().signum() <= 0) {
