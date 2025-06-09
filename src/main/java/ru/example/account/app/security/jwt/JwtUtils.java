@@ -30,8 +30,6 @@ public class JwtUtils {
 
     public JwtUtils(Environment env) {
         this.env = env;
-//        this.tokenExpiration = Duration.parse(
-//                env.getProperty("app.jwt.tokenExpiration", "PT30M"));
     }
 
     @PostConstruct
