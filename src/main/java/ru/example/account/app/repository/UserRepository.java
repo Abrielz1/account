@@ -52,13 +52,6 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
           """)
     boolean existsByPhones(@Param("phone")String phone);
 
-    @Query(value = """
-                   FROM User AS u JOIN u.userEmails AS ue
-                   WHERE ue.email = :email
-                   """)
-    Optional<User> findByEmail(@Param("email") String email);
-
-
     @EntityGraph(value = "user-with-contacts")
     @Query(value = """
                    FROM User AS u JOIN u.userEmails AS ue
