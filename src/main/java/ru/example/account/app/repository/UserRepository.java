@@ -3,6 +3,7 @@ package ru.example.account.app.repository;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.QueryHint;
 import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Lock;
@@ -35,6 +36,7 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     Optional<User> findWithLockingById(@Param("id") Long id);
 
 
+    @EntityGraph(value = "user-with-contacts")
     @Query(value = """
           SELECT CASE WHEN COUNT(ue) > 0 THEN TRUE ELSE FALSE END
           FROM User AS u JOIN u.userEmails AS ue
@@ -55,4 +57,12 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
                    WHERE ue.email = :email
                    """)
     Optional<User> findByEmail(@Param("email") String email);
+
+
+    @EntityGraph(value = "user-with-contacts")
+    @Query(value = """
+                   FROM User AS u JOIN u.userEmails AS ue
+                   WHERE ue.email = :email
+                   """)
+    Optional<User> getFullUserData(String email);
 }

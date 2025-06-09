@@ -76,5 +76,4 @@ public class UserControllerIT {
                 AuthResponse.class
         ).token();
     }
-
 }

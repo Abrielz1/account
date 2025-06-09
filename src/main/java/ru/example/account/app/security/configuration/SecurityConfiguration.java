@@ -2,6 +2,7 @@ package ru.example.account.app.security.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -11,6 +12,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
@@ -24,6 +26,7 @@ import java.util.List;
  * Конфигурация безопасности Spring Security.
  * Настраивает JWT-аутентификацию, CORS и политику сессий.
  */
+@Slf4j
 @Configuration
 @EnableMethodSecurity
 @RequiredArgsConstructor
@@ -43,10 +46,13 @@ public class SecurityConfiguration {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(12);
+        //    return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+
+        log.info("Configuring authentication manager");
         return configuration.getAuthenticationManager();
     }
     /**
@@ -57,6 +63,7 @@ public class SecurityConfiguration {
      */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity security) throws Exception {
+        log.info("Configuring security filter chain");
         security.authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/**",
                                          "/v3/api-docs/**",
@@ -78,8 +85,8 @@ public class SecurityConfiguration {
                 .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class)
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration config = new CorsConfiguration();
-                    config.setAllowedOrigins(List.of("http://localhost:3000"));
-                    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
+                    config.setAllowedOrigins(List.of("http://localhost:8080"));
+                    config.setAllowedMethods(List.of("*")); //"GET", "POST", "PUT", "DELETE"
                     config.setAllowedHeaders(List.of("Content-Type", "Cache-Control", "Authorization"));
                     config.setAllowCredentials(true);
                     return config;

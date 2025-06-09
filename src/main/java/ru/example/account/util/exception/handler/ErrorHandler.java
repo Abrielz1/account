@@ -13,7 +13,6 @@ import ru.example.account.util.exception.exceptions.AlreadyExistsException;
 import ru.example.account.util.exception.exceptions.BadRequestException;
 import ru.example.account.util.exception.exceptions.UserNotFoundException;
 
-
 @Slf4j
 @RestControllerAdvice
 public class ErrorHandler {

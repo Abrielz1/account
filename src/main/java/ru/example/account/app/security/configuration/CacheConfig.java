@@ -1,6 +1,5 @@
 package ru.example.account.app.security.configuration;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.cache.RedisCacheManagerBuilderCustomizer;
 import org.springframework.cache.annotation.EnableCaching;
@@ -10,11 +9,7 @@ import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
-import ru.example.account.app.entity.EmailData;
-import ru.example.account.app.entity.PhoneData;
-import ru.example.account.app.entity.User;
 import java.time.Duration;
-import java.util.Set;
 
 @Configuration
 @EnableCaching

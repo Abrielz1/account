@@ -1,7 +1,6 @@
 spring:
-  jackson:
-    stream-read-constraints:
-      max-nesting-depth: 2048
+  config:
+    import: optional:application.env
   data:
     redis:
       host: localhost
@@ -47,12 +46,11 @@ logging:
 
 app:
   jwt:
-    secret: $APP_SECRET
+    secret: "KOEqxmVGbQPbephZ75sK5J6bZVN1OJWzO2hKRZ3mVDVCdVJ/Oa56aG5D5RNH3l087J3Sz2iPoiCp0gVMulSbgw=="
     tokenExpiration: 150m
     refreshTokenExpiration: 600m
   cache:
     expiryOfCashDuration: 60m
-
 springdoc:
   show-actuator: true
   api-docs:
@@ -61,3 +59,12 @@ springdoc:
     path: /swagger-ui.html
     operations-sorter: method
     tags-sorter: alpha
+server:
+  servlet:
+    encoding:
+      force: true
+      charset: UTF-8
+      enabled: true
+profiles:
+  active: test
+

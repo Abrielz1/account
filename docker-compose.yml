@@ -1,5 +1,6 @@
 services:
 
+
   redis:
     image: redis:7.0.12
     container_name: my-redis
@@ -34,6 +35,7 @@ services:
       - app-network
 
   account_service:
+
     deploy:
       resources:
         limits:
@@ -45,7 +47,9 @@ services:
       dockerfile: Dockerfile
     ports:
       - "${APP_PORT}:8080"
+
     environment:
+      APP_SECRET: "VGhpcyBpcyBBIHRlc3Qgc2VjcmV0IGtleSBmb3IgSldUIGdlbmVyYXRpb24="
       SPRING_DATASOURCE_URL: jdbc:postgresql://account_db:5432/${POSTGRES_DB}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
@@ -78,3 +82,5 @@ volumes:
 networks:
   app-network:
     driver: bridge
+
+
