@@ -1,19 +1,15 @@
-package ru.example.account.web.controller;
+package ru.example.account;
 
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.util.TestPropertyValues;
-import org.springframework.context.ApplicationContextInitializer;
-import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import ru.example.account.AccountApplication;
 import ru.example.account.app.security.configuration.JpaConfig;
+
 
 @Testcontainers
 @ActiveProfiles("test")
@@ -21,7 +17,7 @@ import ru.example.account.app.security.configuration.JpaConfig;
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         classes = {
                 AccountApplication.class,
-                JpaConfig.class // Явно подключаем JPA конфиг
+                JpaConfig.class
         }
 )
 
@@ -46,8 +42,8 @@ public abstract class BaseIntegrationTest {
         registry.add("spring.datasource.password", postgres::getPassword);
 
         // Redis
-        registry.add("spring.data.redis.host", redis::getHost);
-        registry.add("spring.data.redis.port", () -> redis.getMappedPort(6379));
+        registry.add("spring.redis.host", redis::getHost);
+        registry.add("spring.redis.port", () -> redis.getMappedPort(6379));
 
         // Отключаем Flyway в тестах
         registry.add("spring.flyway.enabled", () -> "false");

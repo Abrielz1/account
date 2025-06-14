@@ -1,4 +1,4 @@
-package ru.example.account.app;
+package ru.example.account.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -27,7 +27,7 @@ import static org.testcontainers.shaded.org.hamcrest.Matchers.hasItems;
 @AutoConfigureMockMvc
 @Testcontainers
 @Transactional
-public class UserControllerIT {
+class UserControllerIT {
 
     @Container
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:14.6-alpine");

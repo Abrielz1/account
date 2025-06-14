@@ -1,6 +1,5 @@
 services:
 
-
   redis:
     image: redis:7.0.12
     container_name: my-redis
@@ -49,7 +48,7 @@ services:
       - "${APP_PORT}:8080"
 
     environment:
-      APP_SECRET: "VGhpcyBpcyBBIHRlc3Qgc2VjcmV0IGtleSBmb3IgSldUIGdlbmVyYXRpb24="
+      APP_SECRET: "KOEqxmVGbQPbephZ75sK5J6bZVN1OJWzO2hKRZ3mVDVCdVJ/Oa56aG5D5RNH3l087J3Sz2iPoiCp0gVMulSbgw=="
       SPRING_DATASOURCE_URL: jdbc:postgresql://account_db:5432/${POSTGRES_DB}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}

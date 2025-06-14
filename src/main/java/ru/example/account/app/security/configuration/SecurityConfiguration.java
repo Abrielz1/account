@@ -12,7 +12,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
@@ -46,7 +45,6 @@ public class SecurityConfiguration {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(12);
-        //    return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 
     @Bean
@@ -86,7 +84,7 @@ public class SecurityConfiguration {
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration config = new CorsConfiguration();
                     config.setAllowedOrigins(List.of("http://localhost:8080"));
-                    config.setAllowedMethods(List.of("*")); //"GET", "POST", "PUT", "DELETE"
+                    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE")); //
                     config.setAllowedHeaders(List.of("Content-Type", "Cache-Control", "Authorization"));
                     config.setAllowCredentials(true);
                     return config;

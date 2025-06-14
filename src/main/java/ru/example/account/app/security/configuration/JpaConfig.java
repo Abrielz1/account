@@ -41,6 +41,7 @@ public class JpaConfig {
         adapter.setShowSql(true);
         adapter.setGenerateDdl(false);
         adapter.setDatabasePlatform("org.hibernate.dialect.PostgreSQLDialect");
+
         return adapter;
     }
 
@@ -48,6 +49,7 @@ public class JpaConfig {
     @Bean(name = "transactionManager")
     public PlatformTransactionManager transactionManager(
             EntityManagerFactory entityManagerFactory) {
+
         return new JpaTransactionManager(entityManagerFactory);
     }
 }

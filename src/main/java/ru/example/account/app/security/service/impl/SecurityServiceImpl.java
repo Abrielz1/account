@@ -14,7 +14,6 @@ import ru.example.account.app.entity.Account;
 import ru.example.account.app.entity.EmailData;
 import ru.example.account.app.entity.PhoneData;
 import ru.example.account.app.entity.RefreshToken;
-import ru.example.account.app.entity.RoleType;
 import ru.example.account.app.entity.User;
 import ru.example.account.app.repository.AccountRepository;
 import ru.example.account.app.repository.EmailDataRepository;
@@ -29,7 +28,6 @@ import ru.example.account.web.model.auth.request.UserCredentialsRegisterRequestD
 import ru.example.account.web.model.auth.response.AuthResponse;
 import ru.example.account.web.model.auth.response.RefreshTokenResponse;
 import ru.example.account.web.model.auth.response.UserCredentialsResponseDto;
-
 import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
@@ -65,34 +63,30 @@ public class SecurityServiceImpl implements SecurityService {
         account.setBalance(new BigDecimal("10.00"));
         account.setInitialBalance(new BigDecimal("10.00"));
 
-        // Создаем пользователя
         User user = new User();
         user.setUsername(requestDto.username());
         user.setPassword(passwordEncoder.encode(requestDto.password()));
         user.setDateOfBirth(requestDto.birthDate());
         user.setRoles(new HashSet<>(requestDto.roles()));
-        user.setUserAccount(account);  // Связь пользователя с аккаунтом
+        user.setUserAccount(account);
 
-        // Создаем email
         EmailData emailData = new EmailData();
         emailData.setEmail(requestDto.email());
-        emailData.setUser(user);  // Связь email с пользователем
+        emailData.setUser(user);
 
-        // Создаем телефон
         PhoneData phoneData = new PhoneData();
         phoneData.setPhone(requestDto.phoneNumber());
-        phoneData.setUser(user);  // Связь телефона с пользователем
+        phoneData.setUser(user);
 
-        // Устанавливаем коллекции
         user.setUserEmails(Set.of(emailData));
         user.setUserPhones(Set.of(phoneData));
 
-        // Сохраняем все через каскадирование
         user = userRepository.save(user);
 
         return new UserCredentialsResponseDto(
-                user.getUserEmails().stream().map(EmailData::getEmail).collect(Collectors.toSet()),
-                user.getPassword()
+                user.getUserEmails().stream()
+                        .map(EmailData::getEmail)
+                        .collect(Collectors.toSet())
         );
     }
 
@@ -114,7 +108,7 @@ public class SecurityServiceImpl implements SecurityService {
 
         return new AuthResponse(
                 userDetails.getUser().getId(),
-                jwtUtils.generateJwtToken(userDetails.getEmail(), userDetails.getUser().getId()),
+                jwtUtils.generateTokenFromUsername(userDetails.getEmail(), userDetails.getUser().getId()),
                 refreshToken.getTokenRefresh(),
                 userDetails.getUsername(),
                 userDetails.getAuthorities()

@@ -19,7 +19,6 @@ import ru.example.account.web.model.auth.request.UserCredentialsRegisterRequestD
 import ru.example.account.web.model.auth.response.AuthResponse;
 import ru.example.account.web.model.auth.response.RefreshTokenResponse;
 import ru.example.account.web.model.auth.response.UserCredentialsResponseDto;
-
 import java.time.LocalDateTime;
 /**
  * Контроллер аутентификации и управления токенами.
@@ -40,13 +39,6 @@ public class AuthController {
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.OK)
     public UserCredentialsResponseDto registerUser(@RequestBody UserCredentialsRegisterRequestDto request) {
-
-//        if (Boolean.TRUE.equals(userRepository.existsByUserName(request.userName()))) {
-//            throw new AlreadyExistsException("Username: %s already taken! at time "
-//                    .formatted(request.userName())
-//                    + LocalDateTime.now());
-//
-//        }
 
         UserCredentialsResponseDto userResponseDto = securityService.register(request);
 
@@ -76,7 +68,7 @@ public class AuthController {
                     @ApiResponse(responseCode = "401", description = "Invalid credentials")
             }
     )
-    @PostMapping("/signing")
+    @PostMapping("/signin")
     @ResponseStatus(HttpStatus.OK)
     public AuthResponse login(@RequestBody LoginRequest loginRequest) {
 

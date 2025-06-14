@@ -1,5 +1,4 @@
 app:
   jwt:
-    secret: "KOEqxmVGbQPbephZ75sK5J6bZVN1OJWzO2hKRZ3mVDVCdVJ/Oa56aG5D5RNH3l087J3Sz2iPoiCp0gVMulSbgw==" # "This is A test secret key for JWT generation" в Base64
-    tokenExpiration: 5m
-    refreshTokenExpiration: 10m
+    secret: "fQL3RmtrMkHctNXq6ckD0xxm19OmglQqH0fWXWjdPVFjH43CaJmEWaKxe/04gBrCdDaCXmhxwxQSaBb0i6xUyg=="
+    tokenExpiration: P1D

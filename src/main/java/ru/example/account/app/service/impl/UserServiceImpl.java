@@ -2,9 +2,11 @@ package ru.example.account.app.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -37,6 +39,9 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
+    @Autowired
+    private UserServiceImpl self;
+
     private final UserRepository userRepository;
 
     @Override
@@ -56,7 +61,7 @@ public class UserServiceImpl implements UserService {
     public CreateUserAccountDetailResponseDto createUserEmailData(AppUserDetails currentUser,
                                                                   ManageUserEmailRequestDto createPhone) {
 
-        User userFromDb = this.getUserByUserId(currentUser.getId());
+        User userFromDb = self.getUserByUserId(currentUser.getId());
 
         if (!this.isFreeEmail(createPhone.email())) {
 
@@ -81,7 +86,7 @@ public class UserServiceImpl implements UserService {
     public CreateUserAccountDetailResponseDto createUserPhoneData(AppUserDetails currentUser,
                                                                   ManageUserPhoneRequestDto createPhone) {
 
-        User userFromDb = this.getUserByUserId(currentUser.getId());
+        User userFromDb = self.getUserByUserId(currentUser.getId());
 
         if (!this.isFreePhone(createPhone.phone())) {
 
@@ -102,11 +107,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @CacheEvict(key = "#currentUser.id")
+    @Caching(evict = {
+            @CacheEvict(value = "users", key = "#userRepository.getFullUserData(#currentUser.email).get().getId().toString()"),
+            @CacheEvict(value = "users", key = "#userRepository.findEmailByUserId(#currentUser.getId()).orElse(#currentUser.getId().toString())")
+    })
     @Transactional
     public UserEmailResponseDto editUserEmailData(AppUserDetails currentUser, ManageUserEmailRequestDto updateUser) {
 
-        User userFromDb = this.getUserByUserId(currentUser.getId());
+        User userFromDb = self.getUserByUserId(currentUser.getId());
         this.userRightsValidator(currentUser.getId(), userFromDb.getId());
 
         EmailData emailData = EmailData
@@ -122,11 +130,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @CacheEvict(key = "#currentUser.id")
+    @Caching(evict = {
+            @CacheEvict(value = "users", key = "#userRepository.getFullUserData(#currentUser.email).get().getId().toString()"),
+            @CacheEvict(value = "users", key = "#userRepository.findEmailByUserId(#currentUser.getId()).orElse(#currentUser.getId().toString())")
+    })
     @Transactional
     public UserPhoneResponseDto editUserPhoneData(AppUserDetails currentUser, ManageUserPhoneRequestDto updateUser) {
 
-        User userFromDb = this.getUserByUserId(currentUser.getId());
+        User userFromDb = self.getUserByUserId(currentUser.getId());
         this.userRightsValidator(currentUser.getId(), userFromDb.getId());
 
         return UserMapper.toUserPhoneResponseDto(this.updatePhoneData(userFromDb, updateUser));

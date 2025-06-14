@@ -28,7 +28,7 @@ public class CacheConfig {
                 )
                 .withCacheConfiguration("accounts",
                         RedisCacheConfiguration.defaultCacheConfig()
-                                .entryTtl(Duration.ofMinutes(30))
+                                .entryTtl(expiry)
                                 .serializeKeysWith(
                                         RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
                                 .serializeValuesWith(RedisSerializationContext.SerializationPair

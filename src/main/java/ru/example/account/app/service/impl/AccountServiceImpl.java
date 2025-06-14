@@ -5,13 +5,16 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.example.account.app.entity.Account;
 import ru.example.account.app.entity.User;
@@ -22,7 +25,6 @@ import ru.example.account.app.security.service.impl.AppUserDetails;
 import ru.example.account.app.service.AccountService;
 import ru.example.account.util.exception.exceptions.BadRequestException;
 import ru.example.account.util.exception.exceptions.UserNotFoundException;
-import ru.example.account.web.AccountCacheDto;
 import ru.example.account.web.model.account.request.CreateMoneyTransferRequest;
 import ru.example.account.web.model.account.response.CreateMoneyTransferResponse;
 import java.math.BigDecimal;
@@ -30,6 +32,7 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
 /**
  * Сервис управления банковскими операциями.
  * Реализует логику переводов и периодического начисления процентов.
@@ -42,6 +45,9 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class AccountServiceImpl implements AccountService {
 
+    @Autowired
+    private AccountServiceImpl self;
+
     private static final BigDecimal MAX_PERCENT = new BigDecimal("2.07");
     private static final BigDecimal INCREASE_RATE = new BigDecimal("1.10");
     private static final RoundingMode ROUNDING_MODE = RoundingMode.HALF_UP;
@@ -52,6 +58,7 @@ public class AccountServiceImpl implements AccountService {
     private final AccountRepository accountRepository;
 
     private final JwtUtils jwtUtils;
+
     /**
      * Перевод средств с проверкой блокировок.
      * Использует пессимистичные блокировки уровня REPEATABLE_READ.
@@ -68,12 +75,14 @@ public class AccountServiceImpl implements AccountService {
             }
     )
     @Override
-    @CacheEvict(value = "users", key = "{#firstUser.id, #secondUser.id}")
+    @Caching(evict = {
+            @CacheEvict(value = "users", key = "#currentUser.email"),
+            @CacheEvict(value = "users", key = "#userRepository.findEmailByUserId(#request.to()).orElse(#request.to().toString())")
+    })
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     public CreateMoneyTransferResponse transferFromOneAccountToAnother(AppUserDetails currentUser,
                                                                        CreateMoneyTransferRequest request,
                                                                        String token) {
-
 
         if (request.sum() == null) {
             log.error("sum and balance must not be a null");
@@ -110,7 +119,6 @@ public class AccountServiceImpl implements AccountService {
 
         User firstUser = this.getUserFromDb(usersIdsList.get(0));
         User secondUser = this.getUserFromDb(usersIdsList.get(1));
-
 
         return this.validateAndPrecededTransfer(firstUser, secondUser, request.sum());
     }
@@ -166,44 +174,49 @@ public class AccountServiceImpl implements AccountService {
             return new UserNotFoundException("No user in db with such id: %d".formatted(userId));
         });
     }
+
     /**
      * Ежедневное начисление 10% на баланс (макс. 207% от депозита).
      * Запускается каждые 30 секунд (для демонстрации).
      */
     @Scheduled(fixedRate = 30_000)
-    @CacheEvict(cacheNames = "accounts", allEntries = true)
-    @Transactional()
     public void moneyRiser() {
+        int pageSize = 50;
+        int page = 0;
+        Page<Account> accountPage;
 
-        List<Account> accountList = accountRepository.findAllNotBiggerThanMax(MAX_PERCENT);
+        do {
+            accountPage = self.processPage(page++, pageSize);
+            if (accountPage == null || accountPage.isEmpty()) {
+                log.info("No accounts to process");
+                break;
+            }
 
-        if (accountList.isEmpty()) {
-            log.info("No accounts to process");
-            return;
-        }
+            List<Account> updatedAccounts = accountPage.getContent().stream()
+                    .map(balance -> {
+                        if (balance.getBalance().signum() <= 0) {
+                            log.debug("Skipping account {} with zero/negative balance", balance.getId());
+                            return balance;
+                        }
 
-        accountRepository.saveAll(accountList.stream()
-                .map(balance -> {
+                        BigDecimal maxAllowed = balance.getInitialBalance().multiply(MAX_PERCENT);
+                        BigDecimal newBalance = balance.getBalance()
+                                .multiply(INCREASE_RATE)
+                                .setScale(SCALE, ROUNDING_MODE);
 
-                    if (balance.getBalance().signum() <= 0) {
-                     log.debug("Skipping account {} with zero/negative balance", balance.getId());
+                        balance.setBalance(newBalance.min(maxAllowed));
                         return balance;
-                    }
+                    })
+                    .toList();
 
-                    BigDecimal maxAllowed = balance.getInitialBalance().multiply(MAX_PERCENT);
-                    BigDecimal newBalance = balance.getBalance().multiply(INCREASE_RATE)
-                            .setScale(SCALE, ROUNDING_MODE);
+            accountRepository.saveAll(updatedAccounts);
+            log.info("Processed {} accounts on page {}", updatedAccounts.size(), page - 1);
 
-                    balance.setBalance(newBalance.min(maxAllowed));
-                    return balance;
-                })
-                .toList());
+        } while (accountPage.hasNext());
     }
 
-    @Cacheable(key = "#userId", unless = "#result == null")
-    public AccountCacheDto getAccountForCache(Long id) {
-        return accountRepository.findAccountById(id)
-                .map(AccountCacheDto::fromEntity)
-                .orElse(null);
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public Page<Account> processPage(int page, int pageSize) {
+        return accountRepository.findAllNotBiggerThanMax(MAX_PERCENT, PageRequest.of(page, pageSize));
     }
 }
