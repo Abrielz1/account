@@ -50,7 +50,4 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
             """)
     @Cacheable(key = "#email", unless = "#result == null")
     Optional<User> getFullUserData(String email);
-
-    @Query("SELECT ue.email FROM User u JOIN u.userEmails ue WHERE u.id = :userId")
-    Optional<String> findEmailByUserId(@Param("userId") Long userId);
 }

@@ -49,6 +49,6 @@ public class UserSpecification implements Specification<User> {
         }
 
         query.distinct(true);
-        return cb.and(predicates.toArray(predicates.toArray(new Predicate[0])));
+        return cb.and(predicates.toArray(new Predicate[0]));
     }
 }
