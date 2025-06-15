@@ -9,13 +9,29 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.example.account.util.exception.exceptions.AccessDeniedException;
+import ru.example.account.util.exception.exceptions.AccountNotFoundException;
 import ru.example.account.util.exception.exceptions.AlreadyExistsException;
 import ru.example.account.util.exception.exceptions.BadRequestException;
+import ru.example.account.util.exception.exceptions.ProcessingInterruptedException;
 import ru.example.account.util.exception.exceptions.UserNotFoundException;
 
 @Slf4j
 @RestControllerAdvice
 public class ErrorHandler {
+
+    @ExceptionHandler(ProcessingInterruptedException.class)
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    public ErrorResponse handleProcessingInterruptedException(ProcessingInterruptedException exception) {
+        log.warn("Processing interrupted at page {}:", exception.getMessage());
+        return new ErrorResponse("Processing temporarily unavailable", exception.getMessage());
+    }
+
+    @ExceptionHandler(AccountNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleAccountNotFoundException(AccountNotFoundException exception) {
+        log.error("No such entity as requested account");
+        return new ErrorResponse("No such entity as requested account", exception.getMessage());
+    }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)

@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import ru.example.account.app.entity.Account;
 import java.math.BigDecimal;
+import java.util.Optional;
 
 @Repository
 public interface AccountRepository extends JpaRepository<Account, Long> {
@@ -26,4 +27,16 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     })
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Page<Account> findAllNotBiggerThanMax(@Param("maxPercent") BigDecimal maxPercent, Pageable pageable);
+
+    @Query("SELECT u.userAccount.id FROM User u WHERE u.id = :userId")
+    Optional<Long> findAccountIdByUserIdSafe(@Param("userId") Long userId);
+
+    @Query(value = """
+       SELECT a FROM Account AS a WHERE a.id = :accountId
+""")
+  @QueryHints({
+            @QueryHint(name = "jakarta.persistence.lock.timeout", value = "2000")
+    })
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Optional<Account> getAccountWithLocksByUserId(@Param("accountId") Long accountId);
 }

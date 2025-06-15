@@ -1,8 +1,10 @@
 package ru.example.account.app.service.impl;
 
+import jakarta.persistence.LockTimeoutException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -33,8 +35,9 @@ public class PageProcessorImpl implements PageProcessor {
 
     @Override
     @Retryable(
-            retryFor = OptimisticLockingFailureException.class,
-            backoff = @Backoff(delay = 100, multiplier = 2)
+            retryFor = {PessimisticLockingFailureException.class, LockTimeoutException.class},
+            backoff = @Backoff(delay = 100, multiplier = 2),
+            maxAttempts = 3
     )
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Page<Account> processPage(int page, int pageSize) {
@@ -85,6 +88,6 @@ public class PageProcessorImpl implements PageProcessor {
             int pageSize
     ) {
         log.error("Optimistic lock failed after 3 retries for page {}: {}", page, ex.getMessage());
-        return null;
+        return Page.empty(); // <-- Возвращаем пустую страницу для продолжения
     }
 }

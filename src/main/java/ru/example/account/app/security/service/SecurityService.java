@@ -1,6 +1,5 @@
 package ru.example.account.app.security.service;
 
-import ru.example.account.app.entity.User;
 import ru.example.account.web.model.auth.request.LoginRequest;
 import ru.example.account.web.model.auth.request.RefreshTokenRequest;
 import ru.example.account.web.model.auth.request.UserCredentialsRegisterRequestDto;
@@ -17,6 +16,4 @@ public interface SecurityService {
     RefreshTokenResponse refreshToken(RefreshTokenRequest request);
 
     void logout();
-
-    User getUserByUserId(Long userId);
 }
