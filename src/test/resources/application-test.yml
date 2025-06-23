@@ -1,4 +1,89 @@
+# Этот файл содержит настройки ИСКЛЮЧИТЕЛЬНО для тестового окружения.
+
+# Настройка логгирования для тестов, чтобы было видно все SQL запросы
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    # Эта настройка покажет, какие параметры вставляются в SQL запросы
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.springframework.security: DEBUG
+
+# Настройки нашего приложения специально для тестов
 app:
   jwt:
-    secret: "fQL3RmtrMkHctNXq6ckD0xxm19OmglQqH0fWXWjdPVFjH43CaJmEWaKxe/04gBrCdDaCXmhxwxQSaBb0i6xUyg=="
-    tokenExpiration: P1D
+    # Задаем короткое время жизни токенов, чтобы тесты на протухание (если они будут)
+    # проходили быстро. Секрет мы зададим динамически в BaseIntegrationTest.
+    tokenExpiration: 15m
+    refreshTokenExpiration: 30m
+  cache:
+    # Для тестов можно задать короткий TTL для кэша, чтобы он не влиял на другие тесты
+    expiryOfCashDuration: 1m
+
+# Эта секция включает "магию" Spring Boot Testcontainers для Redis
+spring:
+  data:
+    redis:
+      # Говорим Spring Boot, что мы хотим, чтобы он сам управлял контейнером Redis
+      testcontainers:
+        # Указываем, какой Docker-образ использовать
+        image: "redis:7.0.12-alpine"
+
+  # Переопределяем импорт .env файла, чтобы в тестах он гарантированно не читался,
+  # даже если он есть локально. Все проперти должны приходить из этого файла или
+  # из @DynamicPropertySource. Это обеспечивает 100% изоляцию.
+  config:
+    import: ""
+
+# Для тестов не нужна полная конфигурация Swagger, можно отключить
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+##app:
+##  jwt:
+##    secret: "fQL3RmtrMkHctNXq6ckD0xxm19OmglQqH0fWXWjdPVFjH43CaJmEWaKxe/04gBrCdDaCXmhxwxQSaBb0i6xUyg=="
+##    tokenExpiration: P1D
+## Это конфигурация ИСКЛЮЧИТЕЛЬНО для тестов
+## Она будет активирована с помощью @ActiveProfiles("test")
+#
+## Настройки базы данных для Testcontainers
+## Мы не используем localhost, Testcontainers сам подставит URL и креды
+## Эти строки здесь для полноты, но они будут переопределены @DynamicPropertySource
+## в BaseIntegrationTest, что является лучшей практикой.
+#spring:
+#  datasource:
+#    url: jdbc:tc:postgresql:14.6-alpine:///testdb
+#    username: testuser
+#    password: testpass
+#    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver # Важно для Testcontainers!
+#
+#  # Отключаем Flyway для Testcontainers, если мы хотим создавать схему по-другому,
+#  # но лучше оставить его включенным, чтобы тесты проверяли и миграции тоже.
+#  flyway:
+#    enabled: true
+#
+#  # Настройки Redis для Testcontainers (тоже будут переопределены, но полезно иметь)
+#  data:
+#    redis:
+#      host: localhost
+#      port: 6379
+#
+#  # ОТКЛЮЧАЕМ ИМПОРТ .Отлично! Давай раз и навсегда настроим тебе **железобеenv ФАЙЛА В ТЕСТАХ!
+#  # Это гарантирует, что никакие боевые переменные случайно не попадут в тесты.
+#  config:
+#    import: "" # Пустое значение отключает импорт
+#
+## Задаем все "секретные" и другие переменные прямо здесь, в тестовом конфиге
+#app:
+#  jwt:
+#    # Используем простой, но валидный Base64 ключ для тестов.
+#    # Это "test-secret" в Base64.
+#    secret: "dGVzdC1zZWNyZXQ="
+#    tokenExpiration: 15m # Короткое время жизни для тестов
+#    refreshTokenExpiration: 30m
+#
+#  # Здесь можно переопределить любые другие свойства
+#  cache:
+#    expiryOfCashDuration: 1m # Короткий TTL для кэша в тестах

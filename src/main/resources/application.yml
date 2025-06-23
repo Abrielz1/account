@@ -1,29 +1,31 @@
 spring:
-
-  profiles:
-    active: test
+  # Профиль по умолчанию не указываем, он будет задаваться снаружи
   config:
+    # Импортируем переменные из .env файла. `optional:` значит, что приложение не упадет, если файла нет.
     import: optional:application.env
-  data:
-    redis:
-      host: localhost
-      port: 6379
+
+  # --- Настройки для Базы Данных ---
+  # Здесь используются плейсхолдеры, которые будут заменены значениями из application.env или системных переменных
+  datasource:
+    url: jdbc:postgresql://localhost:5432/${POSTGRES_DB:account} # :account - значение по умолчанию
+    username: ${POSTGRES_USER:root}
+    password: ${POSTGRES_PASSWORD:root}
+    hikari:
+      connection-timeout: 30000
+      validation-timeout: 5000
+
+  # --- Настройки JPA / Hibernate ---
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: none # Правильно! Управляем схемой через Flyway
     show-sql: true
     properties:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
     generate-ddl: false
-  datasource:
-    url: jdbc:postgresql://localhost:5432/account
-    username: root
-    password: root
-    hikari:
-      connection-timeout: 30000
-      validation-timeout: 5000
+
+  # --- Настройки Flyway ---
   flyway:
     enabled: true
     locations: classpath:db/migration
@@ -31,30 +33,41 @@ spring:
     default-schema: public
     out-of-order: false
 
+  # --- Настройки Redis (для боевого режима) ---
+  data:
+    redis:
+      host: localhost # Можно заменить на ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379} # Используем порт из .env
 
+  # --- Настройки Кэширования ---
+  cache:
+    type: redis # Указываем, что хотим использовать Redis для кэширования
+
+# --- Настройки логгирования ---
 logging:
   file:
     name: logfile.log
   level:
-    org:
-      springframework:
-        orm:
-          jpa: INFO
-          JpaTransactionManager: DEBUG
-        transaction: INFO
-        interceptor: TRACE
+    org.springframework.orm.jpa: INFO
+    org.springframework.transaction: INFO
   logback:
     rollingpolicy:
-      max-file-size: 50MB
-      max-history: 1
+    # Эта секция в стандартном Spring Boot не работает. Для тонкой настройки
+    # логбека нужно использовать отдельный файл logback-spring.xml. Пока можно удалить.
+    # max-file-size: 50MB
+    # max-history: 1
 
+# --- Настройки нашего приложения ---
 app:
   jwt:
-    secret: "fQL3RmtrMkHctNXq6ckD0xxm19OmglQqH0fWXWjdPVFjH43CaJmEWaKxe/04gBrCdDaCXmhxwxQSaBb0i6xUyg=="
+    # Секрет теперь передается СНАРУЖИ через переменную окружения APP_SECRET
+    secret: "${APP_SECRET}"
     tokenExpiration: 150m
     refreshTokenExpiration: 600m
   cache:
     expiryOfCashDuration: 60m
+
+# --- Настройки Swagger ---
 springdoc:
   show-actuator: true
   api-docs:
@@ -63,11 +76,93 @@ springdoc:
     path: /swagger-ui.html
     operations-sorter: method
     tags-sorter: alpha
+
+# --- Настройки встроенного веб-сервера ---
 server:
+  port: ${APP_PORT:8080}
   servlet:
     encoding:
-      force: true
       charset: UTF-8
       enabled: true
+      force: true
 
+# --- Настройки Actuator (для healthcheck) ---
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health"
 
+#spring:
+#
+#  profiles:
+#    active: test
+#  config:
+#    import: optional:application.env
+#  data:
+#    redis:
+#      host: localhost
+#      port: 6379
+#  jpa:
+#    hibernate:
+#      ddl-auto: none
+#    show-sql: true
+#    properties:
+#      hibernate:
+#        format_sql: true
+#        dialect: org.hibernate.dialect.PostgreSQLDialect
+#    generate-ddl: false
+#  datasource:
+#    url: jdbc:postgresql://localhost:5432/account
+#    username: root
+#    password: root
+#    hikari:
+#      connection-timeout: 30000
+#      validation-timeout: 5000
+#  flyway:
+#    enabled: true
+#    locations: classpath:db/migration
+#    baseline-on-migrate: true
+#    default-schema: public
+#    out-of-order: false
+#
+#
+#logging:
+#  file:
+#    name: logfile.log
+#  level:
+#    org:
+#      springframework:
+#        orm:
+#          jpa: INFO
+#          JpaTransactionManager: DEBUG
+#        transaction: INFO
+#        interceptor: TRACE
+#  logback:
+#    rollingpolicy:
+#      max-file-size: 50MB
+#      max-history: 1
+#
+#app:
+#  jwt:
+#    secret: "fQL3RmtrMkHctNXq6ckD0xxm19OmglQqH0fWXWjdPVFjH43CaJmEWaKxe/04gBrCdDaCXmhxwxQSaBb0i6xUyg=="
+#    tokenExpiration: 150m
+#    refreshTokenExpiration: 600m
+#  cache:
+#    expiryOfCashDuration: 60m
+#springdoc:
+#  show-actuator: true
+#  api-docs:
+#    path: /api-docs
+#  swagger-ui:
+#    path: /swagger-ui.html
+#    operations-sorter: method
+#    tags-sorter: alpha
+#server:
+#  servlet:
+#    encoding:
+#      force: true
+#      charset: UTF-8
+#      enabled: true
+#
+#

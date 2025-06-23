@@ -1,10 +1,8 @@
 package ru.example.account.app.service.impl;
 
-import jakarta.persistence.LockTimeoutException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.OptimisticLockingFailureException;
-import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -35,29 +33,29 @@ public class PageProcessorImpl implements PageProcessor {
 
     @Override
     @Retryable(
-            retryFor = {PessimisticLockingFailureException.class, LockTimeoutException.class},
-            backoff = @Backoff(delay = 100, multiplier = 2),
-            maxAttempts = 3
+            retryFor = { OptimisticLockingFailureException.class }, // <-- МЕНЯЕМ ТИП ИСКЛЮЧЕНИЯ на правильный
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 200, multiplier = 2) // Немного увеличим паузу
     )
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional(propagation = Propagation.REQUIRES_NEW) //REQUIRES_NEW - критически важно, чтобы каждая пачка была в своей транзакции
     public Page<Account> processPage(int page, int pageSize) {
         PageRequest pageRequest = PageRequest.of(page, pageSize, Sort.by("id"));
         Page<Account> accountPage = accountRepository.findAllNotBiggerThanMax(MAX_PERCENT, pageRequest);
 
         if (accountPage.isEmpty()) {
-            return accountPage;
+            return accountPage; // Если страница пуста, просто выходим
         }
 
         List<Account> updatedAccounts = accountPage.getContent().stream()
                 .filter(account -> account.getBalance().signum() > 0)
                 .map(this::applyInterest)
-                .filter(account -> {
-                    BigDecimal maxAllowed = account.getInitialBalance().multiply(MAX_PERCENT);
-                    return account.getBalance().compareTo(maxAllowed) < 0;
-                })
+                // Этот filter() здесь больше не нужен, т.к. изначальный запрос уже все отфильтровал,
+                // а applyInterest не дает выйти за пределы. Его можно убрать для чистоты.
+                // .filter(account -> { ... })
                 .toList();
 
         if (!updatedAccounts.isEmpty()) {
+            // Hibernate сам проверит поле @Version при сохранении
             accountRepository.saveAll(updatedAccounts);
         }
 
@@ -65,18 +63,19 @@ public class PageProcessorImpl implements PageProcessor {
     }
 
     private Account applyInterest(Account account) {
-
         BigDecimal maxAllowed = account.getInitialBalance().multiply(MAX_PERCENT);
+
+        // Проверка перед вычислением, чтобы не делать лишнюю работу
+        if (account.getBalance().compareTo(maxAllowed) >= 0) {
+            log.trace("Cap for Account {} has already been reached.", account.getId());
+            return account;
+        }
+
         BigDecimal newBalance = account.getBalance()
                 .multiply(INCREASE_RATE)
                 .setScale(SCALE, ROUNDING_MODE);
 
-
-        if (account.getBalance().compareTo(maxAllowed) >= 0) {
-            log.info("Cap of Account reached!");
-            return account;
-        }
-
+        // Устанавливаем либо новый баланс, либо максимальный, если вышли за пределы
         account.setBalance(newBalance.min(maxAllowed));
         return account;
     }
@@ -87,7 +86,8 @@ public class PageProcessorImpl implements PageProcessor {
             int page,
             int pageSize
     ) {
-        log.error("Optimistic lock failed after 3 retries for page {}: {}", page, ex.getMessage());
-        return Page.empty(); // <-- Возвращаем пустую страницу для продолжения
+        // Логируем, что даже ретраи не помогли
+        log.error("Optimistic lock conflict on page {} couldn't be resolved after multiple retries. Message: {}", page, ex.getMessage());
+        return Page.empty(); // Возвращаем пустую страницу, чтобы главный цикл мог ее обработать и завершиться
     }
 }
