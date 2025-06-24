@@ -111,15 +111,15 @@ public class AccountServiceImpl implements AccountService {
         }
 
         if (senderAccount.getBalance().compareTo(moneyToTransfer) >= 0) {
-            BigDecimal amount = moneyToTransfer.setScale(2, RoundingMode.HALF_UP);
+            BigDecimal amount = moneyToTransfer.setScale(2, RoundingMode.HALF_EVEN);
 
             BigDecimal senderBalance = senderAccount.getBalance()
                     .subtract(amount)
-                    .setScale(2, RoundingMode.HALF_UP);
+                    .setScale(2, RoundingMode.HALF_EVEN);
 
             BigDecimal receiverBalance = receiverAccount.getBalance()
                     .add(amount)
-                    .setScale(2, RoundingMode.HALF_UP);
+                    .setScale(2, RoundingMode.HALF_EVEN);
 
             senderAccount.setBalance(senderBalance);
             receiverAccount.setBalance(receiverBalance);

@@ -49,9 +49,6 @@ public class PageProcessorImpl implements PageProcessor {
         List<Account> updatedAccounts = accountPage.getContent().stream()
                 .filter(account -> account.getBalance().signum() > 0)
                 .map(this::applyInterest)
-                // Этот filter() здесь больше не нужен, т.к. изначальный запрос уже все отфильтровал,
-                // а applyInterest не дает выйти за пределы. Его можно убрать для чистоты.
-                // .filter(account -> { ... })
                 .toList();
 
         if (!updatedAccounts.isEmpty()) {
