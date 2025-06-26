@@ -19,6 +19,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.proxy.HibernateProxy;
+import java.io.Serializable;
+import java.util.Objects;
 
 @Table(name = "phone_data")
 @Entity
@@ -26,14 +29,13 @@ import lombok.ToString;
 @Setter
 @Builder
 @ToString
-@EqualsAndHashCode
 @NamedEntityGraph(
         name = "account-with-phone",
         attributeNodes = @NamedAttributeNode("user")
 )
 @NoArgsConstructor
 @AllArgsConstructor
-public class PhoneData {
+public class PhoneData implements Serializable {
 
     @Id
     @Column(name = "id", updatable = false)
@@ -51,4 +53,20 @@ public class PhoneData {
 
     @Version
     private Long version;
+
+    @Override
+    public final boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null) return false;
+        Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
+        Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
+        if (thisEffectiveClass != oEffectiveClass) return false;
+        PhoneData phoneData = (PhoneData) o;
+        return getId() != null && Objects.equals(getId(), phoneData.getId());
+    }
+
+    @Override
+    public final int hashCode() {
+        return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
+    }
 }

@@ -20,6 +20,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.proxy.HibernateProxy;
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Objects;
 /**
@@ -45,7 +46,7 @@ import java.util.Objects;
 )
 @NoArgsConstructor
 @AllArgsConstructor
-public class Account {
+public class Account implements Serializable {
 
     @Schema(description = "Unique account ID", example = "1")
     @Id

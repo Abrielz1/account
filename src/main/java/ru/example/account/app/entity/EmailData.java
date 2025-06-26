@@ -21,6 +21,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.proxy.HibernateProxy;
+
+import java.io.Serializable;
 import java.util.Objects;
 
 @Table(name = "email_data")
@@ -35,7 +37,7 @@ import java.util.Objects;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class EmailData {
+public class EmailData implements Serializable {
 
     @Id
     @Column(name = "id", updatable = false)

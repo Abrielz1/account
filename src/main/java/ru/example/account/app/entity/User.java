@@ -27,6 +27,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.proxy.HibernateProxy;
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Objects;
@@ -68,7 +69,7 @@ import java.util.Set;
 @NamedEntityGraph(name = "users_entity-graph", attributeNodes = @NamedAttributeNode("roles"))
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
+public class User implements Serializable {
 
     @Id
     @EqualsAndHashCode.Include
