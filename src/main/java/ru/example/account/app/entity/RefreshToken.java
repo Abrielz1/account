@@ -9,6 +9,8 @@ import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.index.Indexed;
 import java.io.Serializable;
 import java.time.Instant;
+import java.util.UUID;
+import java.io.Serial;
 
 @Data
 @Builder
@@ -17,9 +19,11 @@ import java.time.Instant;
 @AllArgsConstructor
 public class RefreshToken implements Serializable {
 
+    @Serial
+    private static final long serialVersionUID = 1L;
+
     @Id
-    @Indexed
-    private Long id;
+    private UUID sessionId;
 
     @Indexed
     private Long userId;

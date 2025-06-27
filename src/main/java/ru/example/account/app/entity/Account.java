@@ -1,73 +1,52 @@
 package ru.example.account.app.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.NamedAttributeNode;
-import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.proxy.HibernateProxy;
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Objects;
-/**
- * Банковский аккаунт пользователя.
- *
- * <p>Ограничения:
- * <ul>
- *   <li>balance >= 0</li>
- *   <li>initial_balance >= 0</li>
- *   <li>balance <= initial_balance * 2.07</li>
- * </ul>
- */
+
 @Schema(description = "Bank account entity")
-@Table(name = "accounts")
-@Entity
 @Getter
 @Setter
 @Builder
 @ToString
-@NamedEntityGraph(
-        name = "account-with-user",
-        attributeNodes = @NamedAttributeNode("user")
-)
 @NoArgsConstructor
 @AllArgsConstructor
-public class Account implements Serializable {
+@Entity
+@Table(name = "accounts")
+public class Account {
 
     @Schema(description = "Unique account ID", example = "1")
     @Id
-    @Column(name = "id", updatable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", updatable = false)
     private Long id;
 
     @Schema(description = "Current balance", example = "100.00")
-    @EqualsAndHashCode.Include
     @Column(name = "balance", precision = 19, scale = 2)
     private BigDecimal balance;
 
     @Schema(description = "Initial deposit amount", example = "100.00")
-    @EqualsAndHashCode.Include
-    @Column(name = "initial_balance", precision = 19, scale = 2)
+    @Column(name = "initial_balance", precision = 19, scale = 2, updatable = false)
     private BigDecimal initialBalance;
 
-    @OneToOne(mappedBy = "userAccount")
-    @EqualsAndHashCode.Exclude()
+    @OneToOne(mappedBy = "userAccount", fetch = FetchType.LAZY)
     @ToString.Exclude
-    @JsonIgnore
     private User user;
 
     @Version

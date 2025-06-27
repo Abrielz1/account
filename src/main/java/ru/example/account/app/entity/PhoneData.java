@@ -1,54 +1,45 @@
 package ru.example.account.app.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.NamedAttributeNode;
-import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.proxy.HibernateProxy;
-import java.io.Serializable;
 import java.util.Objects;
 
-@Table(name = "phone_data")
-@Entity
 @Getter
 @Setter
 @Builder
 @ToString
-@NamedEntityGraph(
-        name = "account-with-phone",
-        attributeNodes = @NamedAttributeNode("user")
-)
 @NoArgsConstructor
 @AllArgsConstructor
-public class PhoneData implements Serializable {
+@Entity
+@Table(name = "phone_data")
+public class PhoneData {
 
     @Id
-    @Column(name = "id", updatable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", updatable = false)
     private Long id;
 
-    @EqualsAndHashCode.Include
-    @Column(name = "phone", unique = true)
+    @Column(name = "phone", unique = true, nullable = false)
     private String phone;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
     @ToString.Exclude
-    @JsonIgnore
     private User user;
 
     @Version
