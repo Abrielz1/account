@@ -6,11 +6,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisKeyValueAdapter;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.convert.KeyspaceConfiguration;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 import ru.example.account.app.entity.RefreshToken;
 import java.time.Duration;
-import java.util.Collections;
+import java.util.List;
 
 @Configuration
 @EnableRedisRepositories(keyspaceConfiguration = RedisConfiguration.RefreshTokenKeyConfiguration.class,
@@ -28,6 +29,11 @@ public class RedisConfiguration {
         );
     }
 
+    @Bean
+    public StringRedisTemplate stringRedisTemplate(LettuceConnectionFactory connectionFactory) {
+        return new StringRedisTemplate(connectionFactory);
+    }
+
     public class RefreshTokenKeyConfiguration extends KeyspaceConfiguration {
         private static final String REFRESH_TOKEN_KEYSPACE = "refresh_tokens";
 
@@ -37,7 +43,7 @@ public class RedisConfiguration {
 
             keyspaceSettings.setTimeToLive(refreshTokenExpiration.getSeconds());
 
-            return Collections.singleton(keyspaceSettings);
+            return List.of(keyspaceSettings);
         }
     }
 }

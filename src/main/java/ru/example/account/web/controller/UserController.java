@@ -46,39 +46,38 @@ public class UserController {
             @RequestParam(required = false) String email,
             @PositiveOrZero @RequestParam(defaultValue = "0") int page,
             @Positive @RequestParam(defaultValue = "10") int size) {
-
         return userService.searchUsers(dateOfBirth, phone, name, email, PageRequest.of(page, size));
     }
 
     @PostMapping("/email")
     @ResponseStatus(HttpStatus.CREATED)
-    public CreateUserAccountDetailResponseDto createUserEmailData(@AuthenticationPrincipal AppUserDetails currentUser,
-                                                                     @Validated @RequestBody ManageUserEmailRequestDto updateUser) {
-
+    public CreateUserAccountDetailResponseDto createUserEmailData(
+            @AuthenticationPrincipal AppUserDetails currentUser,
+            @Validated @RequestBody ManageUserEmailRequestDto updateUser) {
         return userService.createUserEmailData(currentUser, updateUser);
     }
 
     @PostMapping("/phone")
     @ResponseStatus(HttpStatus.CREATED)
-    public CreateUserAccountDetailResponseDto createUserPhoneData(@AuthenticationPrincipal AppUserDetails currentUser,
-                                                                     @Validated @RequestBody ManageUserPhoneRequestDto updateUser) {
-
+    public CreateUserAccountDetailResponseDto createUserPhoneData(
+            @AuthenticationPrincipal AppUserDetails currentUser,
+            @Validated @RequestBody ManageUserPhoneRequestDto updateUser) {
         return userService.createUserPhoneData(currentUser, updateUser);
     }
 
     @PutMapping("/edit/email")
     @ResponseStatus(HttpStatus.OK)
-    public UserEmailResponseDto editUserEmailData(@AuthenticationPrincipal AppUserDetails currentUser,
-                                                  @Validated @RequestBody ManageUserEmailRequestDto updateUser) {
-
+    public UserEmailResponseDto editUserEmailData(
+            @AuthenticationPrincipal AppUserDetails currentUser,
+            @Validated @RequestBody ManageUserEmailRequestDto updateUser) {
         return userService.editUserEmailData(currentUser, updateUser);
     }
 
     @PutMapping("/edit/phone")
     @ResponseStatus(HttpStatus.OK)
-    public UserPhoneResponseDto editUserPhoneData(@AuthenticationPrincipal AppUserDetails currentUser,
-                                                  @Validated @RequestBody ManageUserPhoneRequestDto updateUser) {
-
+    public UserPhoneResponseDto editUserPhoneData(
+            @AuthenticationPrincipal AppUserDetails currentUser,
+            @Validated @RequestBody ManageUserPhoneRequestDto updateUser) {
         return userService.editUserPhoneData(currentUser, updateUser);
     }
 }

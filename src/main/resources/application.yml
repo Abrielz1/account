@@ -59,6 +59,9 @@ logging:
 
 # --- Настройки нашего приложения ---
 app:
+  scheduling:
+    moneyRiser:
+      rate: 2592000000
   jwt:
     # Секрет теперь передается СНАРУЖИ через переменную окружения APP_SECRET
     secret: "${APP_SECRET}"
