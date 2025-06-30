@@ -53,8 +53,8 @@ public class BalanceManipulationService {
 
             } catch (Exception e) {
                 log.error("Fatal error while processing batch after ID {}. Stopping job. Error: {}", lastProcessedId, e.getMessage(), e);
-                break; // <-- Здесь break оправдан, т.к. это аварийный выход из-за исключения.
-                // SonarQube обычно не ругается, если break один и в catch-блоке. Если ругается, можно вынести в return.
+                break; // <--  это аварийный выход из-за исключения.
+
             }
         }
 
