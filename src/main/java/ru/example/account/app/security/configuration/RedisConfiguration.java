@@ -1,5 +1,8 @@
 package ru.example.account.app.security.configuration;
 
+import org.redisson.Redisson;
+import org.redisson.api.RedissonClient;
+import org.redisson.config.Config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,8 +21,24 @@ import java.util.List;
         enableKeyspaceEvents = RedisKeyValueAdapter.EnableKeyspaceEvents.ON_STARTUP)
 public class RedisConfiguration {
 
+    @Value("${spring.data.redis.host:localhost}")
+    private String redisHost;
+
+    @Value("${spring.data.redis.port:6379}")
+    private int redisPort;
+
     @Value("${app.jwt.refreshTokenExpiration}")
     private Duration refreshTokenExpiration;
+
+    @Bean(destroyMethod = "shutdown") // Указываем метод для корректного завершения работы
+    public RedissonClient redissonClient() {
+        Config config = new Config();
+        // Используем одиночный сервер, так как в docker-compose у нас один Redis
+        // Проперти `redis://` обязательно
+        String redisAddress = String.format("redis://%s:%d", redisHost, redisPort);
+        config.useSingleServer().setAddress(redisAddress);
+        return Redisson.create(config);
+    }
 
     @Bean
     public LettuceConnectionFactory redisConnectionFactory() {
