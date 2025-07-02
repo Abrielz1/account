@@ -20,22 +20,13 @@ CREATE TABLE users (
 );
 COMMENT ON TABLE users IS 'Основные данные пользователей';
 
-
--- Справочник ролей
-CREATE TABLE roles (
-                       id          SMALLINT PRIMARY KEY,
-                       name        VARCHAR(50) NOT NULL UNIQUE
-);
-COMMENT ON TABLE roles IS 'Справочник ролей в системе';
-
 CREATE TABLE user_roles (
-                            id          BIGSERIAL PRIMARY KEY,
                             user_id     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-                            role_id     SMALLINT NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
-                            assigned_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-                            UNIQUE (user_id, role_id)
+    -- Храним роль как строку. Тип ENUM в базе (security.user_role) остается!
+                            role        security.user_role NOT NULL,
+                            PRIMARY KEY (user_id, role)
 );
-COMMENT ON TABLE user_roles IS 'Связь между пользователями и их ролями';
+COMMENT ON TABLE user_roles IS 'Набор ролей для пользователя (управляется @ElementCollection)';
 
 CREATE TABLE email_data (
                             id                BIGSERIAL PRIMARY KEY,
