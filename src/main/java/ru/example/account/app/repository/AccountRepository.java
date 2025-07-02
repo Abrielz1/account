@@ -26,7 +26,7 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
             @QueryHint(name = "org.hibernate.fetchSize", value = "50"),
             @QueryHint(name = "jakarta.persistence.lock.timeout", value = "5000")
     })
-   // @Lock(LockModeType.PESSIMISTIC_WRITE) // <-- Проблема №1
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     Page<Account> findAllNotBiggerThanMax(@Param("maxPercent") BigDecimal maxPercent, Pageable pageable);
 
     @Query("SELECT u.userAccount.id FROM User u WHERE u.id = :userId")

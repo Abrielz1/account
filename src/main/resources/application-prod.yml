@@ -1,0 +1,28 @@
+server:
+  port: ${APP_PORT} # Порт из переменной окружения
+
+spring:
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+
+  jpa:
+    show-sql: false # Отключаем в проде
+
+logging:
+  level:
+    root: INFO
+
+app:
+  scheduling:
+    moneyRiser:
+      rate: 86400000 # Раз в сутки для прода
