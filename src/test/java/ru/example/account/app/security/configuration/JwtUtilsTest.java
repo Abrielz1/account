@@ -8,7 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.context.ActiveProfiles;
-import ru.example.account.app.security.jwt.JwtUtils;
+import ru.example.account.security.jwt.JwtUtils;
 import java.time.Duration;
 
 @ActiveProfiles("test")
