@@ -1,85 +1,79 @@
-services:
+version: '3.8'
 
+services:
+  # --- Инфраструктура ---
   redis:
-    image: redis:7.0.12
-    container_name: my-redis
+    image: redis:7.2-alpine
+    container_name: fintech-redis # Даем более уникальное имя
     ports:
-      - "${REDIS_PORT}:6379"
+      - "${REDIS_PORT:-6379}:6379" # Добавляем значение по умолчанию
+    volumes:
+      - redis_data:/data
     networks:
-      - app-network
-    restart: unless-stopped
+      - fintech-network # Используем уникальное имя сети
+    restart: on-failure # Более щадящий рестарт
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
 
   account_db:
-    image: postgres:14.6-alpine
-    container_name: account_db
+    image: postgres:15-alpine
+    container_name: business-db # Называем его 'business', т.к. скоро будет и 'security'
     ports:
-      - "5432:5432"
+      - "${BUSINESS_DB_PORT:-5432}:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - business_db_data:/var/lib/postgresql/data
     environment:
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      # Все креды для базы должны приходить из env_file
+      POSTGRES_DB: ${BUSINESS_DB_NAME}
+      POSTGRES_USER: ${BUSINESS_DB_USER}
+      POSTGRES_PASSWORD: ${BUSINESS_DB_PASSWORD}
     networks:
-      - app-network
+      - fintech-network
+    restart: on-failure
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${BUSINESS_DB_USER}"]
+      interval: 10s
 
+  # --- Моё Приложение собственно ---
   account_service:
-
-    deploy:
-      resources:
-        limits:
-          cpus: '2'
-          memory: 2G
-    image: account
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: . # Собирает Dockerfile из текущей папки, на, что указывает .
+    container_name: account-service
     ports:
-      - "${APP_PORT}:8080"
+      - "${APP_PORT:-8080}:8080"
+    networks:
+      - fintech-network
+    restart: on-failure
 
+    # Это директива верхнего уровня для сервиса, такая же как ports, build, environment. Она не является частью environment
+    env_file:
+      - .env
+
+    # В environment мы можем оставить ТОЛЬКО активацию профиля, что и сделано
+    # так как все остальное придет из .env файла. Это делает секцию чище.
     environment:
-      APP_SECRET: "KOEqxmVGbQPbephZ75sK5J6bZVN1OJWzO2hKRZ3mVDVCdVJ/Oa56aG5D5RNH3l087J3Sz2iPoiCp0gVMulSbgw=="
-      SPRING_DATASOURCE_URL: jdbc:postgresql://account_db:5432/${POSTGRES_DB}
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
-
-      SPRING_FLYWAY_ENABLED: "true"
-      SPRING_FLYWAY_LOCATIONS: classpath:db/migration
-      SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
-
-      SPRING_CACHE_TYPE: redis
-      SPRING_REDIS_HOST: my-redis
-      SPRING_REDIS_PORT: 6379
+      - SPRING_PROFILES_ACTIVE=prod
 
     healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://0.0.0.0:8080/actuator/health || exit 1" ]
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
-
-
+    
+    # Используй правильную нотацию для depends_on с healthcheck!
     depends_on:
-      - account_db
-      - redis
-    networks:
-      - app-network
-    restart: unless-stopped
+      account_db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
+# --- Volumes & Networks (именуем уникально!) ---
 volumes:
-  postgres_data: {}
+  redis_data: {}
+  business_db_data: {}
 
 networks:
-  app-network:
+  fintech-network:
     driver: bridge
-
-

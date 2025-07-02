@@ -1,28 +1,47 @@
-server:
-  port: ${APP_PORT} # Порт из переменной окружения
+# ===================================================================
+#      ПРОФИЛЬ ДЛЯ PROD / DOCKER (spring.profiles.active=prod)
+# ===================================================================
 
 spring:
-  datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
-    username: ${POSTGRES_USER}
-    password: ${POSTGRES_PASSWORD}
-    driver-class-name: org.postgresql.Driver
-    hikari:
-      maximum-pool-size: 20
+  config:
+    activate:
+      on-profile: prod
 
-  data:
-    redis:
-      host: ${REDIS_HOST}
-      port: ${REDIS_PORT}
+# --- Prod настройки DataSource ---
+# Здесь мы ОБЯЗАТЕЛЬНО используем переменные окружения, никаких хардкода
+datasource-business:
+  url: jdbc:postgresql://${BUSINESS_DB_HOST}/${BUSINESS_DB_NAME}
+  username: ${BUSINESS_DB_USER}
+  password: ${BUSINESS_DB_PASSWORD}
+datasource-security:
+  url: jdbc:postgresql://${SECURITY_DB_HOST}/${SECURITY_DB_NAME}
+  username: ${SECURITY_DB_USER}
+  password: ${SECURITY_DB_PASSWORD}
 
-  jpa:
-    show-sql: false # Отключаем в проде
+# --- Prod настройки JPA ---
+# В проде мы отключаем показ SQL для производительности и безопасности
+jpa:
+  show-sql: false
 
+# --- Prod настройки REDIS ---
+data:
+  redis:
+    host: ${REDIS_HOST}
+    port: ${REDIS_PORT}
+    # password: ${REDIS_PASSWORD} # В проде, скорее всего, будет пароль
+
+# --- Prod кастомные настройки ---
+app:
+  jwt:
+    # Секрет ОБЯЗАН приходить из переменной окружения
+    secret: "${APP_SECRET}"
+
+# В проде нам не нужно дебаг-логирование SQL
 logging:
   level:
-    root: INFO
+    org.hibernate.SQL: INFO
 
-app:
-  scheduling:
-    moneyRiser:
-      rate: 86400000 # Раз в сутки для прода
+# В проде можно отключить Swagger UI для безопасности
+springdoc:
+  swagger-ui:
+    enabled: false

@@ -1,31 +1,50 @@
-server:
-  port: 8080
+# ===================================================================
+#      ПРОФИЛЬ ДЛЯ ЛОКАЛЬНОЙ РАЗРАБОТКИ (spring.profiles.active=local)
+# ===================================================================
 
+# Указываем, чтобы Spring Boot сначала загрузил основной application.yml,
+# а потом переопределил его значениями из этого файла.
 spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/account
-    username: root
-    password: root
-    driver-class-name: org.postgresql.Driver
+  config:
+    activate:
+      on-profile: local # Этот файл активируется только с профилем 'local'
 
-  data:
-    redis:
-      host: localhost
-      port: 6379
+# --- Локальные настройки DataSource ---
+# Мы не используем переменные окружения, а хардкодим значения для простоты
+datasource-business:
+  url: jdbc:postgresql://localhost:5432/business_db
+  username: user_business
+  password: password_business
+datasource-security:
+  url: jdbc:postgresql://localhost:5433/security_db
+  username: user_security
+  password: password_security
 
-  jpa:
-    show-sql: true
+# --- Локальные настройки JPA ---
+jpa:
+  # Включаем показ SQL и форматирование только для локальной разработки
+  show-sql: true
+  business:
     properties:
-      hibernate:
-        format_sql: true
+      hibernate: { format_sql: true }
+  security:
+    properties:
+      hibernate: { format_sql: true }
 
+# --- Локальные настройки REDIS ---
+data:
+  redis:
+    host: localhost
+    port: 6379
+
+# --- Кастомные настройки для локальной разработки ---
+app:
+  jwt:
+    # Для локального запуска удобно иметь простой, известный секрет
+    secret: "dGVzdC1zZWNyZXQtZm9yLWxvY2FsLWRldmVsb3BtZW50Cg=="
+
+# Включаем логирование SQL на уровне DEBUG для удобства отладки
 logging:
   level:
     org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql: TRACE
-    ru.example.account: DEBUG
-
-app:
-  scheduling:
-    moneyRiser:
-      rate: 30000 # 30 секунд для локальной отладки
+    org.hibernate.type.descriptor.sql: TRACE # Показывает параметры, вставляемые в SQL
