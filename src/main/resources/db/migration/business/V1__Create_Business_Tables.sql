@@ -1,14 +1,21 @@
+
 CREATE SCHEMA IF NOT EXISTS business;
 SET search_path TO business;
 
+-- Сначала создаем тип ENUM для ролей
+CREATE TYPE user_role_enum AS ENUM (
+    'CLIENT', 'ADMIN', 'TECH_SUPPORT', 'MANAGER',
+    'SECURITY_OFFICER', 'SECURITY_SUPERVISOR',
+    'SECURITY_TOP_SUPERVISOR', 'TOP_MANAGEMENT'
+    );
+
+-- Создаем таблицы...
 CREATE TABLE accounts (
                           id                BIGSERIAL PRIMARY KEY,
-                          balance           DECIMAL(19, 2) NOT NULL,
+                          balance           DECIMAL(19, 2) NOT NULL CONSTRAINT balance_non_negative CHECK (balance >= 0),
                           initial_balance   DECIMAL(19, 2) NOT NULL,
-                          version           BIGINT DEFAULT 0 NOT NULL,
-                          CONSTRAINT balance_non_negative CHECK (balance >= 0)
+                          version           BIGINT DEFAULT 0 NOT NULL
 );
-COMMENT ON TABLE accounts IS 'Счета пользователей с балансами';
 
 CREATE TABLE users (
                        id               BIGSERIAL PRIMARY KEY,
@@ -18,15 +25,13 @@ CREATE TABLE users (
                        account_id       BIGINT NOT NULL UNIQUE REFERENCES accounts(id) ON DELETE CASCADE,
                        version          BIGINT DEFAULT 0 NOT NULL
 );
-COMMENT ON TABLE users IS 'Основные данные пользователей';
 
+-- Таблица для связи с ролями (используем наш ENUM)
 CREATE TABLE user_roles (
                             user_id     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    -- Храним роль как строку. Тип ENUM в базе (security.user_role) остается!
-                            role        security.user_role NOT NULL,
+                            role        user_role_enum NOT NULL,
                             PRIMARY KEY (user_id, role)
 );
-COMMENT ON TABLE user_roles IS 'Набор ролей для пользователя (управляется @ElementCollection)';
 
 CREATE TABLE email_data (
                             id                BIGSERIAL PRIMARY KEY,
@@ -34,8 +39,6 @@ CREATE TABLE email_data (
                             user_id           BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                             version           BIGINT DEFAULT 0 NOT NULL
 );
-COMMENT ON TABLE email_data IS 'Email-адреса пользователей';
-
 
 CREATE TABLE phone_data (
                             id                 BIGSERIAL PRIMARY KEY,
@@ -43,10 +46,9 @@ CREATE TABLE phone_data (
                             user_id            BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                             version            BIGINT DEFAULT 0 NOT NULL
 );
-COMMENT ON TABLE phone_data IS 'Телефонные номера пользователей';
 
+-- Добавляем расширения и индексы
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
-
 CREATE INDEX IF NOT EXISTS idx_users_username_trgm ON users USING GIN (LOWER(username) gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_email_data_email ON email_data(email);
 CREATE INDEX IF NOT EXISTS idx_phone_data_phone ON phone_data(phone);

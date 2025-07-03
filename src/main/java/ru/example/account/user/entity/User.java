@@ -1,6 +1,7 @@
 package ru.example.account.user.entity;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
@@ -11,9 +12,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.NamedAttributeNode;
-import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
@@ -28,76 +26,60 @@ import org.hibernate.proxy.HibernateProxy;
 import ru.example.account.business.entity.Account;
 import ru.example.account.business.entity.EmailData;
 import ru.example.account.business.entity.PhoneData;
-
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+@Entity
+@Table(name = "users", schema = "business")
 @Getter
 @Setter
 @Builder
-@ToString
+@ToString(of = {"id", "username"})
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-@Table(name = "users")
-@NamedEntityGraph(
-        name = "user-with-contacts",
-        attributeNodes = {
-                @NamedAttributeNode("userPhones"),
-                @NamedAttributeNode("userEmails"),
-                @NamedAttributeNode("roles")
-        }
-)
-@NamedEntityGraph(
-        name = "user-with-accounts",
-        attributeNodes = @NamedAttributeNode("userAccount")
-)
-@NamedEntityGraph(
-        name = "users_entity-graph",
-        attributeNodes = @NamedAttributeNode("roles")
-)
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", updatable = false)
     private Long id;
 
-    @Column(name = "username", nullable = false, unique = true)
+    @Column(nullable = false, unique = true)
     private String username;
 
-    @Column(name = "password", nullable = false, length = 3200)
+    @Column(nullable = false)
     private String password;
 
     @Column(name = "date_of_birth", nullable = false)
     private LocalDate dateOfBirth;
 
+    @Version
+    private Long version = 0L;
+
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "account_id", unique = true, nullable = false)
+    @ToString.Exclude
+    private Account userAccount;
+
     @ElementCollection(targetClass = RoleType.class, fetch = FetchType.LAZY)
-    @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
-    @Column(name = "roles", nullable = false)
+    @CollectionTable(
+            name = "user_roles",
+            schema = "business",
+            joinColumns = @JoinColumn(name = "user_id")
+    )
+    @Column(name = "role", nullable = false) // имя колонки в user_roles
     @Enumerated(EnumType.STRING)
-    @Builder.Default
+    @ToString.Exclude
     private Set<RoleType> roles = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @ToString.Exclude
-    @Builder.Default
-    private Set<PhoneData> userPhones = new HashSet<>();
+    private Set<EmailData> userEmails = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @ToString.Exclude
-    @Builder.Default
-    private Set<EmailData> userEmails = new HashSet<>();
-
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "account_id", referencedColumnName = "id", nullable = false, unique = true)
-    @ToString.Exclude
-    private Account userAccount;
-
-    @Version
-    private Long version;
+    private Set<PhoneData> userPhones = new HashSet<>();
 
     @Override
     public final boolean equals(Object o) {

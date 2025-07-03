@@ -1,5 +1,12 @@
 package ru.example.account.user.entity;
 
 public enum RoleType {
-    ROLE_USER
+    ROLE_CLIENT,
+    ROLE_ADMIN,
+    ROLE_TECH_SUPPORT,
+    ROLE_MANAGER,
+    ROLE_SECURITY_OFFICER,
+    ROLE_SECURITY_SUPERVISOR,
+    ROLE_SECURITY_TOP_SUPERVISOR,
+    ROLE_TOP_MANAGEMENT;
 }

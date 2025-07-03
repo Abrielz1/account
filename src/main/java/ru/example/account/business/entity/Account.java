@@ -1,6 +1,5 @@
 package ru.example.account.business.entity;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -18,41 +17,35 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.proxy.HibernateProxy;
 import ru.example.account.user.entity.User;
-
 import java.math.BigDecimal;
 import java.util.Objects;
 
-@Schema(description = "Bank account entity")
+@Entity
+@Table(name = "accounts", schema = "business")
 @Getter
 @Setter
 @Builder
-@ToString
+@ToString(of = {"id", "balance"})
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-@Table(name = "accounts")
 public class Account {
 
-    @Schema(description = "Unique account ID", example = "1")
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", updatable = false)
     private Long id;
 
-    @Schema(description = "Current balance", example = "100.00")
-    @Column(name = "balance", precision = 19, scale = 2)
+    @Column(nullable = false)
     private BigDecimal balance;
 
-    @Schema(description = "Initial deposit amount", example = "100.00")
-    @Column(name = "initial_balance", precision = 19, scale = 2, updatable = false)
+    @Column(name = "initial_balance", nullable = false)
     private BigDecimal initialBalance;
+
+    @Version
+    private Long version = 0L;
 
     @OneToOne(mappedBy = "userAccount", fetch = FetchType.LAZY)
     @ToString.Exclude
     private User user;
-
-    @Version
-    private Long version;
 
     @Override
     public final boolean equals(Object o) {
