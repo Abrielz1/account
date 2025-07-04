@@ -19,13 +19,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import ru.example.account.security.service.impl.AppUserDetails;
+import ru.example.account.user.model.request.ManageUserEmailRequestDto;
+import ru.example.account.user.model.request.ManageUserPhoneRequestDto;
+import ru.example.account.user.model.request.UserSearchResponseDto;
+import ru.example.account.user.model.response.CreateUserAccountDetailResponseDto;
+import ru.example.account.user.model.response.UserEmailResponseDto;
+import ru.example.account.user.model.response.UserPhoneResponseDto;
 import ru.example.account.user.service.UserService;
-import ru.example.account.security.model.request.ManageUserEmailRequestDto;
-import ru.example.account.security.model.request.ManageUserPhoneRequestDto;
-import ru.example.account.security.model.request.UserSearchResponseDto;
-import ru.example.account.security.model.response.CreateUserAccountDetailResponseDto;
-import ru.example.account.security.model.response.UserEmailResponseDto;
-import ru.example.account.security.model.response.UserPhoneResponseDto;
 import java.time.LocalDate;
 
 @Slf4j
@@ -35,7 +35,7 @@ import java.time.LocalDate;
 @RequiredArgsConstructor
 public class UserController {
 
-    private final UserService userService;
+  //  private final UserService userService;
 
     @GetMapping("/search")
     @ResponseStatus(HttpStatus.OK)
@@ -46,7 +46,8 @@ public class UserController {
             @RequestParam(required = false) String email,
             @PositiveOrZero @RequestParam(defaultValue = "0") int page,
             @Positive @RequestParam(defaultValue = "10") int size) {
-        return userService.searchUsers(dateOfBirth, phone, name, email, PageRequest.of(page, size));
+      //  return userService.searchUsers(dateOfBirth, phone, name, email, PageRequest.of(page, size));
+        return null;
     }
 
     @PostMapping("/email")
@@ -54,7 +55,8 @@ public class UserController {
     public CreateUserAccountDetailResponseDto createUserEmailData(
             @AuthenticationPrincipal AppUserDetails currentUser,
             @Validated @RequestBody ManageUserEmailRequestDto updateUser) {
-        return userService.createUserEmailData(currentUser, updateUser);
+       // return userService.createUserEmailData(currentUser, updateUser);
+        return null;
     }
 
     @PostMapping("/phone")
@@ -62,7 +64,8 @@ public class UserController {
     public CreateUserAccountDetailResponseDto createUserPhoneData(
             @AuthenticationPrincipal AppUserDetails currentUser,
             @Validated @RequestBody ManageUserPhoneRequestDto updateUser) {
-        return userService.createUserPhoneData(currentUser, updateUser);
+     //   return userService.createUserPhoneData(currentUser, updateUser);
+        return null;
     }
 
     @PutMapping("/edit/email")
@@ -70,7 +73,8 @@ public class UserController {
     public UserEmailResponseDto editUserEmailData(
             @AuthenticationPrincipal AppUserDetails currentUser,
             @Validated @RequestBody ManageUserEmailRequestDto updateUser) {
-        return userService.editUserEmailData(currentUser, updateUser);
+      //  return userService.editUserEmailData(currentUser, updateUser);
+        return null;
     }
 
     @PutMapping("/edit/phone")
@@ -78,6 +82,7 @@ public class UserController {
     public UserPhoneResponseDto editUserPhoneData(
             @AuthenticationPrincipal AppUserDetails currentUser,
             @Validated @RequestBody ManageUserPhoneRequestDto updateUser) {
-        return userService.editUserPhoneData(currentUser, updateUser);
+      //  return userService.editUserPhoneData(currentUser, updateUser);
+        return null;
     }
 }

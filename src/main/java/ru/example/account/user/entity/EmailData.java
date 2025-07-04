@@ -1,4 +1,4 @@
-package ru.example.account.business.entity;
+package ru.example.account.user.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -8,6 +8,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.NamedAttributeNode;
+import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
@@ -17,18 +19,18 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.proxy.HibernateProxy;
-import ru.example.account.user.entity.User;
 
 import java.util.Objects;
 
+@NamedEntityGraph(name = "EmailData.withUser", attributeNodes = @NamedAttributeNode("user"))
 @Getter
 @Setter
 @Builder
 @ToString
 @NoArgsConstructor
-@AllArgsConstructor
 @Entity
 @Table(name = "email_data")
+@AllArgsConstructor
 public class EmailData {
 
     @Id

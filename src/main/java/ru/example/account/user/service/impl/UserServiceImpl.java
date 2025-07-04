@@ -11,9 +11,15 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
-import ru.example.account.business.entity.EmailData;
-import ru.example.account.business.entity.PhoneData;
+import ru.example.account.user.entity.EmailData;
+import ru.example.account.user.entity.PhoneData;
 import ru.example.account.user.entity.User;
+import ru.example.account.user.model.request.ManageUserEmailRequestDto;
+import ru.example.account.user.model.request.ManageUserPhoneRequestDto;
+import ru.example.account.user.model.request.UserSearchResponseDto;
+import ru.example.account.user.model.response.CreateUserAccountDetailResponseDto;
+import ru.example.account.user.model.response.UserEmailResponseDto;
+import ru.example.account.user.model.response.UserPhoneResponseDto;
 import ru.example.account.user.repository.UserRepository;
 import ru.example.account.security.service.impl.AppUserDetails;
 import ru.example.account.user.service.UserProcessor;
@@ -22,13 +28,6 @@ import ru.example.account.user.service.UserSpecification;
 import ru.example.account.shared.exception.exceptions.AccessDeniedException;
 import ru.example.account.shared.exception.exceptions.AlreadyExistsException;
 import ru.example.account.shared.mapper.UserMapper;
-import ru.example.account.security.model.request.ManageUserEmailRequestDto;
-import ru.example.account.security.model.request.ManageUserPhoneRequestDto;
-import ru.example.account.security.model.request.UserSearchResponseDto;
-import ru.example.account.security.model.response.CreateUserAccountDetailResponseDto;
-import ru.example.account.security.model.response.UserEmailResponseDto;
-import ru.example.account.security.model.response.UserPhoneResponseDto;
-
 import java.time.LocalDate;
 import java.util.Objects;
 
@@ -37,13 +36,13 @@ import java.util.Objects;
 @CacheConfig(cacheNames = "users")
 @Transactional
 @RequiredArgsConstructor
-public class UserServiceImpl implements UserService {
+public class UserServiceImpl { // implements UserService
 
     private final UserProcessor userProcessor;
 
     private final UserRepository userRepository;
 
-    @Override
+   // @Override
     @Cacheable(key = "{#dateOfBirth, #phone, #name, #email, #page.pageNumber, #page.pageSize}")
     public Page<UserSearchResponseDto> searchUsers(LocalDate dateOfBirth,
                                                    String phone,
@@ -51,12 +50,12 @@ public class UserServiceImpl implements UserService {
                                                    String email,
                                                    PageRequest page) {
 
-        return userRepository.findAll(new UserSpecification(dateOfBirth, phone, name, email), page)
-                .map(UserMapper::toUserSearchResponseDto);
-
+//        return userRepository.findAll(new UserSpecification(dateOfBirth, phone, name, email), page)
+//                .map(UserMapper::toUserSearchResponseDto);
+        return null;
     }
 
-    @Override
+  //  @Override
     @Caching(evict = {
             @CacheEvict(value = "users", key = "#currentUser.id"),
             @CacheEvict(value = "userSearch", allEntries = true)
@@ -82,10 +81,11 @@ public class UserServiceImpl implements UserService {
 
         userFromDb.getUserEmails().add(emailData);
 
-        return UserMapper.toCreateUserAccountDetailResponseDto(this.userRepository.save(userFromDb));
+      //  return UserMapper.toCreateUserAccountDetailResponseDto(this.userRepository.save(userFromDb));
+        return null;
     }
 
-    @Override
+ //   @Override
     @Caching(evict = {
             @CacheEvict(value = "users", key = "#currentUser.id"),
             @CacheEvict(value = "userSearch", allEntries = true)
@@ -110,10 +110,11 @@ public class UserServiceImpl implements UserService {
 
         userFromDb.getUserPhones().add(phoneData);
 
-        return UserMapper.toCreateUserAccountDetailResponseDto(this.userRepository.save(userFromDb));
+      //  return UserMapper.toCreateUserAccountDetailResponseDto(this.userRepository.save(userFromDb));
+        return null;
     }
 
-    @Override
+  //  @Override
     @Caching(evict = {
             @CacheEvict(value = "users", key = "#currentUser.id"),
             @CacheEvict(value = "userSearch", allEntries = true)
@@ -132,10 +133,11 @@ public class UserServiceImpl implements UserService {
         userFromDb.getUserEmails().add(emailData);
 
 
-        return UserMapper.toUserEmailResponseDto(this.updateEmailData(userFromDb, updateUser));
+       // return UserMapper.toUserEmailResponseDto(this.updateEmailData(userFromDb, updateUser));
+        return null;
     }
 
-    @Override
+ //   @Override
     @Caching(evict = {
             @CacheEvict(value = "users", key = "#currentUser.id"),
             @CacheEvict(value = "userSearch", allEntries = true)
@@ -145,7 +147,8 @@ public class UserServiceImpl implements UserService {
         User userFromDb = userProcessor.getUserByUserId(currentUser.getId());
         this.userRightsValidator(currentUser.getId(), userFromDb.getId());
 
-        return UserMapper.toUserPhoneResponseDto(this.updatePhoneData(userFromDb, updateUser));
+       // return UserMapper.toUserPhoneResponseDto(this.updatePhoneData(userFromDb, updateUser));
+        return null;
     }
 
     private User updateEmailData(User userFromDb, ManageUserEmailRequestDto updateUser) {

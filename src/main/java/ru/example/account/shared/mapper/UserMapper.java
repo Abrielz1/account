@@ -1,7 +1,7 @@
 package ru.example.account.shared.mapper;
 
-import ru.example.account.business.entity.EmailData;
-import ru.example.account.business.entity.PhoneData;
+import ru.example.account.user.entity.EmailData;
+import ru.example.account.user.entity.PhoneData;
 import ru.example.account.user.entity.User;
 import ru.example.account.security.model.request.UserSearchResponseDto;
 import ru.example.account.security.model.response.CreateUserAccountDetailResponseDto;

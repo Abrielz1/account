@@ -6,6 +6,8 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.NamedAttributeNode;
+import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
@@ -18,6 +20,7 @@ import ru.example.account.user.entity.User;
 import java.math.BigDecimal;
 import java.util.Objects;
 
+@NamedEntityGraph(name = "Account.withUser", attributeNodes = @NamedAttributeNode("user"))
 @Entity
 @Table(name = "accounts", schema = "business")
 @Getter

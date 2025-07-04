@@ -2,10 +2,9 @@ package ru.example.account.security.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,11 +12,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import ru.example.account.user.entity.User;
-
 import java.time.Instant;
+import java.util.UUID;
 
-@Table(name = "users")
+@Table(name = "black_list_refresh_tokens", schema = "security")
 @Entity
 @Getter
 @Setter
@@ -27,17 +25,31 @@ import java.time.Instant;
 @AllArgsConstructor
 public class BlackLictedRefreshToken {
 
+    // Сам токен - это и есть первичный ключ
     @Id
-    @Column(name = "id")
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String token;
 
-    @OneToOne
-    private User user;
+    @Column(nullable = false)
+    private Long userId;
 
-    @Column(name = "token_refresh")
-    private String tokenRefresh;
+    @Column(nullable = false)
+    private UUID sessionId;
 
-    @Column(name = "expire_at")
-    private Instant expiryDate;
+    // Время, когда этот токен был СОЗДАН
+    // (мы возьмем его из expiresAt - ttl)
+    @Column(nullable = false)
+    private Instant createdAt;
+
+    // Время, когда этот токен должен был ИСТЕЧЬ
+    @Column(name = "original_expiry_date", nullable = false)
+    private Instant originalExpiryDate;
+
+    // Время, когда он был реально ОТОЗВАН
+    @Column(name = "revoked_at", nullable = false)
+    private Instant revokedAt;
+
+    // Причина отзыва
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private RevocationReason reason;
 }

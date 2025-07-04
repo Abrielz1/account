@@ -22,8 +22,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.proxy.HibernateProxy;
 import ru.example.account.business.entity.Account;
-import ru.example.account.business.entity.EmailData;
-import ru.example.account.business.entity.PhoneData;
+
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Objects;
@@ -35,15 +34,13 @@ import jakarta.persistence.NamedEntityGraph;
         name = "User.withRoles",
         attributeNodes = @NamedAttributeNode("roles")
 )
-@NamedEntityGraph(
-        name = "User.withAllDetails",
+@NamedEntityGraph(name = "User.withFullData",
         attributeNodes = {
-                @NamedAttributeNode("userAccount"),
-                @NamedAttributeNode("roles"),
-                @NamedAttributeNode("userEmails"),
-                @NamedAttributeNode("userPhones")
-        }
-)
+        @NamedAttributeNode("userAccount"),
+        @NamedAttributeNode("roles"),
+        @NamedAttributeNode("userEmails"),
+        @NamedAttributeNode("userPhones")
+})
 @Entity
 @Table(name = "users", schema = "business")
 @Getter
