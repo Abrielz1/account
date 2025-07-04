@@ -1,33 +1,43 @@
 -- V2__Insert_Initial_Business_Data.sql
+
 SET search_path TO business;
 
--- Вставляем данные в таблицы
+-- 1. Заполняем справочник ролей
+INSERT INTO roles (id, name) VALUES
+                                 (1, 'ROLE_CLIENT'),
+                                 (2, 'ROLE_ADMIN'),
+                                 (3, 'ROLE_TECH_SUPPORT'),
+                                 (4, 'ROLE_MANAGER');
+-- и т.д.
+
+-- 2. Вставляем счета
 INSERT INTO accounts(id, balance, initial_balance) VALUES
-                                                       (1, 10.0, 10.0), (2, 10.0, 10.0), (3, 10.0, 10.0)
--- ... и так далее для всех 7
-ON CONFLICT (id) DO NOTHING;
+                                                       (1, 100.00, 100.00),
+                                                       (2, 200.00, 200.00);
+-- и т.д.
 
+-- 3. Вставляем пользователей
 INSERT INTO users(id, username, password, date_of_birth, account_id) VALUES
-                                                                         (1, 'john_shepard', '$2a$12$...', '2006-06-06', 1),
-                                                                         (2, 'vlastimil_peterjela', '$2a$12$...','2007-07-07', 2),
-                                                                         (3, 'hacku_yuki', '$2a$12$..', '2008-06-06', 3)
--- ... и так далее для всех 7
-ON CONFLICT (id) DO NOTHING;
+                                                                         (1, 'shepard.j', '$2a$12$q4fb3xtW/X.dSh2jSUr88exA52T05hTJzEyo/vb9gRkWqxUrQopH2', '2154-04-11', 1),
+                                                                         (2, 'liara.t', '$2a$12$R.3Vq9P7M8jV9lT0L.Zq4u2o5y8eN6yK/X.z7B8q0o5P3g7a8S9rC', '2077-01-01', 2);
+-- и т.д.
 
--- Назначаем роли
-INSERT INTO user_roles (user_id, role) VALUES
-                                           (1, 'CLIENT'), (2, 'CLIENT'), (3, 'CLIENT'), (4, 'CLIENT'), (5, 'CLIENT'), (6, 'CLIENT'), (7, 'CLIENT'),
-                                           (2, 'MANAGER'), -- даем второму юзеру роль менеджера
-                                           (1, 'ADMIN') -- а первому - админа для тестов
-ON CONFLICT (user_id, role) DO NOTHING;
+-- 4. Назначаем роли
+INSERT INTO user_roles (user_id, role_id) VALUES
+                                              (1, 1), -- Shepard - CLIENT
+                                              (1, 2); -- Shepard - еще и ADMIN
 
--- ... INSERT'ы для email_data и phone_data ...
-INSERT INTO email_data(...) VALUES (...) ON CONFLICT (id) DO NOTHING;
-INSERT INTO phone_data(...) VALUES (...) ON CONFLICT (id) DO NOTHING;
+-- 5. Добавляем контакты
+INSERT INTO email_data (email, user_id) VALUES
+                                            ('shepard@normandy.com', 1),
+                                            ('liara@prothean.expert', 2);
 
--- Обновляем sequence'ы, чтобы избежать конфликтов при создании новых записей
-SELECT setval('accounts_id_seq', (SELECT MAX(id) FROM accounts), true);
-SELECT setval('users_id_seq', (SELECT MAX(id) FROM users), true);
--- для user_roles нет sequence, так как нет SERIAL ключа
-SELECT setval('email_data_id_seq', (SELECT MAX(id) FROM email_data), true);
-SELECT setval('phone_data_id_seq', (SELECT MAX(id) FROM phone_data), true);
+INSERT INTO phone_data (phone, user_id) VALUES
+    ('+79991112233', 1);
+
+-- 6. Корректируем sequences в самом конце
+SELECT setval('business.accounts_id_seq', (SELECT MAX(id) FROM business.accounts), true);
+SELECT setval('business.users_id_seq', (SELECT MAX(id) FROM business.users), true);
+SELECT setval('business.user_roles_id_seq', COALESCE((SELECT MAX(id) FROM business.user_roles), 1), false);
+SELECT setval('business.email_data_id_seq', COALESCE((SELECT MAX(id) FROM business.email_data), 1), false);
+SELECT setval('business.phone_data_id_seq', COALESCE((SELECT MAX(id) FROM business.phone_data), 1), false);

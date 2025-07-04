@@ -28,11 +28,11 @@ public class UserProcessorImpl implements UserProcessor {
 
     @Override
     public boolean isFreeEmail(String newEmail) {
-        return !userRepository.existsEmails(newEmail);
+        return !userRepository.existsByUserEmails_Email(newEmail);
     }
 
     @Override
     public boolean isFreePhone(String newPhone) {
-        return !userRepository.existsByPhones(newPhone);
+        return !userRepository.existsByUserPhones_Phone(newPhone);
     }
 }

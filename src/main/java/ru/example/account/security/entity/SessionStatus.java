@@ -1,5 +1,8 @@
 package ru.example.account.security.entity;
 
 public enum SessionStatus {
-    REVOKED, APPROVED
+    ACTIVE,
+    REVOKED_BY_USER,
+    REVOKED_BY_SYSTEM,
+    RED_ALERT
 }

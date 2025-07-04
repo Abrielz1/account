@@ -9,8 +9,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -24,10 +22,8 @@ import java.util.Objects;
 @Table(name = "accounts", schema = "business")
 @Getter
 @Setter
-@Builder
-@ToString(of = {"id", "balance"})
 @NoArgsConstructor
-@AllArgsConstructor
+@ToString(of = {"id", "balance"})
 public class Account {
 
     @Id

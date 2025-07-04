@@ -11,7 +11,7 @@ import ru.example.account.user.repository.UserRepository;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class UserSecurityService implements UserDetailsService {
+public class UserDetailsServiceImpl implements UserDetailsService {
 
     private final UserRepository userRepository;
 
@@ -20,7 +20,7 @@ public class UserSecurityService implements UserDetailsService {
 
         log.info("Loading user by email: {}", email);
 
-        var user = userRepository.getFullUserData(email)
+        var user = userRepository.getWithRolesByEmail(email)
                 .orElseThrow(() -> {
                     log.error("User not found with email: {}", email);
                     return new UsernameNotFoundException("User not found");
