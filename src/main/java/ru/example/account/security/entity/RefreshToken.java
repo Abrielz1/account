@@ -1,8 +1,10 @@
 package ru.example.account.security.entity;
 
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
@@ -12,11 +14,10 @@ import java.time.Instant;
 import java.util.UUID;
 import java.io.Serial;
 
-@Data
+@Getter
 @Builder
 @RedisHash("refresh_tokens")
-@NoArgsConstructor
-@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class RefreshToken implements Serializable {
 
     @Serial

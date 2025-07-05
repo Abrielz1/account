@@ -24,10 +24,12 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RevokedTokenArchive {
-    @Id
-    private String token;
 
-    @Column(nullable = false)
+    @Id
+    @Column(name = "token_value") // <-- Переименовал, чтобы не конфликтовать с "token" may bad
+    private String tokenValue;
+
+    @Column(name = "session_id", nullable = false)
     private UUID sessionId;
 
     @Column(name = "user_id", nullable = false)
@@ -40,7 +42,7 @@ public class RevokedTokenArchive {
     private Instant revokedAt;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "reason",nullable = false) //Причина прилёта мухобойки
     @JdbcType(PostgreSQLEnumJdbcType.class) // Маппинг на кастомный ENUM
     private RevocationReason reason;
 }
