@@ -15,6 +15,10 @@ public enum RevocationReason {
      * Отозван принудительно администратором.
      */
     REASON_ADMIN_ACTION,
+    /**
+     *  Токен просрочен.
+     */
+    REASON_EXPIRED,
 
     /**
      * Отозван автоматически после смены пароля.
@@ -25,5 +29,5 @@ public enum RevocationReason {
      * на сессию (например, попытка использовать refresh-token с нового устройства).
      * Этот статус должен запускать все необходимые алерты.
      */
-    RED_ALERT
+    REASON_RED_ALERT
 }
