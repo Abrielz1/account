@@ -47,6 +47,7 @@ import ru.example.account.business.entity.AccountMembership;
                 @NamedSubgraph(name = "membership-details", attributeNodes = @NamedAttributeNode("account"))
         }
 )
+
 @Entity
 @Table(name = "users", schema = "business")
 @Getter

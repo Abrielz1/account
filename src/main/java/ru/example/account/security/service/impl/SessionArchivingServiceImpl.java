@@ -17,6 +17,7 @@ import java.time.Instant;
 public class SessionArchivingServiceImpl implements SessionArchivingService {
 
     private final AuthSessionRepository authSessionRepository;
+
     private final RevokedTokenArchiveRepository archiveRepository;
 
     // ВАЖНО: Этот метод должен выполняться в НОВОЙ транзакции,

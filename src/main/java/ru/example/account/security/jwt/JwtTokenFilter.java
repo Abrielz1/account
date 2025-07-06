@@ -1,65 +1,172 @@
 package ru.example.account.security.jwt;
 
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.flywaydb.core.internal.util.StringUtils;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpHeaders;
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+import ru.example.account.security.entity.EventType;
+import ru.example.account.security.entity.SecurityEvent;
+import ru.example.account.security.service.AccessTokenBlacklistService;
+import ru.example.account.security.service.impl.AppUserDetails;
+import ru.example.account.user.entity.RoleType;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
-@Slf4j
 @Component
+@Slf4j
 @RequiredArgsConstructor
 public class JwtTokenFilter extends OncePerRequestFilter {
 
-
     private final JwtUtils jwtUtils;
+    private final AccessTokenBlacklistService blacklistService;
+    private final ApplicationEventPublisher eventPublisher;
 
-    private final UserDetailsService userDetailsService;
+    private static final Set<String> VALID_ROLES = Arrays.stream(RoleType.values())
+            .map(Enum::name)
+            .collect(Collectors.toUnmodifiableSet());
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain filterChain) throws ServletException, IOException {
+
+        final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+
+        if (!StringUtils.hasText(authHeader) || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        final String token = authHeader.substring(7);
+
+        if (!jwtUtils.isTokenValid(token)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         try {
-            String jwtToken = this.getToken(request);
+            final Claims claims = jwtUtils.getAllClaimsFromToken(token);
+            final UUID sessionId = jwtUtils.getSessionId(claims);
+            final Long userId = jwtUtils.getUserId(claims);
 
-            if (jwtToken != null && jwtUtils.validateAccessToken(jwtToken)) {
-                String username = jwtUtils.getUsernameFromToken(jwtToken);
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-
-                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        userDetails.getAuthorities()
-                );
-
-                authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+            if (blacklistService.isBlacklisted(sessionId)) {
+                log.warn("Access denied for blacklisted session ID: {}", sessionId);
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Session has been terminated.");
+                return;
             }
-        } catch (RuntimeException exception) {
-            log.error("Token invalid is {})", exception.getMessage());
+
+            if (this.isPayloadSuspicious(claims)) {
+                this.handleSuspiciousToken(request, userId, sessionId, claims);
+                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Invalid token payload.");
+                return;
+            }
+
+            if (SecurityContextHolder.getContext().getAuthentication() == null) {
+                this.setAuthentication(request, claims);
+            }
+        } catch (Exception e) {
+            log.error("Could not set user authentication in security context", e);
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid Token");
+            return;
         }
 
         filterChain.doFilter(request, response);
     }
 
-    private String getToken(HttpServletRequest request) {
+    private void setAuthentication(HttpServletRequest request, Claims claims) {
+        UserDetails userDetails = new AppUserDetails(
+                jwtUtils.getUserId(claims),
+                jwtUtils.getEmail(claims),
+                jwtUtils.getAuthorities(claims),
+                jwtUtils.getSessionId(claims),
+                jwtUtils.getExpiration(claims)
+        );
 
-        String headerAuth = request.getHeader(HttpHeaders.AUTHORIZATION);
+        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                userDetails, null, userDetails.getAuthorities());
+        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+    }
 
-        return StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer ") ?
-                headerAuth.substring(7) : null;
+    private boolean isPayloadSuspicious(Claims claims) {
+        Long userId = jwtUtils.getUserId(claims);
+        if (userId == null || userId <= 0) return true;
+        List<String> rolesInToken = jwtUtils.getRoleClaims(claims);
+        return rolesInToken == null || rolesInToken.isEmpty() || !VALID_ROLES.containsAll(rolesInToken);
+    }
+
+    private void handleSuspiciousToken(HttpServletRequest request, Long userId, UUID sessionId, Claims claims) {
+        log.error("!!! SECURITY ALERT: Suspicious token detected. IP: {}, User-Agent: {}, UserID: {}, Claims: {}",
+                request.getRemoteAddr(), request.getHeader("User-Agent"), userId, claims.toString());
+
+        final String ipAddress = request.getRemoteAddr();
+        final String userAgent = request.getHeader("User-Agent");
+
+        eventPublisher.publishEvent(new SecurityEvent(
+                EventType.TOKEN_PAYLOAD_SUSPICIOUS,
+                userId,
+                sessionId,
+                ipAddress,
+                userAgent,
+                Map.of("claims", claims.toString())
+        ));
     }
 }
+//    private final JwtUtils jwtUtils;
+//
+//    private final UserDetailsService userDetailsService;
+//
+//    @Override
+//    protected void doFilterInternal(HttpServletRequest request,
+//                                    HttpServletResponse response,
+//                                    FilterChain filterChain) throws ServletException, IOException {
+//
+//        try {
+//            String jwtToken = this.getToken(request);
+//
+//            if (jwtToken != null && jwtUtils.validateAccessToken(jwtToken)) {
+//                String username = jwtUtils.getUsernameFromToken(jwtToken);
+//                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+//
+//                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+//                        userDetails,
+//                        null,
+//                        userDetails.getAuthorities()
+//                );
+//
+//                authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+//                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+//            }
+//        } catch (RuntimeException exception) {
+//            log.error("Token invalid is {})", exception.getMessage());
+//        }
+//
+//        filterChain.doFilter(request, response);
+//    }
+//
+//    private String getToken(HttpServletRequest request) {
+//
+//        String headerAuth = request.getHeader(HttpHeaders.AUTHORIZATION);
+//
+//        return StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer ") ?
+//                headerAuth.substring(7) : null;
+//    }
+//}

@@ -1,9 +1,12 @@
 package ru.example.account.security.service.impl;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import ru.example.account.user.entity.User;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -12,13 +15,16 @@ import java.util.stream.Collectors;
 public class AppUserDetails implements UserDetails {
     // Делаем final для неизменяемости после создания
     private final Long id;
-    private final String email;
+    private final String email; // Используется как principal name
+    @JsonIgnore // Пароль не должен сериализоваться
     private final String password;
+    // Реальный username, может отличаться
     private final String username; // Можем хранить username (логин) отдельно от email (principal)
     private final Collection<? extends GrantedAuthority> authorities;
 
     // --- НОВЫЕ ПОЛЯ ДЛЯ КОНТЕКСТА ---
     private final UUID sessionId;
+    private final Instant expiration;
 
     // Поле User делаем nullable. Оно будет заполнено, только если мы пришли из UserDetailsServiceImpl.
     private final transient User userEntity; // `transient` - чтобы не попадало в сериализацию
@@ -31,21 +37,23 @@ public class AppUserDetails implements UserDetails {
         this.username = user.getUsername();
         this.password = user.getPassword();
         this.authorities = user.getRoles().stream()
-                .map(GrantedAuthority.class::cast)
+                .map(roleEnum -> new SimpleGrantedAuthority(roleEnum.name()))
                 .collect(Collectors.toSet());
         // В этом сценарии sessionId нам не известен, и это нормально
         this.sessionId = null;
+        this.expiration = null;
     }
 
     // --- КОНСТРУКТОР №2: для JwtTokenFilter (когда Entity нет) ---
-    public AppUserDetails(Long id, String email, Collection<? extends GrantedAuthority> authorities, UUID sessionId) {
+    public AppUserDetails(Long id, String email, Collection<? extends GrantedAuthority> authorities, UUID sessionId, Instant expiration) {
         this.userEntity = null; // Нет живой сущности!
         this.id = id;
         this.email = email;
-        this.username = email;
+        this.username = email;// Для простоты считаем их одинаковыми
         this.password = ""; // Пароль не хранится в токене и не нужен на этом этапе
         this.authorities = authorities;
         this.sessionId = sessionId;
+        this.expiration = expiration;
     }
 
     // --- Реализация методов интерфейса UserDetails ---
