@@ -3,35 +3,51 @@ package ru.example.account.security.entity;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
+import org.springframework.data.redis.core.TimeToLive;
 import org.springframework.data.redis.core.index.Indexed;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.UUID;
 import java.io.Serial;
 
-@Getter
 @Builder
+@Getter
 @RedisHash("refresh_tokens")
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
+@AllArgsConstructor
 public class RefreshToken implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
 
     @Id
-    private UUID sessionId;
+    private String token;
 
     @Indexed
+    private UUID sessionId;
+
+    @Indexed // Чтобы можно было найти все токены юзера
     private Long userId;
 
     @Indexed
-    private String tokenRefresh;
+    private Instant expiresAt;
 
-    @Indexed
-    private Instant expiryDate;
+    @TimeToLive
+    private Long timeToLive; // в секундах
+
+    // --- ВОТ ОН, BUILDER НА СТАТИЧЕСКОМ МЕТОДЕ! ---
+//    @Builder
+//    public static RefreshToken create(UUID sessionId, Long userId, Duration ttl) {
+//        RefreshToken rt = new RefreshToken();
+//        rt.token = UUID.randomUUID().toString();
+//        rt.sessionId = sessionId;
+//        rt.userId = userId;
+//        rt.timeToLive = ttl.toSeconds();
+//        rt.expiresAt = Instant.now().plus(ttl);
+//        return rt;
+//    }
 }

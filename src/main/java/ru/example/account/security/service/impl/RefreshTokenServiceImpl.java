@@ -32,9 +32,10 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     public RefreshToken createRefreshToken(Long userId) {
         RefreshToken refreshToken = RefreshToken
                 .builder()
+                .token(UUID.randomUUID().toString())
                 .userId(userId)
-                .expiryDate(Instant.now().plusMillis(refreshTokenExpiration.toMillis()))
-                .tokenRefresh(UUID.randomUUID().toString())
+                .expiresAt(Instant.now().plusMillis(refreshTokenExpiration.toMillis()))
+                .timeToLive(60L*5L)
                 .build();
 
        return refreshTokenRepository.save(refreshToken);
@@ -42,9 +43,9 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
     public RefreshToken checkRefreshToken(RefreshToken refreshToken) {
 
-        if (refreshToken.getExpiryDate().isBefore(Instant.now())) {
+        if (refreshToken.getExpiresAt().isBefore(Instant.now())) {
             refreshTokenRepository.delete(refreshToken);
-            throw new RefreshTokenException("Refresh token is expired! " + refreshToken.getTokenRefresh()
+            throw new RefreshTokenException("Refresh token is expired! " + refreshToken.getToken()
                     + "Try reLogin!");
         } else {
 
