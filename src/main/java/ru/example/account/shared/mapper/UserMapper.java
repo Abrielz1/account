@@ -3,10 +3,11 @@ package ru.example.account.shared.mapper;
 import ru.example.account.user.entity.EmailData;
 import ru.example.account.user.entity.PhoneData;
 import ru.example.account.user.entity.User;
-import ru.example.account.security.model.request.UserSearchResponseDto;
-import ru.example.account.security.model.response.CreateUserAccountDetailResponseDto;
-import ru.example.account.security.model.response.UserEmailResponseDto;
-import ru.example.account.security.model.response.UserPhoneResponseDto;
+import ru.example.account.user.model.request.UserSearchResponseDto;
+import ru.example.account.user.model.response.CreateUserAccountDetailResponseDto;
+import ru.example.account.user.model.response.UserEmailResponseDto;
+import ru.example.account.user.model.response.UserPhoneResponseDto;
+
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -58,6 +59,5 @@ public class UserMapper {
         return new CreateUserAccountDetailResponseDto(user.getId(),
                                                       toEmails(user.getUserEmails()),
                                                       toPhones(user.getUserPhones()));
-
     }
 }

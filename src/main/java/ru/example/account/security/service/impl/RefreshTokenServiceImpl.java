@@ -25,6 +25,9 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     @Value("${app.jwt.refreshTokenExpiration}")
     private Duration refreshTokenExpiration;
 
+    @Value("${app.jwt.ttl}")
+    private Long timeToLive;
+
     public Optional<RefreshToken> getByRefreshToken(String refreshToken) {
         return refreshTokenRepository.findByTokenRefresh(refreshToken);
     }
@@ -35,7 +38,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                 .token(UUID.randomUUID().toString())
                 .userId(userId)
                 .expiresAt(Instant.now().plusMillis(refreshTokenExpiration.toMillis()))
-                .timeToLive(60L*5L)
+                .timeToLive(timeToLive)
                 .build();
 
        return refreshTokenRepository.save(refreshToken);

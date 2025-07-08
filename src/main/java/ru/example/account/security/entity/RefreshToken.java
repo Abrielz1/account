@@ -39,7 +39,6 @@ public class RefreshToken implements Serializable {
     @TimeToLive
     private Long timeToLive; // в секундах
 
-    // --- ВОТ ОН, BUILDER НА СТАТИЧЕСКОМ МЕТОДЕ! ---
 //    @Builder
 //    public static RefreshToken create(UUID sessionId, Long userId, Duration ttl) {
 //        RefreshToken rt = new RefreshToken();
