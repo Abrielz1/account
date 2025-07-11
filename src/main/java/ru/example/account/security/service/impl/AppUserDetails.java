@@ -14,16 +14,22 @@ import java.util.stream.Collectors;
 @Getter
 public class AppUserDetails implements UserDetails {
     // Делаем final для неизменяемости после создания
+
     private final Long id;
+
     private final String email; // Используется как principal name
+
     @JsonIgnore // Пароль не должен сериализоваться
     private final String password;
+
     // Реальный username, может отличаться
     private final String username; // Можем хранить username (логин) отдельно от email (principal)
+
     private final Collection<? extends GrantedAuthority> authorities;
 
     // --- НОВЫЕ ПОЛЯ ДЛЯ КОНТЕКСТА ---
     private final UUID sessionId;
+
     private final Instant expiration;
 
     // Поле User делаем nullable. Оно будет заполнено, только если мы пришли из UserDetailsServiceImpl.

@@ -1,7 +1,6 @@
 package ru.example.account.security.entity;
 
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,15 +9,15 @@ import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.TimeToLive;
 import org.springframework.data.redis.core.index.Indexed;
 import java.io.Serializable;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 import java.io.Serial;
+import java.util.concurrent.TimeUnit;
 
-@Builder
 @Getter
 @RedisHash("refresh_tokens")
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-@AllArgsConstructor
 public class RefreshToken implements Serializable {
 
     @Serial
@@ -36,17 +35,15 @@ public class RefreshToken implements Serializable {
     @Indexed
     private Instant expiresAt;
 
-    @TimeToLive
+    @TimeToLive(unit = TimeUnit.SECONDS)
     private Long timeToLive; // в секундах
 
-//    @Builder
-//    public static RefreshToken create(UUID sessionId, Long userId, Duration ttl) {
-//        RefreshToken rt = new RefreshToken();
-//        rt.token = UUID.randomUUID().toString();
-//        rt.sessionId = sessionId;
-//        rt.userId = userId;
-//        rt.timeToLive = ttl.toSeconds();
-//        rt.expiresAt = Instant.now().plus(ttl);
-//        return rt;
-//    }
+    @Builder
+    private RefreshToken(UUID sessionId, Long userId, String token, Duration ttl) {
+        this.sessionId = sessionId;
+        this.userId = userId;
+        this.token = token;
+        this.expiresAt = Instant.now().plus(ttl);
+        this.timeToLive = ttl.toSeconds();
+    }
 }

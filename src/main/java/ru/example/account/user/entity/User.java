@@ -15,6 +15,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.NamedSubgraph;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import jakarta.persistence.Version;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,6 +25,7 @@ import ru.example.account.business.entity.Account;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 import jakarta.persistence.NamedAttributeNode;
 import jakarta.persistence.NamedEntityGraph;
 import ru.example.account.business.entity.AccountMembership;
@@ -97,9 +99,34 @@ public abstract class User {
     @ToString.Exclude
     private Set<AccountMembership> sharedAccountMemberships = new HashSet<>();
 
+    @Transient // <-- Говорим Hibernate игнорировать это поле
+    public Set<Account> getAccounts() {
+
+        if (sharedAccountMemberships == null) {
+            return new HashSet<>();
+        }
+        return sharedAccountMemberships.stream()
+                .map(AccountMembership::getAccount)
+                .collect(Collectors.toSet());
+    }
+
     @Override
     public abstract boolean equals(Object o);
 
     @Override
     public abstract int hashCode();
+
+    public void addRole(RoleType role) {
+        this.roles.add(role);
+    }
+
+    public void addEmail(String email) {
+        EmailData newEmail = new EmailData(null, email, this, null);
+        this.userEmails.add(newEmail);
+    }
+
+    public void addPhone(String  phone) {
+        PhoneData newPhone = new PhoneData(null, phone, this, null);
+        this.userPhones.add(newPhone);
+    }
 }

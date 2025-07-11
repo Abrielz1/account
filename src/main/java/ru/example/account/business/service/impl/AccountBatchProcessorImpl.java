@@ -1,4 +1,4 @@
-package ru.example.account.business.service;
+package ru.example.account.business.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.example.account.business.entity.Account;
 import ru.example.account.business.repository.AccountRepository;
+import ru.example.account.business.service.AccountBatchProcessor;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;

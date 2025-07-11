@@ -19,7 +19,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.proxy.HibernateProxy;
-
 import java.util.Objects;
 
 @NamedEntityGraph(name = "EmailData.withUser", attributeNodes = @NamedAttributeNode("user"))

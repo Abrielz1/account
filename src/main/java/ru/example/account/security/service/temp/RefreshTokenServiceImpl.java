@@ -1,4 +1,4 @@
-package ru.example.account.security.service.impl;
+package ru.example.account.security.service.temp;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.example.account.security.entity.RefreshToken;
 import ru.example.account.security.repository.RefreshTokenRepository;
-import ru.example.account.security.service.RefreshTokenService;
 import ru.example.account.shared.exception.exceptions.RefreshTokenException;
 import java.time.Duration;
 import java.time.Instant;
@@ -37,8 +36,6 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                 .builder()
                 .token(UUID.randomUUID().toString())
                 .userId(userId)
-                .expiresAt(Instant.now().plusMillis(refreshTokenExpiration.toMillis()))
-                .timeToLive(timeToLive)
                 .build();
 
        return refreshTokenRepository.save(refreshToken);

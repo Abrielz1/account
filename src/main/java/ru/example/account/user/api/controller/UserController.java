@@ -5,7 +5,6 @@ import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -25,7 +24,7 @@ import ru.example.account.user.model.request.UserSearchResponseDto;
 import ru.example.account.user.model.response.CreateUserAccountDetailResponseDto;
 import ru.example.account.user.model.response.UserEmailResponseDto;
 import ru.example.account.user.model.response.UserPhoneResponseDto;
-import ru.example.account.user.service.UserService;
+
 import java.time.LocalDate;
 
 @Slf4j

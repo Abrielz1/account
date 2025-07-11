@@ -8,11 +8,20 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import ru.example.account.business.entity.Account;
+import ru.example.account.business.service.AccountService;
+import ru.example.account.security.model.request.UserRegisterRequestDto;
+import ru.example.account.security.service.AuthService;
+import ru.example.account.user.entity.Client;
 import ru.example.account.user.entity.EmailData;
+import ru.example.account.user.entity.LoyaltyStatus;
 import ru.example.account.user.entity.PhoneData;
+import ru.example.account.user.entity.RoleType;
 import ru.example.account.user.entity.User;
 import ru.example.account.user.model.request.ManageUserEmailRequestDto;
 import ru.example.account.user.model.request.ManageUserPhoneRequestDto;
@@ -20,27 +29,85 @@ import ru.example.account.user.model.request.UserSearchResponseDto;
 import ru.example.account.user.model.response.CreateUserAccountDetailResponseDto;
 import ru.example.account.user.model.response.UserEmailResponseDto;
 import ru.example.account.user.model.response.UserPhoneResponseDto;
-import ru.example.account.user.repository.UserRepository;
+import ru.example.account.user.repository.ClientRepository;
 import ru.example.account.security.service.impl.AppUserDetails;
 import ru.example.account.user.service.UserProcessor;
-import ru.example.account.user.service.UserService;
-import ru.example.account.user.service.UserSpecification;
+import ru.example.account.user.service.ClientService;
 import ru.example.account.shared.exception.exceptions.AccessDeniedException;
 import ru.example.account.shared.exception.exceptions.AlreadyExistsException;
-import ru.example.account.shared.mapper.UserMapper;
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 @Slf4j
 @Service
-@CacheConfig(cacheNames = "users")
+@CacheConfig(cacheNames = "clients")
 @Transactional
 @RequiredArgsConstructor
-public class UserServiceImpl { // implements UserService
+public class ClientServiceImpl implements ClientService {
 
     private final UserProcessor userProcessor;
 
-    private final UserRepository userRepository;
+    private final ClientRepository castomerRepository;
+
+    private final PasswordEncoder passwordEncoder;
+
+    private final AuthService authService;
+
+    private final AccountService accountService;
+
+    @Override
+    @Transactional("businessTransactionManager")
+    public CreateUserAccountDetailResponseDto registerNewUser(UserRegisterRequestDto request) {
+
+        if (castomerRepository.checkUserByUsername(request.username())) {
+            throw new AlreadyExistsException("Username " + request.username() + " is already taken.");
+        }
+
+        if (castomerRepository.checkUserByEmail(request.email())) {
+            throw new AlreadyExistsException("Email " + request.email() + " is already taken.");
+        }
+
+        if (castomerRepository.checkUserByPhone(request.phoneNumber())) {
+            throw new AlreadyExistsException("Phone " + request.phoneNumber() + " is already taken.");
+        }
+
+        if (!StringUtils.hasText(request.accountName()) || !StringUtils.hasText(request.phoneNumber()) || !StringUtils.hasText(request.email())) {
+            throw new  IllegalArgumentException("Client must send valid data!");
+        }
+
+        Client newCustomer = Client.builder()
+
+                .loyaltyStatus(LoyaltyStatus.BRONZE)
+                .registrationSource(request.registrationSource() == null ? null : request.registrationSource())
+                .invitedBy(request.invitedBy() == null ? null : castomerRepository.getByID(request.invitedBy()).orElseThrow(()-> {
+                    log.error("No user with such id: {}", request.invitedBy());
+                    return new UsernameNotFoundException("No user with such id: %d".formatted(request.invitedBy()));
+                }))
+                .build();
+
+        newCustomer.setDateOfBirth(request.birthDate());
+        newCustomer.setPassword(passwordEncoder.encode(request.password()));
+        newCustomer.getRoles().add(RoleType.ROLE_CLIENT);
+        newCustomer.setUsername(request.username());
+
+        newCustomer.addRole(RoleType.ROLE_CLIENT);
+        newCustomer.addEmail(request.email());
+        newCustomer.addPhone(request.phoneNumber());
+
+        Account newAccount = this.accountService.createUserAccount(newCustomer, request);
+        Set<Account> ownerSetOfAccounts = new HashSet<>();
+        ownerSetOfAccounts.add(newAccount);
+
+        newCustomer.setPersonalAccounts(ownerSetOfAccounts);
+
+        castomerRepository.save(newCustomer);
+
+        return new CreateUserAccountDetailResponseDto(
+                newCustomer.getId(), null, null
+        );
+    }
 
    // @Override
     @Cacheable(key = "{#dateOfBirth, #phone, #name, #email, #page.pageNumber, #page.pageSize}")

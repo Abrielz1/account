@@ -1,4 +1,4 @@
-package ru.example.account.business.service;
+package ru.example.account.business.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

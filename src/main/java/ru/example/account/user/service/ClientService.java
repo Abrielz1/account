@@ -1,11 +1,11 @@
 package ru.example.account.user.service;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import ru.example.account.security.service.impl.AppUserDetails;
-import java.time.LocalDate;
+import ru.example.account.security.model.request.UserRegisterRequestDto;
+import ru.example.account.user.model.response.CreateUserAccountDetailResponseDto;
 
-public interface UserService {
+public interface ClientService {
+
+    CreateUserAccountDetailResponseDto registerNewUser(UserRegisterRequestDto request);
 
 //    Page<UserSearchResponseDto> searchUsers(LocalDate dateOfBirth, String phone, String name, String email, PageRequest page);
 //

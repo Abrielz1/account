@@ -1,4 +1,4 @@
-package ru.example.account.business.service;
+package ru.example.account.business.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -7,6 +7,8 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.example.account.business.entity.Account;
 import ru.example.account.business.repository.AccountRepository;
+import ru.example.account.business.service.MoneyTransferService;
+import ru.example.account.security.service.impl.AppUserDetails;
 import ru.example.account.shared.exception.exceptions.AccountNotFoundException;
 import ru.example.account.business.model.request.CreateMoneyTransferRequest;
 import ru.example.account.business.model.response.CreateMoneyTransferResponse;
@@ -23,8 +25,9 @@ public class MoneyTransferServiceImpl implements MoneyTransferService {
 
     @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ)
-    public CreateMoneyTransferResponse transferFromOneAccountToAnother(Long currentUserId,
-                                                                       CreateMoneyTransferRequest request) {
+    public CreateMoneyTransferResponse transferFromOneAccountToAnother(AppUserDetails currentUser,
+                                                                       CreateMoneyTransferRequest request,
+                                                                       String authorizationHeader) {
 
         if (request.sum() == null || request.sum().compareTo(BigDecimal.ZERO) <= 0) {
             log.error("Sum to transfer must be greater than zero!");
@@ -32,7 +35,7 @@ public class MoneyTransferServiceImpl implements MoneyTransferService {
         }
 
         // --- 2. Получаем ID счетов ---
-        Long senderAccountId = this.getAccountIdByUserId(currentUserId);
+        Long senderAccountId = this.getAccountIdByUserId(currentUser.getId());
         Long receiverAccountId = this.getAccountIdByUserId(request.to());
 
         // --- 3. Блокируем счета в правильном порядке, чтобы избежать дедлока ---

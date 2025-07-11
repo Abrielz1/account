@@ -8,10 +8,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import ru.example.account.security.service.AuthService;
+import ru.example.account.security.service.temp.AuthService;
 import ru.example.account.security.model.request.LoginRequest;
 import ru.example.account.security.model.request.RefreshTokenRequest;
-import ru.example.account.security.model.request.UserCredentialsRegisterRequestDto;
+import ru.example.account.security.model.request.UserRegisterRequestDto;
 import ru.example.account.security.model.response.AuthResponse;
 import ru.example.account.security.model.response.UserCredentialsResponseDto;
 import ru.example.account.security.service.impl.AppUserDetails;
@@ -27,7 +27,7 @@ public class AuthController {
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.OK)
-    public UserCredentialsResponseDto registerUser(@Valid @RequestBody UserCredentialsRegisterRequestDto request) {
+    public UserCredentialsResponseDto registerUser(@Valid @RequestBody UserRegisterRequestDto request) {
         log.info("User registration attempt: {}", request.email());
         return null; //authService.register(request);
     }

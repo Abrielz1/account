@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import ru.example.account.security.entity.EventType;
 import ru.example.account.security.entity.SecurityEvent;
-import ru.example.account.security.service.AccessTokenBlacklistService;
+import ru.example.account.security.service.temp.AccessTokenBlacklistService;
 import ru.example.account.security.service.impl.AppUserDetails;
 import ru.example.account.user.entity.RoleType;
 import java.io.IOException;

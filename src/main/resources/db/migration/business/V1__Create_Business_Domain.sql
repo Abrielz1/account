@@ -74,6 +74,7 @@ CREATE TABLE accounts (
                           balance           DECIMAL(19, 2) NOT NULL DEFAULT 0.00,
                           status            VARCHAR(50) NOT NULL, -- 'ACTIVE', 'FROZEN', 'CLOSED'
                           version           BIGINT DEFAULT 0 NOT NULL,
+                          non_withdrawable_balance DECIMAL(19, 2) NOT NULL DEFAULT 0.00,
     -- НОВОЕ ПОЛЕ: Владелец. ЗАПОЛНЯЕТСЯ ТОЛЬКО ДЛЯ ПЕРСОНАЛЬНЫХ СЧЕТОВ.
                           owner_user_id     BIGINT REFERENCES users(id) ON DELETE SET NULL
 );

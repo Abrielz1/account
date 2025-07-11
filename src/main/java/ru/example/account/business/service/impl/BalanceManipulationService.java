@@ -1,4 +1,4 @@
-package ru.example.account.business.service;
+package ru.example.account.business.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +12,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import ru.example.account.business.entity.Account;
 import ru.example.account.business.repository.AccountRepository;
+import ru.example.account.business.service.AccountBatchProcessor;
 
 import java.math.BigDecimal;
 import java.util.List;

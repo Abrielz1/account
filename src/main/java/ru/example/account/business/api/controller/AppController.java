@@ -25,11 +25,11 @@ public class AppController {
 
     private final MoneyTransferService moneyTransferService;
 
-    @PutMapping
-    @ResponseStatus(HttpStatus.OK)
-    public CreateMoneyTransferResponse transferMoneyBetweenAccounts(@AuthenticationPrincipal AppUserDetails currentUser,
-                                                                    @Valid @RequestBody CreateMoneyTransferRequest request) {
-        log.info("Transfer requested: from user ID {}, to {}, amount {}", currentUser.getId(), request.to(), request.sum());
-        return moneyTransferService.transferFromOneAccountToAnother(currentUser.getId(), request);
-    }
+//    @PutMapping
+//    @ResponseStatus(HttpStatus.OK)
+//    public CreateMoneyTransferResponse transferMoneyBetweenAccounts(@AuthenticationPrincipal AppUserDetails currentUser,
+//                                                                    @Valid @RequestBody CreateMoneyTransferRequest request) {
+//        log.info("Transfer requested: from user ID {}, to {}, amount {}", currentUser.getId(), request.to(), request.sum());
+//        return moneyTransferService.transferFromOneAccountToAnother(currentUser.getId(), request);
+//    }
 }

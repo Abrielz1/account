@@ -1,4 +1,4 @@
-package ru.example.account.security.service.impl;
+package ru.example.account.security.service.temp;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -9,7 +9,7 @@ import ru.example.account.security.entity.RevocationReason;
 import ru.example.account.security.entity.RevokedTokenArchive;
 import ru.example.account.security.repository.AuthSessionRepository;
 import ru.example.account.security.repository.RevokedTokenArchiveRepository;
-import ru.example.account.security.service.SessionArchivingService;
+
 import java.time.Instant;
 
 @Service

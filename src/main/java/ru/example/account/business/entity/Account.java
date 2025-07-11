@@ -14,7 +14,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.NamedAttributeNode;
 import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import lombok.Getter;
@@ -24,6 +23,7 @@ import lombok.ToString;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 import org.hibernate.proxy.HibernateProxy;
+import ru.example.account.user.entity.AccountType;
 import ru.example.account.user.entity.User;
 import java.math.BigDecimal;
 import java.util.HashSet;
@@ -46,7 +46,7 @@ public class Account {
     @Enumerated(EnumType.STRING)
     @Column(name = "account_type", nullable = false)
     @JdbcType(PostgreSQLEnumJdbcType.class)
-    private AccountStatus accountType;
+    private AccountType accountType;
 
     @Column(name = "account_name", nullable = false)
     private String accountName;
@@ -54,10 +54,13 @@ public class Account {
     @Column(nullable = false)
     private BigDecimal balance = BigDecimal.ZERO;
 
+    @Column(name = "non_withdrawable_balance", nullable = false)
+    private BigDecimal nonWithdrawableBalance = BigDecimal.ZERO;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @JdbcType(PostgreSQLEnumJdbcType.class)
-    private AccountStatus status;
+    private AccountStatus accountStatus;
 
     @Version
     private Long version = 0L;
