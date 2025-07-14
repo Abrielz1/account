@@ -8,18 +8,13 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
-import ru.example.account.business.entity.Account;
-import ru.example.account.business.service.AccountService;
 import ru.example.account.security.model.request.UserRegisterRequestDto;
-import ru.example.account.security.service.AuthService;
 import ru.example.account.user.entity.Client;
 import ru.example.account.user.entity.EmailData;
-import ru.example.account.user.entity.LoyaltyStatus;
 import ru.example.account.user.entity.PhoneData;
 import ru.example.account.user.entity.RoleType;
 import ru.example.account.user.entity.User;
@@ -36,9 +31,8 @@ import ru.example.account.user.service.ClientService;
 import ru.example.account.shared.exception.exceptions.AccessDeniedException;
 import ru.example.account.shared.exception.exceptions.AlreadyExistsException;
 import java.time.LocalDate;
-import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
+import static ru.example.account.shared.mapper.ClientMapper.toAuthResponse;
 
 @Slf4j
 @Service
@@ -52,10 +46,6 @@ public class ClientServiceImpl implements ClientService {
     private final ClientRepository castomerRepository;
 
     private final PasswordEncoder passwordEncoder;
-
-    private final AuthService authService;
-
-    private final AccountService accountService;
 
     @Override
     @Transactional("businessTransactionManager")
@@ -77,36 +67,19 @@ public class ClientServiceImpl implements ClientService {
             throw new  IllegalArgumentException("Client must send valid data!");
         }
 
-        Client newCustomer = Client.builder()
+        Client newClient = new Client();
 
-                .loyaltyStatus(LoyaltyStatus.BRONZE)
-                .registrationSource(request.registrationSource() == null ? null : request.registrationSource())
-                .invitedBy(request.invitedBy() == null ? null : castomerRepository.getByID(request.invitedBy()).orElseThrow(()-> {
-                    log.error("No user with such id: {}", request.invitedBy());
-                    return new UsernameNotFoundException("No user with such id: %d".formatted(request.invitedBy()));
-                }))
-                .build();
+        newClient.setFieldsClient(request);
 
-        newCustomer.setDateOfBirth(request.birthDate());
-        newCustomer.setPassword(passwordEncoder.encode(request.password()));
-        newCustomer.getRoles().add(RoleType.ROLE_CLIENT);
-        newCustomer.setUsername(request.username());
+        newClient.setPassword(passwordEncoder.encode(request.password()));
 
-        newCustomer.addRole(RoleType.ROLE_CLIENT);
-        newCustomer.addEmail(request.email());
-        newCustomer.addPhone(request.phoneNumber());
+        newClient.addRole(RoleType.ROLE_CLIENT);
+        newClient.addEmail(request.email());
+        newClient.addPhone(request.phoneNumber());
 
-        Account newAccount = this.accountService.createUserAccount(newCustomer, request);
-        Set<Account> ownerSetOfAccounts = new HashSet<>();
-        ownerSetOfAccounts.add(newAccount);
+        castomerRepository.save(newClient);
 
-        newCustomer.setPersonalAccounts(ownerSetOfAccounts);
-
-        castomerRepository.save(newCustomer);
-
-        return new CreateUserAccountDetailResponseDto(
-                newCustomer.getId(), null, null
-        );
+        return toAuthResponse(newClient);
     }
 
    // @Override

@@ -1,8 +1,8 @@
 package ru.example.account.user.model.response;
 
-import java.util.Set;
+import java.util.List;
 
 public record CreateUserAccountDetailResponseDto(Long id,
-                                                 Set<String> emails,
-                                                 Set<String> phones) {
+                                                 List<String> emails,
+                                                 List<String> phones) {
 }

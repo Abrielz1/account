@@ -30,6 +30,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         log.info("Password: {}", user.getPassword());
         log.info("Roles: {}", user.getRoles());
 
-        return null; // new AppUserDetails(user, email);
+        return new AppUserDetails(user);
     }
 }

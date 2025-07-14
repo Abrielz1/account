@@ -11,7 +11,6 @@ import org.springframework.data.jpa.repository.QueryHints;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import ru.example.account.user.entity.Client;
-import ru.example.account.user.entity.User;
 import java.util.Optional;
 
 /**
@@ -20,7 +19,7 @@ import java.util.Optional;
  */
 @Repository
 @CacheConfig(cacheNames = "clients")
-public interface ClientRepository extends JpaRepository<Client, Long>, JpaSpecificationExecutor<User> {
+public interface ClientRepository extends JpaRepository<Client, Long>, JpaSpecificationExecutor<Client> {
 
     // --- Метод для аутентификации (READ) ---
     // ЗАДАЧА: Быстро и надежно получить User + Roles

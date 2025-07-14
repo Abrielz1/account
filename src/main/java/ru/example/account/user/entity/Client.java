@@ -18,6 +18,7 @@ import lombok.ToString;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 import org.hibernate.proxy.HibernateProxy;
+import ru.example.account.security.model.request.UserRegisterRequestDto;
 import java.util.Objects;
 
 @Entity
@@ -71,5 +72,14 @@ public class Client extends User {
         return this instanceof HibernateProxy ?
                 ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode()
                 : getClass().hashCode();
+    }
+
+    public void setFieldsClient(UserRegisterRequestDto request) {
+
+        this.setDateOfBirth(request.birthDate());
+        this.getRoles().add(RoleType.ROLE_CLIENT);
+        this.setLoyaltyStatus(LoyaltyStatus.BRONZE);
+        this.setIsBanned(false);
+        this.setUsername(request.username());
     }
 }
