@@ -20,41 +20,28 @@ import java.util.Optional;
 @Repository
 @CacheConfig(cacheNames = "clients")
 public interface ClientRepository extends JpaRepository<Client, Long>, JpaSpecificationExecutor<Client> {
-//
-//    // --- Метод для аутентификации (READ) ---
-//    // ЗАДАЧА: Быстро и надежно получить User + Roles
-//    // РЕШЕНИЕ: JPQL с INNER JOIN FETCH и PESSIMISTIC_READ блокировкой
-//    @Lock(LockModeType.PESSIMISTIC_READ)
-//    @QueryHints({@QueryHint(name = "jakarta.persistence.lock.timeout", value = "2000")})
-//    @Query("SELECT с FROM Client с INNER JOIN FETCH с.roles WHERE с.userEmails = :email")
-//    Optional<Client> getWithRolesByEmail(@Param("email") String email);
 
     // --- Метод для модификации (WRITE) ---
     // ЗАДАЧА: Получить полную, "жирную" сущность и заблокировать ее для изменений
     // РЕШЕНИЕ: JPQL с JOIN/LEFT JOIN FETCH и PESSIMISTIC_WRITE блокировкой
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @QueryHints({@QueryHint(name = "jakarta.persistence.lock.timeout", value = "5000")})
-    @Query("SELECT с FROM Client с " +
-            "LEFT JOIN FETCH с.personalAccounts " + // Явно загружаем всё, что может понадобиться для изменения
-            "LEFT JOIN FETCH с.roles " +
-            "LEFT JOIN FETCH с.userEmails " +
-            "LEFT JOIN FETCH с.userPhones " +
-            "WHERE с.id = :id")
+    @Query("SELECT c FROM Client c " +
+            "LEFT JOIN FETCH c.personalAccounts " +// Явно загружаем всё, что может понадобиться для изменения
+            "LEFT JOIN FETCH c.sharedAccountMemberships " +
+            "LEFT JOIN FETCH c.roles " +
+            "LEFT JOIN FETCH c.userEmails " +
+            "LEFT JOIN FETCH c.userPhones " +
+            "WHERE c.id = :id")
     Optional<Client> getFullById(@Param("id") Long id);
 
-//
-//    @Query(value = """
-//    SELECT EXISTS(SELECT 1 FROM business.users WHERE business.users.username = :username)
-//            """,nativeQuery = true)
-//    boolean checkUserByUsername(@Param("username") String username);
-//
-//    @Query(value = """
-//            SELECT EXISTS(SELECT 1 FROM business.phone_data WHERE business.phone_data.phone = :phone)
-//            """, nativeQuery = true)
-//    boolean checkUserByPhone(@Param("phone") String phone);
-
     @Query("""
-        FROM User u WHERE u.id = :userId
-""")
-    Optional<Client> getByID(@Param("userId") Long userId);
+        FROM Client c WHERE c.id = :userId
+           """)
+    Optional<Client> findClientById(@Param("userId") Long userId);
+
+    @Query(value = """
+                   SELECT EXISTS(SELECT TRUE FROM business.users WHERE users.id = :referrerId)
+                   """, nativeQuery = true)
+    boolean checkClientExistenceInDb(@Param("referrerId") Long refererId);
 }

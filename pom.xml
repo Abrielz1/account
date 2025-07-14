@@ -22,6 +22,7 @@
         <flyway.version>10.13.0</flyway.version> <!-- Явно управляем версией -->
         <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
         <lombok.version>1.18.32</lombok.version> <!-- Управляем версией Lombok -->
+        <mail.version>2.0.1</mail.version>
     </properties>
 
     <dependencyManagement>
@@ -171,6 +172,12 @@
             <groupId>org.testcontainers</groupId>
             <artifactId>postgresql</artifactId>
             <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.sun.mail</groupId>
+            <artifactId>jakarta.mail</artifactId>
+            <version>${mail.version}</version>
         </dependency>
     </dependencies>
 

@@ -23,7 +23,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> getWithRolesByEmail(@Param("email") String email);
 
     @Query(value = """
-    SELECT EXISTS(SELECT TRUE FROM business.users WHERE users.username = :Username)             
+    SELECT EXISTS(SELECT TRUE FROM business.users WHERE users.username = :username)             
                    """, nativeQuery = true)
     Boolean checkUserByUsername(@Param("Username") String Username);
 }

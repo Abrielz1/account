@@ -39,7 +39,7 @@ public class Client extends User {
     @Column(name = "loyalty_status")
     @JdbcType(PostgreSQLEnumJdbcType.class) // Для кастомного ENUM в PG
     @ToString.Include
-    private LoyaltyStatus loyaltyStatus;
+    private LoyaltyStatus loyaltyStatus = LoyaltyStatus.BRONZE;
 
     @Column(name = "registration_source")
     @ToString.Include
@@ -85,7 +85,7 @@ public class Client extends User {
 
         this.setDateOfBirth(request.birthDate());
         this.getRoles().add(RoleType.ROLE_CLIENT);
-        this.setLoyaltyStatus(LoyaltyStatus.BRONZE);
+        this.setRegistrationSource(request.registrationSource() == null ? null : request.registrationSource());
         this.setRegistrationDateTime(LocalDateTime.now());
         this.setUsername(request.username());
     }
