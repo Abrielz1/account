@@ -4,15 +4,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
-import ru.example.account.user.entity.RoleType;
 import java.time.LocalDate;
-import java.util.Set;
 
 public record UserRegisterRequestDto(
 
@@ -49,12 +46,6 @@ public record UserRegisterRequestDto(
         @NotNull
         @Positive
         @Min(value = 1L)
-        Long invitedBy,
-
-        @Schema(description = "User's account", example = "my money for vacation")
-        @NotBlank
-        @NotEmpty
-        @Size(min = 12, max = 255, message = "Accoun namet must be between 12 and 255 characters")
-        String accountName
+        Long invitedBy
 ) {
 }

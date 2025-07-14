@@ -24,7 +24,6 @@ import ru.example.account.user.model.request.UserSearchResponseDto;
 import ru.example.account.user.model.response.CreateUserAccountDetailResponseDto;
 import ru.example.account.user.model.response.UserEmailResponseDto;
 import ru.example.account.user.model.response.UserPhoneResponseDto;
-
 import java.time.LocalDate;
 
 @Slf4j

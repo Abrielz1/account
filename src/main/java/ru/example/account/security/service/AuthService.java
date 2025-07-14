@@ -14,7 +14,7 @@ public interface AuthService {
 
     AuthResponse login(LoginRequest request, HttpServletRequest httpRequest);
 
-    AuthResponse refresh(RefreshTokenRequest request);
+    AuthResponse refresh(RefreshTokenRequest request, HttpServletRequest httpRequest);
 
     void logout(AppUserDetails userDetails);
 

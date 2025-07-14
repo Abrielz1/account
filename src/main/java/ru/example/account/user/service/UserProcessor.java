@@ -9,4 +9,6 @@ public interface UserProcessor {
     boolean isFreeEmail(String newEmail);
 
     boolean isFreePhone(String newPhone);
+
+    boolean isFreeUsername(String Username);
 }

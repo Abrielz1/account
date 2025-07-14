@@ -6,6 +6,9 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import ru.example.account.user.entity.User;
 import ru.example.account.user.repository.ClientRepository;
+import ru.example.account.user.repository.EmailDataRepository;
+import ru.example.account.user.repository.PhoneDataRepository;
+import ru.example.account.user.repository.UserRepository;
 import ru.example.account.user.service.UserProcessor;
 import ru.example.account.shared.exception.exceptions.UserNotFoundException;
 
@@ -14,13 +17,19 @@ import ru.example.account.shared.exception.exceptions.UserNotFoundException;
 @RequiredArgsConstructor
 public class UserProcessorImpl implements UserProcessor {
 
-    private final ClientRepository userRepository;
+    private final ClientRepository clientRepository;
+
+    private final UserRepository userRepository;
+
+    private final EmailDataRepository emailDataRepository;
+
+    private final PhoneDataRepository phoneDataRepository;
 
     @Override
     @Cacheable(value = "users", key = "#userId", unless = "#result == null")
     public User getUserByUserId(Long userId) {
 
-        return userRepository.findById(userId).orElseThrow(() -> {
+        return clientRepository.findById(userId).orElseThrow(() -> {
             log.error("No user with such id: {}", userId);
             return new UserNotFoundException("No user with such id: %d".formatted(userId));
         });
@@ -28,11 +37,16 @@ public class UserProcessorImpl implements UserProcessor {
 
     @Override
     public boolean isFreeEmail(String newEmail) {
-        return !userRepository.checkUserByEmail(newEmail);
+        return !emailDataRepository.checkUserByEmail(newEmail);
     }
 
     @Override
     public boolean isFreePhone(String newPhone) {
-        return !userRepository.checkUserByPhone(newPhone);
+        return !phoneDataRepository.checkUserByPhone(newPhone);
+    }
+
+    @Override
+    public boolean isFreeUsername(String Username) {
+       return !userRepository.checkUserByUsername(Username);
     }
 }

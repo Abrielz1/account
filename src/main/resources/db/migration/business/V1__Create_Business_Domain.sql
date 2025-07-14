@@ -38,6 +38,7 @@ CREATE TABLE users (
                        username          VARCHAR(255) NOT NULL UNIQUE,
                        password          VARCHAR(255) NOT NULL,
                        date_of_birth     DATE NOT NULL,
+                       registration_date_time TIMESTAMP,
                        version           BIGINT DEFAULT 0 NOT NULL
 );
 

@@ -80,7 +80,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public AuthResponse refresh(RefreshTokenRequest request) {
+    public AuthResponse refresh(RefreshTokenRequest request, HttpServletRequest httpRequest) {
         return null;
     }
 
