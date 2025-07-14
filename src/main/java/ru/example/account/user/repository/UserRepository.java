@@ -14,13 +14,12 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
 
-
     // --- Метод для аутентификации (READ) ---
     // ЗАДАЧА: Быстро и надежно получить User + Roles
     // РЕШЕНИЕ: JPQL с INNER JOIN FETCH и PESSIMISTIC_READ блокировкой
     @Lock(LockModeType.PESSIMISTIC_READ)
     @QueryHints({@QueryHint(name = "jakarta.persistence.lock.timeout", value = "2000")})
-    @Query("SELECT с FROM Client с INNER JOIN FETCH с.roles WHERE с.userEmails = :email")
+    @Query("SELECT u FROM User u INNER JOIN FETCH u.roles r JOIN FETCH u.userEmails e WHERE e.email = :email")
     Optional<User> getWithRolesByEmail(@Param("email") String email);
 
     @Query(value = """
