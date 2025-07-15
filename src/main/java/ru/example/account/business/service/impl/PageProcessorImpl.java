@@ -60,20 +60,20 @@ public class PageProcessorImpl implements PageProcessor {
     }
 
     private Account applyInterest(Account account) {
-        BigDecimal maxAllowed = account.getInitialBalance().multiply(MAX_PERCENT);
+      //  BigDecimal maxAllowed = account.getInitialBalance().multiply(MAX_PERCENT);
 
         // Проверка перед вычислением, чтобы не делать лишнюю работу
-        if (account.getBalance().compareTo(maxAllowed) >= 0) {
-            log.trace("Cap for Account {} has already been reached.", account.getId());
-            return account;
-        }
+//        if (account.getBalance().compareTo(maxAllowed) >= 0) {
+//            log.trace("Cap for Account {} has already been reached.", account.getId());
+//            return account;
+//        }
 
         BigDecimal newBalance = account.getBalance()
                 .multiply(INCREASE_RATE)
                 .setScale(SCALE, ROUNDING_MODE);
 
         // Устанавливаем либо новый баланс, либо максимальный, если вышли за пределы
-        account.setBalance(newBalance.min(maxAllowed));
+//        account.setBalance(newBalance.min(maxAllowed));
         return account;
     }
 

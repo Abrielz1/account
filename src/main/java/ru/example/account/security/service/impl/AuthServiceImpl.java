@@ -21,9 +21,13 @@ import ru.example.account.security.service.AuthService;
 import ru.example.account.security.service.SessionCreationService;
 import ru.example.account.security.service.SessionQueryService;
 import ru.example.account.security.service.SessionRevocationService;
+import ru.example.account.shared.exception.exceptions.UserNotFoundException;
 import ru.example.account.shared.util.FingerprintUtils;
 import ru.example.account.user.model.response.CreateUserAccountDetailResponseDto;
+import ru.example.account.user.repository.UserRepository;
 import ru.example.account.user.service.ClientService;
+
+import java.time.LocalDateTime;
 
 @Slf4j
 @Service
@@ -52,6 +56,8 @@ public class AuthServiceImpl implements AuthService {
 
     private final UserDetailsService userDetailsService;
 
+    private final UserRepository userRepository;
+
     @Override
     @Transactional(value = "businessTransactionManager")
     public CreateUserAccountDetailResponseDto registerNewUserAccount(UserRegisterRequestDto request) {
@@ -66,6 +72,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional(value = "securityTransactionManager")
     public AuthResponse login(LoginRequest request, HttpServletRequest httpRequest) {
 
         Authentication authentication = authenticationManager
@@ -75,6 +82,15 @@ public class AuthServiceImpl implements AuthService {
                 ));
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        AppUserDetails userDetails = (AppUserDetails) authentication.getPrincipal();
+
+        var user = userRepository.getWithRolesByEmail(userDetails.getEmail()).orElseThrow(() -> {
+            log.error("No user in db");
+            return new UserNotFoundException("No user in db");
+        });
+
+        user.setLastLogin(LocalDateTime.now());
 
         return null;
     }

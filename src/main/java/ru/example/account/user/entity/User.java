@@ -23,6 +23,7 @@ import lombok.Setter;
 import lombok.ToString;
 import ru.example.account.business.entity.Account;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -70,6 +71,9 @@ public abstract class User {
 
     @Column(name = "date_of_birth", nullable = false)
     private LocalDate dateOfBirth;
+
+    @Column(name = "last_login")
+    private LocalDateTime lastLogin;
 
     @Version
     private Long version = 0L;
