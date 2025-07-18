@@ -22,7 +22,7 @@ public class RedisSessionServiceImpl implements RedisSessionService {
     public void cacheActiveSession(Long userId, UUID sessionId, String refreshToken, String accessToken, String fingerprintHash) {
 
         ActiveSessionCache redisSession = ActiveSessionCache.builder()
-                .refreshTokenValue(refreshToken)
+                .refreshToken(refreshToken)
                 .sessionId(sessionId)
                 .userId(userId)
                 .accessToken(accessToken)

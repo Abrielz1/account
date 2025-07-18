@@ -27,7 +27,7 @@ public class ActiveSessionCache implements Serializable {
      САМ refresh-токен является первичным ключом в этом хранилище.
      */
     @Id
-    private String refreshTokenValue;
+    private String refreshToken;
     /**
 
      ID сессии (из AuthSession).
@@ -55,10 +55,10 @@ public class ActiveSessionCache implements Serializable {
     private String fingerprintHash;
 
     @Builder
-    private ActiveSessionCache(UUID sessionId, Long userId, String refreshTokenValue, Duration ttl, String accessToken, String fingerprintHash) {
+    private ActiveSessionCache(UUID sessionId, Long userId, String refreshToken, Duration ttl, String accessToken, String fingerprintHash) {
         this.sessionId = sessionId;
         this.userId = userId;
-        this.refreshTokenValue = refreshTokenValue;
+        this.refreshToken = refreshToken;
         this.expiresAt = Instant.now().plus(ttl);
         this.timeToLive = ttl.toSeconds();
         this.accessToken = accessToken;

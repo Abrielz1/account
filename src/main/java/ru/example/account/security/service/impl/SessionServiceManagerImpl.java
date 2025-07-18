@@ -2,12 +2,8 @@ package ru.example.account.security.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import ru.example.account.security.entity.ActiveSessionCache;
-import ru.example.account.security.entity.AuthSession;
-import ru.example.account.security.entity.SessionStatus;
 import ru.example.account.security.jwt.JwtUtils;
 import ru.example.account.security.model.response.AuthResponse;
 import ru.example.account.security.repository.AuthSessionRepository;
@@ -15,8 +11,6 @@ import ru.example.account.security.service.IdGenerationService;
 import ru.example.account.security.service.RedisSessionService;
 import ru.example.account.security.service.SessionService;
 import ru.example.account.security.service.SessionServiceManager;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.UUID;
 
 @Slf4j
@@ -35,9 +29,6 @@ public class SessionServiceManagerImpl implements SessionServiceManager {
     private final IdGenerationService idGenerationService;
 
     private final PasswordEncoder passwordEncoder;
-
-    @Value("${app.jwt.refresh-token-expiration}")
-    private Duration refreshTokenExpiration;
 
     @Override
     public AuthResponse createSession( AppUserDetails userDetails,
@@ -73,17 +64,3 @@ public class SessionServiceManagerImpl implements SessionServiceManager {
         return new AuthResponse(accessToken, refreshToken);
     }
 }
-/*
-AuthSession.builder()
-                .id(sessionId)
-                .userId(userDetails.getId())
-                .refreshToken(refreshToken)
-                .accessToken(accessToken)
-                .fingerprintHash(fingerprint)
-                .ipAddress(ipAddress)
-                .userAgent(userAgent)
-                .status(SessionStatus.STATUS_ACTIVE)
-                .createdAt(Instant.now())
-                .expiresAt(Instant.now().plus(refreshTokenExpiration))
-                .build();
- */
