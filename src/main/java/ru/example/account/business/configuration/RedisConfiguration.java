@@ -12,7 +12,7 @@ import org.springframework.data.redis.core.RedisKeyValueAdapter;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.convert.KeyspaceConfiguration;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
-import ru.example.account.security.entity.RefreshToken;
+import ru.example.account.security.entity.ActiveSessionCache;
 import java.time.Duration;
 import java.util.List;
 
@@ -58,7 +58,7 @@ public class RedisConfiguration {
 
         @Override
         protected Iterable<KeyspaceSettings> initialConfiguration() {
-            KeyspaceSettings keyspaceSettings = new KeyspaceSettings(RefreshToken.class, REFRESH_TOKEN_KEYSPACE);
+            KeyspaceSettings keyspaceSettings = new KeyspaceSettings(ActiveSessionCache.class, REFRESH_TOKEN_KEYSPACE);
 
             keyspaceSettings.setTimeToLive(refreshTokenExpiration.getSeconds());
 

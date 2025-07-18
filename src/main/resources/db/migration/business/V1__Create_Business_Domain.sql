@@ -33,14 +33,15 @@ CREATE TYPE business.ownership_role_enum AS ENUM (
 
 -- Абстрактная база для всех пользователей
 CREATE TABLE users (
-                       id                BIGSERIAL PRIMARY KEY,
-                       user_type         VARCHAR(31) NOT NULL, -- Колонка-дискриминатор ('EMPLOYEE', 'CUSTOMER')
-                       username          VARCHAR(255) NOT NULL UNIQUE,
-                       password          VARCHAR(255) NOT NULL,
-                       date_of_birth     DATE NOT NULL,
-                       last_login        TIMESTAMP,
-                       registration_date_time TIMESTAMP,
-                       version           BIGINT DEFAULT 0 NOT NULL
+                       id                     BIGSERIAL PRIMARY KEY,
+                       user_type              VARCHAR(31) NOT NULL, -- Колонка-дискриминатор ('EMPLOYEE', 'CUSTOMER')
+                       username               VARCHAR(255) NOT NULL UNIQUE,
+                       password               VARCHAR(255) NOT NULL,
+                       date_of_birth          DATE NOT NULL,
+                       last_login_timestamp   TIMESTAMPTZ,
+                       enabled                BOOLEAN DEFAULT FALSE,
+                       registration_timestamp TIMESTAMPTZ,
+                       version                BIGINT DEFAULT 0 NOT NULL
 );
 
 -- Наследник: Сотрудники
@@ -70,13 +71,13 @@ CREATE TABLE phone_data ( /* ... id, phone, user_id ... */ );
 
 -- Счета
 CREATE TABLE accounts (
-                          id                BIGSERIAL PRIMARY KEY,
-                          account_type      account_type_enum NOT NULL, -- PERSONAL_*, SHARED_*
-                          account_name      VARCHAR(255) NOT NULL,
-                          balance           DECIMAL(19, 2) NOT NULL DEFAULT 0.00,
-                          status            VARCHAR(50) NOT NULL, -- 'ACTIVE', 'FROZEN', 'CLOSED'
-                          version           BIGINT DEFAULT 0 NOT NULL,
-                          non_withdrawable_balance DECIMAL(19, 2) NOT NULL DEFAULT 0.00,
+                          id                        BIGSERIAL PRIMARY KEY,
+                          account_type              account_type_enum NOT NULL, -- PERSONAL_*, SHARED_*
+                          account_name              VARCHAR(255) NOT NULL,
+                          balance                   DECIMAL(19, 2) NOT NULL DEFAULT 0.00,
+                          status                    VARCHAR(50) NOT NULL, -- 'ACTIVE', 'FROZEN', 'CLOSED'
+                          version           B       IGINT DEFAULT 0 NOT NULL,
+                          non_withdrawable_balance  DECIMAL(19, 2) NOT NULL DEFAULT 0.00,
     -- НОВОЕ ПОЛЕ: Владелец. ЗАПОЛНЯЕТСЯ ТОЛЬКО ДЛЯ ПЕРСОНАЛЬНЫХ СЧЕТОВ.
                           owner_user_id     BIGINT REFERENCES users(id) ON DELETE SET NULL
 );

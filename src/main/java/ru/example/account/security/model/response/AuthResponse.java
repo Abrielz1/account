@@ -1,14 +1,8 @@
 package ru.example.account.security.model.response;
 
-import java.util.List;
+public record AuthResponse(
 
-public record AuthResponse(Long id,
+                           String accessToken,
 
-                           String token,
-
-                           String tokenRefresh,
-
-                           String username,
-
-                           List<String> roles) {
+                           String tokenRefresh) {
 }

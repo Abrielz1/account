@@ -36,6 +36,9 @@ public class AuthSession {
     @Column(name = "refresh_token", nullable = false, unique = true)
     private String refreshToken;
 
+    @Column(name = "access_token", columnDefinition = "TEXT", nullable = false, unique = true)
+    private String accessToken;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private SessionStatus status;

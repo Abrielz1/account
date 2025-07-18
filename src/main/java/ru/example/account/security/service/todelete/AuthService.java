@@ -1,4 +1,4 @@
-package ru.example.account.security.service.temp;
+package ru.example.account.security.service.todelete;
 
 import jakarta.servlet.http.HttpServletRequest;
 import ru.example.account.security.model.request.LoginRequest;

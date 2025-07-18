@@ -26,4 +26,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     SELECT EXISTS(SELECT TRUE FROM business.users WHERE users.username = :username)             
                    """, nativeQuery = true)
     Boolean checkUserByUsername(@Param("Username") String Username);
+
+    @Query(value = """
+                   FROM User u WHERE u.id = :userId
+                   """)
+    Optional<User> findByUserId(@Param("userId") Long userId);
 }

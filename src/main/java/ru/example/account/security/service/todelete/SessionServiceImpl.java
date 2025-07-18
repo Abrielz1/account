@@ -1,4 +1,4 @@
-package ru.example.account.security.service.temp;
+package ru.example.account.security.service.todelete;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

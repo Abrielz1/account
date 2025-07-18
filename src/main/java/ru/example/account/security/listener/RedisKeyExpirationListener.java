@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationListener; // Используем интерфейс для надежности
 import org.springframework.data.redis.core.RedisKeyExpiredEvent;
 import org.springframework.stereotype.Component;
-import ru.example.account.security.entity.RefreshToken; // Путь к твоей Redis-сущности
+import ru.example.account.security.entity.ActiveSessionCache; // Путь к твоей Redis-сущности
 import java.io.IOException;
 
 @Slf4j
@@ -35,7 +35,7 @@ public class RedisKeyExpirationListener implements ApplicationListener<RedisKeyE
                 try {
                     // Теперь мы можем попытаться десериализовать его
                     // ВАЖНО: класс должен быть тем, что мы ожидаем
-                    RefreshToken expiredToken = objectMapper.readValue(body, RefreshToken.class);
+                    ActiveSessionCache expiredToken = objectMapper.readValue(body, ActiveSessionCache.class);
                     log.info("Expired Refresh Token details: userId={}, sessionId={}",
                             expiredToken.getUserId(), expiredToken.getSessionId());
 

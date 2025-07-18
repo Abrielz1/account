@@ -1,4 +1,4 @@
-package ru.example.account.security.service.temp;
+package ru.example.account.security.service.todelete;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -6,7 +6,7 @@ import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.example.account.security.entity.AuthSession;
-import ru.example.account.security.entity.RefreshToken;
+import ru.example.account.security.entity.ActiveSessionCache;
 import ru.example.account.security.repository.AuthSessionRepository;
 import ru.example.account.security.repository.RevokedTokenArchiveRepository;
 
@@ -25,7 +25,7 @@ public class UniqueIdGeneratorServiceImpl  implements UniqueIdGeneratorService {
 
 @Override
 @Transactional
-public RefreshToken createRefreshToken(Long userId, String fingerprintHash, String ipAddress, String userAgent) {
+public ActiveSessionCache createRefreshToken(Long userId, String fingerprintHash, String ipAddress, String userAgent) {
 
     return null;
 }

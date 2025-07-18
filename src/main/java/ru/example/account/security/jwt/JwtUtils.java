@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
+import ru.example.account.security.entity.ActiveSessionCache;
 import ru.example.account.security.service.impl.AppUserDetails;
 import ru.example.account.shared.exception.exceptions.InvalidJwtAuthenticationException;
 import javax.crypto.SecretKey;
@@ -50,6 +51,15 @@ public class JwtUtils {
             log.error("Invalid JWT secret key. It must be a Base64-encoded string.", e);
             throw new IllegalArgumentException("Invalid JWT secret key.", e);
         }
+    }
+
+
+    public ActiveSessionCache generateRefreshToken(String userEmail, String newAccessesToken) {
+        ActiveSessionCache newRefreshToken = ActiveSessionCache
+                .builder()
+                .accessToken(newAccessesToken)
+                .build();
+        return newRefreshToken;
     }
 
     public String generateAccessToken(AppUserDetails userDetails, UUID sessionId) {

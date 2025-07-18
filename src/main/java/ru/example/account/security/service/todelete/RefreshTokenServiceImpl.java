@@ -1,11 +1,11 @@
-package ru.example.account.security.service.temp;
+package ru.example.account.security.service.todelete;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.example.account.security.entity.RefreshToken;
+import ru.example.account.security.entity.ActiveSessionCache;
 import ru.example.account.security.repository.RefreshTokenRepository;
 import ru.example.account.shared.exception.exceptions.RefreshTokenException;
 import java.time.Duration;
@@ -27,12 +27,12 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     @Value("${app.jwt.ttl}")
     private Long timeToLive;
 
-    public Optional<RefreshToken> getByRefreshToken(String refreshToken) {
+    public Optional<ActiveSessionCache> getByRefreshToken(String refreshToken) {
         return refreshTokenRepository.findByTokenRefresh(refreshToken);
     }
 
-    public RefreshToken createRefreshToken(Long userId) {
-        RefreshToken refreshToken = RefreshToken
+    public ActiveSessionCache createRefreshToken(Long userId) {
+        ActiveSessionCache refreshToken = ActiveSessionCache
                 .builder()
                 .token(UUID.randomUUID().toString())
                 .userId(userId)
@@ -41,11 +41,11 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
        return refreshTokenRepository.save(refreshToken);
     }
 
-    public RefreshToken checkRefreshToken(RefreshToken refreshToken) {
+    public ActiveSessionCache checkRefreshToken(ActiveSessionCache refreshToken) {
 
         if (refreshToken.getExpiresAt().isBefore(Instant.now())) {
             refreshTokenRepository.delete(refreshToken);
-            throw new RefreshTokenException("Refresh token is expired! " + refreshToken.getToken()
+            throw new RefreshTokenException("Refresh token is expired! " + refreshToken.getRefreshTokenValue()
                     + "Try reLogin!");
         } else {
 

@@ -26,7 +26,7 @@ import java.util.UUID;
 public class RevokedTokenArchive {
 
     @Id
-    @Column(name = "token_value") // <-- Переименовал, чтобы не конфликтовать с "token" may bad
+    @Column(name = "token_value") // <-- Переименовал, чтобы не конфликтовать с "token"
     private String tokenValue;
 
     @Column(name = "session_id", nullable = false)

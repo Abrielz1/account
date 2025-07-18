@@ -1,4 +1,4 @@
-package ru.example.account.security.service.temp;
+package ru.example.account.security.service.todelete;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +18,7 @@ import ru.example.account.security.model.request.LoginRequest;
 import ru.example.account.security.model.request.RefreshTokenRequest;
 import ru.example.account.security.model.response.AuthResponse;
 import ru.example.account.security.repository.AuthSessionRepository;
+import ru.example.account.security.service.AccessTokenBlacklistService;
 import ru.example.account.security.service.impl.AppUserDetails;
 import ru.example.account.shared.exception.exceptions.SecurityBreachAttemptException;
 import ru.example.account.shared.exception.exceptions.TokenRefreshException;

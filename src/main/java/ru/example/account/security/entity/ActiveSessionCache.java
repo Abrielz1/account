@@ -18,14 +18,24 @@ import java.util.concurrent.TimeUnit;
 @Getter
 @RedisHash("refresh_tokens")
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class RefreshToken implements Serializable {
+public class ActiveSessionCache implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
+    /**
 
+     САМ refresh-токен является первичным ключом в этом хранилище.
+     */
     @Id
-    private String token;
+    private String refreshTokenValue;
+    /**
 
+     ID сессии (из AuthSession).
+
+     Это НЕ ключ в Redis, ключ - refresh-токен.
+
+     Но по нему можно будет искать.
+     */
     @Indexed
     private UUID sessionId;
 
@@ -38,12 +48,20 @@ public class RefreshToken implements Serializable {
     @TimeToLive(unit = TimeUnit.SECONDS)
     private Long timeToLive; // в секундах
 
+    @Indexed
+    private String accessToken;
+
+    @Indexed
+    private String fingerprintHash;
+
     @Builder
-    private RefreshToken(UUID sessionId, Long userId, String token, Duration ttl) {
+    private ActiveSessionCache(UUID sessionId, Long userId, String refreshTokenValue, Duration ttl, String accessToken, String fingerprintHash) {
         this.sessionId = sessionId;
         this.userId = userId;
-        this.token = token;
+        this.refreshTokenValue = refreshTokenValue;
         this.expiresAt = Instant.now().plus(ttl);
         this.timeToLive = ttl.toSeconds();
+        this.accessToken = accessToken;
+        this.fingerprintHash = fingerprintHash;
     }
 }

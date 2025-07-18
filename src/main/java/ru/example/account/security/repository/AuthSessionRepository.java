@@ -22,4 +22,5 @@ public interface AuthSessionRepository extends JpaRepository<AuthSession, UUID> 
             """)
     boolean checkSessionIdAuditLog(@Param("sessionId") String sessionId);
 
+    Boolean existsByRefreshToken(String token);
 }

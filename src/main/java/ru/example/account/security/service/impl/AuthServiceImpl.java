@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -14,20 +15,21 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.example.account.security.jwt.JwtUtils;
 import ru.example.account.security.model.request.LoginRequest;
 import ru.example.account.security.model.request.RefreshTokenRequest;
-import ru.example.account.security.model.request.UserRegisterRequestDto;
 import ru.example.account.security.model.response.AuthResponse;
+import ru.example.account.security.repository.AuthSessionRepository;
 import ru.example.account.security.service.AccessTokenBlacklistService;
 import ru.example.account.security.service.AuthService;
-import ru.example.account.security.service.SessionCreationService;
+import ru.example.account.security.service.FingerprintService;
+import ru.example.account.security.service.HttpUtilsService;
 import ru.example.account.security.service.SessionQueryService;
 import ru.example.account.security.service.SessionRevocationService;
-import ru.example.account.shared.exception.exceptions.UserNotFoundException;
+import ru.example.account.security.service.SessionService;
+import ru.example.account.security.service.SessionServiceManager;
+import ru.example.account.security.service.TimezoneService;
+import ru.example.account.security.service.UserService;
+import ru.example.account.shared.exception.exceptions.UserNotVerifiedException;
 import ru.example.account.shared.util.FingerprintUtils;
-import ru.example.account.user.model.response.CreateUserAccountDetailResponseDto;
 import ru.example.account.user.repository.UserRepository;
-import ru.example.account.user.service.ClientService;
-
-import java.time.LocalDateTime;
 
 @Slf4j
 @Service
@@ -38,15 +40,15 @@ public class AuthServiceImpl implements AuthService {
     // --- ЗАВИСИМОСТИ ---
     private final AuthenticationManager authenticationManager;
 
-    private final ClientService clientService;
+    private final IdGenerationServiceImpl idGenerationService;
 
     private final JwtUtils jwtUtils;
-
-    private final SessionCreationService sessionCreationService;
 
     private final SessionQueryService sessionQueryService;
 
     private final SessionRevocationService sessionRevocationService;
+
+    private final SessionService sessionService;
 
     private final AccessTokenBlacklistService blacklistService;
 
@@ -58,41 +60,63 @@ public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
 
-    @Override
-    @Transactional(value = "businessTransactionManager")
-    public CreateUserAccountDetailResponseDto registerNewUserAccount(UserRegisterRequestDto request) {
+    private final SessionServiceManager sessionManager; // главный
 
-        if (request == null ) {
-            log.error("User suplied empty registeration form!");
-             throw new IllegalArgumentException("User suplied empty registeration form!");
-        }
+    private final UserService userService;             // Для обновления last_login
 
-        log.info("user accounr was created");
-        return  clientService.registerNewUser(request);
-    }
+    private final FingerprintService fingerprintService;
+
+    private final HttpUtilsService httpUtilsService;
+
+    private final TimezoneService timezoneService;
+
+    private final AuthSessionRepository authSessionRepository;
 
     @Override
     @Transactional(value = "securityTransactionManager")
     public AuthResponse login(LoginRequest request, HttpServletRequest httpRequest) {
 
-        Authentication authentication = authenticationManager
+        log.info("Authentication attempt for user: {}", request.email());
+
+        Authentication authentication;
+        try {
+            authentication = authenticationManager
                 .authenticate(new UsernamePasswordAuthenticationToken(
                         request.email(),
                         request.password()
                 ));
+        } catch (BadCredentialsException e) {
+            log.warn("Failed login for [{}]: Bad credentials", request.email());
+
+            throw e;
+        }
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         AppUserDetails userDetails = (AppUserDetails) authentication.getPrincipal();
 
-        var user = userRepository.getWithRolesByEmail(userDetails.getEmail()).orElseThrow(() -> {
-            log.error("No user in db");
-            return new UserNotFoundException("No user in db");
-        });
 
-        user.setLastLogin(LocalDateTime.now());
+        // Проверка, что аккаунт пользователя активирован (после подтверждения email)
+        if (!userDetails.isEnabled()) {
+            throw new UserNotVerifiedException("User account is not active. Please check your email, especially spam folder.");
+        }
 
-        return null;
+        log.info("User {} successfully authenticated.", userDetails.getUsername());
+
+
+        String ipAddress = this.httpUtilsService.getClientIpAddress(httpRequest);
+
+        String fingerprint = this.fingerprintService.generateUsersFingerprint(httpRequest);
+
+        String userAgent = httpRequest.getHeader("User-Agent");
+
+        this.userService.updateLastLoginAsync(userDetails.getId(), this.timezoneService.getZoneIdFromRequest(httpRequest));
+
+        return  this.sessionManager.createSession(
+                userDetails,
+                ipAddress,
+                fingerprint,
+                userAgent);
     }
 
     @Override

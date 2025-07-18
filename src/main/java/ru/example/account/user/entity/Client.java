@@ -19,8 +19,6 @@ import org.hibernate.annotations.JdbcType;
 import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 import org.hibernate.proxy.HibernateProxy;
 import ru.example.account.security.model.request.UserRegisterRequestDto;
-
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -44,10 +42,6 @@ public class Client extends User {
     @Column(name = "registration_source")
     @ToString.Include
     private String registrationSource;
-
-    @Column(name = "registration_date_time")
-    @ToString.Include
-    private LocalDateTime registrationDateTime;
 
     @Column(name = "is_banned", nullable = false)
     @ToString.Include

@@ -6,5 +6,7 @@ import ru.example.account.security.entity.RevokedTokenArchive;
 
 @Repository
 public interface RevokedTokenArchiveRepository extends JpaRepository<RevokedTokenArchive, String> {
+
+
 }
 

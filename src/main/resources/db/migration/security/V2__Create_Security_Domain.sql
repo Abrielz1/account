@@ -38,15 +38,16 @@ CREATE TYPE security.revocation_reason_enum AS ENUM ( 'USER_LOGOUT',
 
 -- === ТАБЛИЦА АКТИВНЫХ СЕССИЙ ===
 CREATE TABLE auth_sessions (
-                               id                UUID PRIMARY KEY,
-                               user_id           BIGINT NOT NULL,
-                               refresh_token     VARCHAR(255) NOT NULL UNIQUE,
-                               status            session_status_enum NOT NULL,
-                               fingerprint_hash  VARCHAR(255),
-                               ip_address        VARCHAR(45),
-                               user_agent        TEXT,
-                               created_at        TIMESTAMPTZ NOT NULL,
-                               expires_at        TIMESTAMPTZ NOT NULL
+                               id                 UUID PRIMARY KEY,
+                               user_id            BIGINT NOT NULL,
+                               refresh_token      VARCHAR(255) NOT NULL UNIQUE,
+                               access_token       TEXT NOT NULL UNIQUE,
+                               status             session_status_enum NOT NULL,
+                               fingerprint_hash   VARCHAR(255),
+                               ip_address         VARCHAR(45),
+                               user_agent         TEXT,
+                               created_at         TIMESTAMPTZ NOT NULL,
+                               expires_at         TIMESTAMPTZ NOT NULL
 );
 
 -- === ТАБЛИЦА-АРХИВ ОТОЗВАННЫХ ТОКЕНОВ ===

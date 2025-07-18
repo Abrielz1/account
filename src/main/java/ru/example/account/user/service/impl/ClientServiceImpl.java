@@ -1,21 +1,25 @@
 package ru.example.account.user.service.impl;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheConfig;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import ru.example.account.security.model.request.UserRegisterRequestDto;
+import ru.example.account.security.service.TimezoneService;
 import ru.example.account.user.entity.Client;
-import ru.example.account.user.entity.RoleType;
 import ru.example.account.user.model.response.CreateUserAccountDetailResponseDto;
 import ru.example.account.user.repository.ClientRepository;
 import ru.example.account.user.service.UserProcessor;
 import ru.example.account.user.service.ClientService;
 import ru.example.account.shared.exception.exceptions.AlreadyExistsException;
+
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+
 import static ru.example.account.shared.mapper.ClientMapper.toAuthResponse;
 
 @Slf4j
@@ -25,15 +29,18 @@ import static ru.example.account.shared.mapper.ClientMapper.toAuthResponse;
 @RequiredArgsConstructor
 public class ClientServiceImpl implements ClientService {
 
+    private final TimezoneService timezoneService;
+
     private final UserProcessor userProcessor;
 
-    private final ClientRepository castomerRepository;
+    private final ClientRepository clientRepository;
 
     private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional("businessTransactionManager")
-    public CreateUserAccountDetailResponseDto registerNewUser(UserRegisterRequestDto request) {
+    public CreateUserAccountDetailResponseDto registerNewUser(UserRegisterRequestDto request,
+                                                              HttpServletRequest httpRequest) {
 
         if (!StringUtils.hasText(request.phoneNumber()) || !StringUtils.hasText(request.email())) {
             throw new  IllegalArgumentException("Client must send valid data!");
@@ -68,19 +75,16 @@ public class ClientServiceImpl implements ClientService {
 
         newClient.setPassword(passwordEncoder.encode(request.password()));
 
-        newClient.addRole(RoleType.ROLE_CLIENT);
         newClient.addEmail(request.email());
         newClient.addPhone(request.phoneNumber());
 
-        castomerRepository.save(newClient);
+        newClient.setRegistrationDateTime(ZonedDateTime.now(timezoneService.getZoneIdFromRequest(httpRequest)));
+
+        clientRepository.save(newClient);
 
         return toAuthResponse(newClient);
     }
 }
-
-
-
-
 
 
 
