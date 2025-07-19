@@ -43,8 +43,8 @@ public class AuthSession {
     @Column(nullable = false)
     private SessionStatus status;
 
-    @Column(name = "fingerprint_hash")
-    private String fingerprintHash;
+    @Column(name = "fingerprint")
+    private String fingerprint;
 
     @Column(name = "ip_address")
     private String ipAddress;

@@ -63,7 +63,7 @@ CREATE TABLE revoked_tokens_archive (
 CREATE TABLE session_audit_log (
                                    session_id        UUID PRIMARY KEY,
                                    user_id           BIGINT NOT NULL,
-                                   fingerprint_hash  VARCHAR(255),
+                                   fingerprint  VARCHAR(255),
                                    ip_address        VARCHAR(45),
                                    user_agent        TEXT,
                                    created_at        TIMESTAMPTZ NOT NULL,
@@ -100,5 +100,10 @@ CREATE INDEX IF NOT EXISTS idx_auth_sessions_expires_at ON auth_sessions(expires
 CREATE INDEX IF NOT EXISTS idx_revoked_tokens_session_id ON revoked_tokens_archive(session_id);
 CREATE INDEX IF NOT EXISTS idx_session_audit_log_user_id ON session_audit_log(user_id);
 CREATE INDEX IF NOT EXISTS idx_session_audit_log_created_at ON session_audit_log(created_at);
+CREATE INDEX IF NOT EXISTS idx_session_fingerprint ON auth_sessions(fingerprint_hash);
+
+
+
+
 
 

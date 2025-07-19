@@ -23,7 +23,7 @@ import ru.example.account.security.service.FingerprintService;
 import ru.example.account.security.service.HttpUtilsService;
 import ru.example.account.security.service.SessionQueryService;
 import ru.example.account.security.service.SessionRevocationService;
-import ru.example.account.security.service.SessionService;
+import ru.example.account.security.service.SessionCommandService;
 import ru.example.account.security.service.SessionServiceManager;
 import ru.example.account.security.service.TimezoneService;
 import ru.example.account.security.service.UserService;
@@ -36,7 +36,6 @@ import ru.example.account.user.repository.UserRepository;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-
     // --- ЗАВИСИМОСТИ ---
     private final AuthenticationManager authenticationManager;
 
@@ -48,7 +47,7 @@ public class AuthServiceImpl implements AuthService {
 
     private final SessionRevocationService sessionRevocationService;
 
-    private final SessionService sessionService;
+    private final SessionCommandService sessionService;
 
     private final AccessTokenBlacklistService blacklistService;
 
@@ -121,7 +120,15 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse refresh(RefreshTokenRequest request, HttpServletRequest httpRequest) {
-        return null;
+
+        log.info("Token refresh process started.");
+        AppUserDetails currentUser = (AppUserDetails) userDetailsService.loadUserByUsername(request.username());
+        return this.sessionManager.rotateSessionAndTokens(
+                request.refreshToken(),
+                request.accessesToken(), // Передаем и старый access-token
+                this.fingerprintService.generateUsersFingerprint(httpRequest),
+                currentUser
+        );
     }
 
     @Override

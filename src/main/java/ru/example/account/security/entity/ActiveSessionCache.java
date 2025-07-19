@@ -52,16 +52,16 @@ public class ActiveSessionCache implements Serializable {
     private String accessToken;
 
     @Indexed
-    private String fingerprintHash;
+    private String fingerprint;
 
     @Builder
-    private ActiveSessionCache(UUID sessionId, Long userId, String refreshToken, Duration ttl, String accessToken, String fingerprintHash) {
+    private ActiveSessionCache(UUID sessionId, Long userId, String refreshToken, Duration ttl, String accessToken, String fingerprint) {
         this.sessionId = sessionId;
         this.userId = userId;
         this.refreshToken = refreshToken;
         this.expiresAt = Instant.now().plus(ttl);
         this.timeToLive = ttl.toSeconds();
         this.accessToken = accessToken;
-        this.fingerprintHash = fingerprintHash;
+        this.fingerprint = fingerprint;
     }
 }
