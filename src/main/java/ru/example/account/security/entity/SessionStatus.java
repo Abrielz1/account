@@ -7,9 +7,16 @@ public enum SessionStatus {
     STATUS_ACTIVE,
 
     /**
+     * Сессия скомпрометирована
+     */
+    STATUS_COMPROMISED,
+
+
+    /**
      * Сессия отозвана пользователем (logout).
      */
     STATUS_REVOKED_BY_USER,
+
 
     /**
      * Сессия принудительно отозвана системой/администратором.
@@ -17,7 +24,7 @@ public enum SessionStatus {
     STATUS_REVOKED_BY_SYSTEM,
 
     /**
-     * КРАСНАЯ ТРЕВОГА: Сессия помечена как скомпрометированная.
+     * КРАСНАЯ ТРЕВОГА: Сессия распознана как хакерская атака.
      */
     STATUS_RED_ALERT
 }

@@ -12,6 +12,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.JdbcType;
+import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 import org.hibernate.proxy.HibernateProxy;
 import java.time.Instant;
 import java.util.Objects;
@@ -57,6 +59,15 @@ public class AuthSession {
 
     @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;
+
+    @Column(name = "revoked_at", nullable = false)
+    private Instant revokedAt;
+
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "reason",nullable = false) //Причина прилёта мухобойки
+    @JdbcType(PostgreSQLEnumJdbcType.class) // Маппинг на кастомный ENUM
+    private RevocationReason reason;
 
     @Override
     public final boolean equals(Object o) {
