@@ -19,6 +19,4 @@ public interface SessionPersistenceService {
 
     // Этот метод - атомарная операция записи в Аудит
     void createAndSaveAuditLog(AuthSession session);
-
-
 }

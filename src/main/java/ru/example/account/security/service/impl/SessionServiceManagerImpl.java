@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.example.account.security.entity.ActiveSessionCache;
 import ru.example.account.security.entity.AuthSession;
 import ru.example.account.security.entity.RevocationReason;
+import ru.example.account.security.entity.SessionAuditLog;
 import ru.example.account.security.jwt.JwtUtils;
 import ru.example.account.security.model.response.AuthResponse;
 import ru.example.account.security.service.IdGenerationService;
@@ -39,9 +40,9 @@ public class SessionServiceManagerImpl implements SessionServiceManager {
     @Override
     @Transactional(value = "securityTransactionManager", propagation = Propagation.REQUIRES_NEW)
     public AuthResponse createSession( AppUserDetails userDetails,
-                                          String fingerprint,
-                                          String ipAddress,
-                                          String userAgent) {
+                                       String fingerprint,
+                                       String ipAddress,
+                                       String userAgent) {
 
         log.info("Creating new session for user ID: {}", userDetails.getId());
 
@@ -52,7 +53,7 @@ public class SessionServiceManagerImpl implements SessionServiceManager {
         final String accessToken = this.jwtUtils.generateAccessToken(userDetails, sessionId);
 
         // --- Шаг 3: Создаем и сохраняем AuthSession в Postgres (наш журнал) ---
-     AuthSession authSession =   this.sessionPersistenceService.createAndSaveSession(
+        AuthSession authSession =   this.sessionPersistenceService.createAndSaveSession(
                 sessionId,
                 userDetails.getId(),
                 fingerprint,
@@ -62,7 +63,8 @@ public class SessionServiceManagerImpl implements SessionServiceManager {
                 refreshToken);
 
         // --- Шаг 4: Создаем и сохраняем ActiveSessionCache в Redis ---
-    ActiveSessionCache activeSessionCache = this.sessionPersistenceService.createAndSaveActiveSessionCache(authSession); // todo запихгуть в журнал сессий
+        this.sessionPersistenceService.createAndSaveActiveSessionCache(authSession);
+        this.sessionPersistenceService.createAndSaveAuditLog(authSession);
 
         return new AuthResponse(accessToken, refreshToken);
     }

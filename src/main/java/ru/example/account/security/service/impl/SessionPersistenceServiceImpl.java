@@ -1,3 +1,4 @@
+
 package ru.example.account.security.service.impl;
 
 import lombok.RequiredArgsConstructor;
@@ -7,9 +8,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.example.account.security.entity.AuthSession;
 import ru.example.account.security.entity.ActiveSessionCache;
+import ru.example.account.security.entity.SessionAuditLog;
 import ru.example.account.security.entity.SessionStatus;
 import ru.example.account.security.repository.ActiveSessionCacheRepository;
 import ru.example.account.security.repository.AuthSessionRepository;
+import ru.example.account.security.repository.SessionAuditLogRepository;
 import ru.example.account.security.service.SessionPersistenceService;
 import java.time.Duration;
 import java.time.Instant;
@@ -23,6 +26,8 @@ public class SessionPersistenceServiceImpl implements SessionPersistenceService 
     private final AuthSessionRepository authSessionRepository;
 
     private final ActiveSessionCacheRepository cacheRepository;
+
+    private final SessionAuditLogRepository sessionAuditLogRepository;
 
     @Value("${app.jwt.refresh-token-expiration}")
     private Duration refreshTokenExpiration;
@@ -69,11 +74,21 @@ public class SessionPersistenceServiceImpl implements SessionPersistenceService 
                 .ttl(refreshTokenExpiration)
                 .build();
 
-      return cacheRepository.save(redisSession);
+        return cacheRepository.save(redisSession);
     }
 
     @Override
+    @Transactional(value = "securityTransactionManager")
     public void createAndSaveAuditLog(AuthSession session) {
-    // todo
+        SessionAuditLog newSessionAuditLog = new SessionAuditLog();
+        newSessionAuditLog.setSessionId(session.getId());
+        newSessionAuditLog.setCreatedAt(session.getCreatedAt());
+        newSessionAuditLog.setUserAgent(session.getUserAgent());
+        newSessionAuditLog.setIpAddress(session.getIpAddress());
+        newSessionAuditLog.setFingerprintHash(session.getFingerprint());
+
+        log.info("starting saving session log");
+        sessionAuditLogRepository.save(newSessionAuditLog);
+        log.info("session log saved successfully");
     }
 }
