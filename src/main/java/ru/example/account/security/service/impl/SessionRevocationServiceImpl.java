@@ -1,17 +1,24 @@
 package ru.example.account.security.service.impl;
 
+import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.example.account.security.entity.AuthSession;
 import ru.example.account.security.entity.RevocationReason;
-import ru.example.account.security.entity.RevokedTokenArchive;
+import ru.example.account.security.entity.RevokedSessionArchive;
 import ru.example.account.security.entity.SessionStatus;
+import ru.example.account.security.jwt.JwtUtils;
 import ru.example.account.security.repository.AuthSessionRepository;
 import ru.example.account.security.repository.RevokedTokenArchiveRepository;
 import ru.example.account.security.service.AccessTokenBlacklistService;
 import ru.example.account.security.service.SessionRevocationService;
+
+import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.TemporalField;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -24,9 +31,10 @@ public class SessionRevocationServiceImpl implements SessionRevocationService {
 
     private final AccessTokenBlacklistService blacklistService;
 
+    private final JwtUtils jwtUtils;
+
     @Override
     public void revoke(AuthSession sessionToRevoke, RevocationReason reason) {
-        Instant now = Instant.now();
 
         if (sessionToRevoke == null) {
             log.error("Attempt to revoke a null session");
@@ -34,27 +42,34 @@ public class SessionRevocationServiceImpl implements SessionRevocationService {
         }
 
         if (sessionToRevoke.getStatus() != SessionStatus.STATUS_ACTIVE) {
-            log.error("Attempt to revoke an already inactive session with ID: {}", sessionToRevoke.getId());
+            log.error("Attempt to revoke an already inactive session with ID: {}. Revocation skipped.", sessionToRevoke.getId());
             return;
         }
 
-        RevokedTokenArchive newRevokedTokenArchive = RevokedTokenArchive.builder()
-                .refreshTokenValue(sessionToRevoke.getRefreshToken())
-                .accessesTokenValue(sessionToRevoke.getAccessToken())
+        Instant now = Instant.now();
+
+        RevokedSessionArchive newRevokedTokenArchive = RevokedSessionArchive.builder()
                 .sessionId(sessionToRevoke.getId())
-                .reason(reason)
-                .revokedAt(now)
                 .userId(sessionToRevoke.getUserId())
                 .fingerprint(sessionToRevoke.getFingerprint())
+                .ipAddress(sessionToRevoke.getIpAddress())
+                .userAgent(sessionToRevoke.getUserAgent())
+                .createdAt(sessionToRevoke.getCreatedAt())    // Время создания оригинальной сессии
+                .expiresAt(sessionToRevoke.getExpiresAt())      // Когда она должна была истечь
+                .revokedAt(now)                           // Время фактического отзыва
+                .reason(reason)
                 .build();
 
         // 2. Помечаем основную сессию как отозванную. Мы ее НЕ удаляем.
         sessionToRevoke.setStatus(sessionToRevoke.getStatus() == SessionStatus.STATUS_COMPROMISED ?
-                SessionStatus.STATUS_RED_ALERT : SessionStatus.STATUS_REVOKED_BY_SYSTEM);
-        sessionToRevoke.setRevokedAt(now);
-        sessionToRevoke.setReason(reason);
-        newRevokedTokenArchive.setSessionStatus(sessionToRevoke.getStatus());
-        newRevokedTokenArchive.setReason(reason);
+                SessionStatus.STATUS_RED_ALERT : SessionStatus.STATUS_REVOKED_BY_USER);
+        try {
+         Claims claims = jwtUtils.getAllClaimsFromToken(sessionToRevoke.getAccessToken());
+         Instant expiration  = jwtUtils.getExpiration(claims);
+            blacklistService.addToBlacklist(sessionToRevoke.getId(), Duration.between(now, expiration));
+        } catch (Exception e) {
+            log.warn("Could not parse access token for session {} to add to blacklist. It may be malformed or expired.", sessionToRevoke.getId());
+        }
 
         log.info("Session {} for user {} has been REVOKED. Reason: {}", sessionToRevoke.getId(), sessionToRevoke.getUserId(), reason);
         archiveRepository.save(newRevokedTokenArchive);
@@ -62,7 +77,12 @@ public class SessionRevocationServiceImpl implements SessionRevocationService {
         authSessionRepository.save(sessionToRevoke);
         log.info("session successfully saved");
 
+        log.info("Session {} for user {} has been REVOKED with reason: {}",
+                sessionToRevoke.getId(),
+                sessionToRevoke.getUserId(),
+                reason);
     }
+
 
     @Override
     public void revokeAllSessionsForUser(Long userId, RevocationReason reason) {

@@ -106,7 +106,6 @@ public class SessionServiceManagerImpl implements SessionServiceManager {
             // ... (протокол "Красная тревога": отозвать все сессии, отправить алерт) ...
             sessionRevocationService.revokeAllSessionsForUser(sessionFromDb.getUserId(), RevocationReason.REASON_RED_ALERT);
 
-            // todo обработка вторжения
             // Кидаем общее исключение, чтобы не давать атакующему подсказок.
             throw new SecurityBreachAttemptException("Security validation failed.");
         }

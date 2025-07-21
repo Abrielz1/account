@@ -19,7 +19,6 @@ public class AccessTokenBlacklistServiceImpl implements AccessTokenBlacklistServ
     // Префикс для ключей, чтобы не смешивать их с другими данными в Redis.
     private static final String KEY_PREFIX = "banned_access_sessions::";
 
-
     @Override
     public void addToBlacklist(UUID sessionId, Duration duration) {
         // Не добавляем, если токен уже и так истек

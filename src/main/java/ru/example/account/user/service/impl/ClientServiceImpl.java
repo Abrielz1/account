@@ -9,17 +9,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import ru.example.account.security.model.request.UserRegisterRequestDto;
+import ru.example.account.security.service.MailSendService;
 import ru.example.account.security.service.TimezoneService;
+import ru.example.account.shared.util.LinkGenerator;
 import ru.example.account.user.entity.Client;
+import ru.example.account.user.model.response.ActivationClientAccountRequest;
 import ru.example.account.user.model.response.CreateUserAccountDetailResponseDto;
 import ru.example.account.user.repository.ClientRepository;
 import ru.example.account.user.service.UserProcessor;
 import ru.example.account.user.service.ClientService;
 import ru.example.account.shared.exception.exceptions.AlreadyExistsException;
-
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
-
 import static ru.example.account.shared.mapper.ClientMapper.toAuthResponse;
 
 @Slf4j
@@ -36,6 +36,10 @@ public class ClientServiceImpl implements ClientService {
     private final ClientRepository clientRepository;
 
     private final PasswordEncoder passwordEncoder;
+
+    private final MailSendService mailSendService;
+
+    private final LinkGenerator linkGenerator;
 
     @Override
     @Transactional("businessTransactionManager")
@@ -81,6 +85,11 @@ public class ClientServiceImpl implements ClientService {
         newClient.setRegistrationDateTime(ZonedDateTime.now(timezoneService.getZoneIdFromRequest(httpRequest)));
 
         clientRepository.save(newClient);
+
+        ActivationClientAccountRequest activationClientAccountRequest = new ActivationClientAccountRequest(request.email(),
+                this.linkGenerator.generateActivationLink(request.email(), newClient));
+
+        mailSendService.sendActivationMail(activationClientAccountRequest);
 
         return toAuthResponse(newClient);
     }

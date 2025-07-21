@@ -6,10 +6,9 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.example.account.security.entity.AuthSession;
 import ru.example.account.security.entity.RevocationReason;
-import ru.example.account.security.entity.RevokedTokenArchive;
+import ru.example.account.security.entity.RevokedSessionArchive;
 import ru.example.account.security.repository.AuthSessionRepository;
 import ru.example.account.security.repository.RevokedTokenArchiveRepository;
-
 import java.time.Instant;
 
 @Service
@@ -25,10 +24,13 @@ public class SessionArchivingServiceImpl implements SessionArchivingService {
     @Override
     @Transactional(value = "securityTransactionManager", propagation = Propagation.REQUIRES_NEW)
     public void archive(AuthSession session, RevocationReason reason) {
-        RevokedTokenArchive archiveEntry = RevokedTokenArchive.builder()
-                .tokenValue(session.getRefreshToken())
+
+        RevokedSessionArchive archiveEntry = RevokedSessionArchive.builder()
+                .userAgent(session.getUserAgent())
+                .ipAddress(session.getIpAddress())
                 .sessionId(session.getId())
                 .userId(session.getUserId())
+                .createdAt(session.getCreatedAt())
                 .revokedAt(Instant.now())
                 .reason(reason)
                 .build();

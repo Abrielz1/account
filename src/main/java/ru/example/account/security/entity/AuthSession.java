@@ -26,32 +26,33 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(of = {"id", "status"})
+@ToString(of = {"id", "userId", "status"})
 public class AuthSession {
-
     @Id
+    @Column(name = "id")
     private UUID id;
 
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(name = "refresh_token", nullable = false, unique = true)
+    @Column(name = "refresh_token", columnDefinition = "TEXT", nullable = false, unique = true)
     private String refreshToken;
 
     @Column(name = "access_token", columnDefinition = "TEXT", nullable = false, unique = true)
     private String accessToken;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "status", nullable = false)
+    @JdbcType(PostgreSQLEnumJdbcType.class)
     private SessionStatus status;
 
-    @Column(name = "fingerprint")
+    @Column(name = "fingerprint", columnDefinition = "TEXT")
     private String fingerprint;
 
-    @Column(name = "ip_address")
+    @Column(name = "ip_address", length = 45)
     private String ipAddress;
 
-    @Column(name = "user_agent")
+    @Column(name = "user_agent", columnDefinition = "TEXT")
     private String userAgent;
 
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -60,14 +61,14 @@ public class AuthSession {
     @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;
 
-    @Column(name = "revoked_at", nullable = false)
+    @Column(name = "revoked_at")
     private Instant revokedAt;
 
-
     @Enumerated(EnumType.STRING)
-    @Column(name = "reason",nullable = false) //Причина прилёта мухобойки
-    @JdbcType(PostgreSQLEnumJdbcType.class) // Маппинг на кастомный ENUM
-    private RevocationReason reason;
+    @Column(name = "revocation_reason")
+    @JdbcType(PostgreSQLEnumJdbcType.class)
+    private RevocationReason revocationReason;
+
 
     @Override
     public final boolean equals(Object o) {

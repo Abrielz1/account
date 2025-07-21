@@ -35,3 +35,4 @@ build/
 /logfile.log.2025-05-13.0.gz
 /src/main/java/ru/example/account/app/entity/KeyGen.java
 /logfile.log.2025-06-10.0.gz
+*.env

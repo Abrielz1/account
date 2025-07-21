@@ -55,3 +55,9 @@ db:
   schema:
     business: business
     security: security
+
+EMAIL_USERNAME:  ${EMAIL_USERNAME}
+EMAIL_FROM: ${EMAIL_FROM}
+EMAIL_PASSWORD: ${EMAIL_PASSWORD}
+EMAIL_HOST: ${EMAIL_HOST}
+EMAIL_PORT: ${EMAIL_PORT}

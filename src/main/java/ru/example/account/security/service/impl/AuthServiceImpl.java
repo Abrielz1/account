@@ -3,7 +3,6 @@ package ru.example.account.security.service.impl;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -12,52 +11,25 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.example.account.security.jwt.JwtUtils;
 import ru.example.account.security.model.request.LoginRequest;
 import ru.example.account.security.model.request.RefreshTokenRequest;
 import ru.example.account.security.model.response.AuthResponse;
-import ru.example.account.security.repository.AuthSessionRepository;
-import ru.example.account.security.service.AccessTokenBlacklistService;
 import ru.example.account.security.service.AuthService;
 import ru.example.account.security.service.FingerprintService;
 import ru.example.account.security.service.HttpUtilsService;
-import ru.example.account.security.service.SessionQueryService;
-import ru.example.account.security.service.SessionRevocationService;
-import ru.example.account.security.service.SessionCommandService;
 import ru.example.account.security.service.SessionServiceManager;
 import ru.example.account.security.service.TimezoneService;
 import ru.example.account.security.service.UserService;
 import ru.example.account.shared.exception.exceptions.UserNotVerifiedException;
-import ru.example.account.shared.util.FingerprintUtils;
-import ru.example.account.user.repository.UserRepository;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-    // --- ЗАВИСИМОСТИ ---
-    private final AuthenticationManager authenticationManager;
-
-    private final IdGenerationServiceImpl idGenerationService;
-
-    private final JwtUtils jwtUtils;
-
-    private final SessionQueryService sessionQueryService;
-
-    private final SessionRevocationService sessionRevocationService;
-
-    private final SessionCommandService sessionService;
-
-    private final AccessTokenBlacklistService blacklistService;
-
-    private final FingerprintUtils fingerprintUtils;
-
-    private final ApplicationEventPublisher eventPublisher;
-
     private final UserDetailsService userDetailsService;
 
-    private final UserRepository userRepository;
+    private final AuthenticationManager authenticationManager;
 
     private final SessionServiceManager sessionManager; // главный
 
@@ -68,8 +40,6 @@ public class AuthServiceImpl implements AuthService {
     private final HttpUtilsService httpUtilsService;
 
     private final TimezoneService timezoneService;
-
-    private final AuthSessionRepository authSessionRepository;
 
     @Override
     @Transactional(value = "securityTransactionManager")
