@@ -44,6 +44,11 @@ public class MailSendServiceImpl implements MailSendService {
     }
 
     @Override
+    public void sendRedAlertNotification(Long userId, String fingerprint, String ipAddress, String userAgent, RevocationReason revocationReason) {
+
+    }
+
+    @Override
     public void sendReplayAttackNotification(String refreshToken, String accessesToken, String fingerprint, String ipAddress, String userAgent, AppUserDetails currentUser) {
 
     }

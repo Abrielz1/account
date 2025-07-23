@@ -5,7 +5,5 @@ import ru.example.account.security.entity.RevocationReason;
 
 public interface SessionCommandService {
 
-    void archive(AuthSession session, RevocationReason reason);
-
     void archiveAllForUser(Long userId, String fingerprint, String ipAddress, String userAgent, RevocationReason revocationReason);
 }

@@ -7,12 +7,12 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.example.account.security.entity.AuthSession;
 import ru.example.account.security.entity.RevocationReason;
+import ru.example.account.security.entity.SessionStatus;
 import ru.example.account.security.model.response.AuthResponse;
 import ru.example.account.security.service.MailSendService;
 import ru.example.account.security.service.SessionCommandService;
 import ru.example.account.security.service.SessionPersistenceService;
 import ru.example.account.security.service.SessionQueryService;
-import ru.example.account.security.service.SessionRevocationService;
 import ru.example.account.security.service.SessionServiceManager;
 import ru.example.account.shared.exception.exceptions.SecurityBreachAttemptException;
 import ru.example.account.shared.exception.exceptions.SessionExpiredException;
@@ -32,6 +32,8 @@ public class SessionServiceManagerImpl implements SessionServiceManager {
     private final SessionQueryService sessionQueryService;
 
     private final SessionCommandService sessionCommandService;
+
+    private final SessionRevocationServiceImpl sessionRevocationService;
 
     private final MailSendService mailSendService;
 
@@ -85,6 +87,7 @@ public class SessionServiceManagerImpl implements SessionServiceManager {
             // todo eventPublisher.publishEvent(... "REPLAY_ATTACK" ...);
 
             if (sessionQueryService.isTokenArchived(refreshToken)) {
+                this.sessionRevocationService.revokeAllSessionsForUser(currentUser.getId(), RevocationReason.REASON_RED_ALERT);
                 this.mailSendService.sendReplayAttackNotification(refreshToken,
                         accessesToken,
                         fingerprint,
@@ -99,13 +102,35 @@ public class SessionServiceManagerImpl implements SessionServiceManager {
         if (sessionFromDb.getExpiresAt().isBefore(Instant.now())) {
             // ... (архивируем с причиной EXPIRED и кидаем исключение)
             log.trace("");
-            this.sessionCommandService.archive(sessionFromDb, RevocationReason.REASON_EXPIRED);
+            this.sessionRevocationService.revokeAndArchive(sessionFromDb, RevocationReason.REASON_EXPIRED);
             throw new SessionExpiredException("");
         }
 
         boolean isTokenBindingValid = Objects.equals(sessionFromDb.getAccessToken(), accessesToken);
         boolean isRefreshTokenValid = Objects.equals(sessionFromDb.getRefreshToken(), refreshToken);
         boolean isFingerprintValid = Objects.equals(sessionFromDb.getFingerprint(), fingerprint);
+        boolean isCompromisedSession = Objects.equals(sessionFromDb.getStatus(), SessionStatus.STATUS_COMPROMISED);
+
+        if (isCompromisedSession) {
+
+            log.error("Hacker intrusion!. Red Alert!");
+
+            String reason = String.format(
+                    "Security violation for session %s: TokenBindingOk=%b, RefreshTokenOk=%b, FingerprintOk=%b, because Session status is: %s",
+                    sessionFromDb.getId(), isTokenBindingValid, isRefreshTokenValid, isFingerprintValid, sessionFromDb.getStatus()
+            );
+
+            log.error("CRITICAL [SECURITY]: {}", reason);
+
+            // ... (протокол "Красная тревога": сдампить всю сессию,  отозвать все сессии, отправить алерт) ...
+            this.sessionCommandService.archiveAllForUser(sessionFromDb.getUserId(), fingerprint, ipAddress, userAgent, RevocationReason.REASON_RED_ALERT);
+
+            // шлём срочное уведомление об хакерской атаке
+            this.mailSendService.sendRedAlertNotification(sessionFromDb.getUserId(), fingerprint, ipAddress, userAgent, currentUser, RevocationReason.REASON_RED_ALERT);
+
+            // Кидаем общее исключение, чтобы не давать атакующему подсказок.
+            throw new SecurityBreachAttemptException("Security validation failed.");
+        }
 
         if (!(isTokenBindingValid && isRefreshTokenValid && isFingerprintValid)) {
             log.error("Hacker intrusion!. Red Alert!");
@@ -131,10 +156,10 @@ public class SessionServiceManagerImpl implements SessionServiceManager {
         // ВСЕ СТРАЖНИКИ ПРОЙДЕНЫ. ЗАПРОС ЛЕГИТИМНЫЙ.
         // ==========================================================
 
-        // ... (Штатная ротация, отзываем старую, создаем новую) ...
+        // ... (Штатная ротация, отзываем старую, создаем новую) ..
 
          // 3. Архивируем и отзываем старую сессию
-          this.sessionCommandService.archive(sessionFromDb, RevocationReason.REASON_TOKEN_ROTATED);
+          this.sessionRevocationService.revokeAndArchive(sessionFromDb, RevocationReason.REASON_TOKEN_ROTATED);
 
         // 4. СОЗДАЕМ НОВУЮ СЕССИЮ (переиспользуем логику из `createSession`)
         //    Это предполагает, что в `createSession` ты уже вынес логику `isNewDevice`.

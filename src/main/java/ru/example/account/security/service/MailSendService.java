@@ -15,5 +15,7 @@ public interface MailSendService {
 
     void sendRedAlertNotification(Long userId, String fingerprint, String ipAddress, String userAgent, AppUserDetails currentUser, RevocationReason revocationReason);
 
+    void sendRedAlertNotification(Long userId, String fingerprint, String ipAddress, String userAgent, RevocationReason revocationReason);
+
     void sendReplayAttackNotification(String refreshToken, String accessesToken, String fingerprint, String ipAddress, String userAgent, AppUserDetails currentUser);
 }

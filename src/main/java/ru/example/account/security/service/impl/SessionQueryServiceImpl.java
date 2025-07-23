@@ -45,11 +45,9 @@ public class SessionQueryServiceImpl implements SessionQueryService {
     }
 
     @Override
-    public Optional<AuthSession> findActiveByRefreshToken(String token) {
+    public Optional<AuthSession> findActiveByRefreshToken(String refreshToken) {
 
-
-
-        return Optional.empty();
+        return authSessionRepository.findByRefreshTokenAndStatus(refreshToken, SessionStatus.STATUS_ACTIVE);
     }
 
     @Override

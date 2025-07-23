@@ -64,4 +64,27 @@ public class RevokedSessionArchive {
     @Column(name = "reason", nullable = false)
     @JdbcType(PostgreSQLEnumJdbcType.class)
     private RevocationReason reason;
+
+    public static RevokedSessionArchive from(AuthSession sessionToRevoke,
+                                             Instant now,
+                                             RevocationReason revocationReason) {
+
+        if (sessionToRevoke == null) {
+            // Чтобы избежать NullPointerException
+            throw new IllegalArgumentException("Source AuthSession cannot be null");
+        }
+
+        return RevokedSessionArchive.builder().sessionId(sessionToRevoke.getId())
+                .userId(sessionToRevoke.getUserId())
+                .refreshToken(sessionToRevoke.getRefreshToken())
+                .accessToken(sessionToRevoke.getAccessToken())
+                .fingerprint(sessionToRevoke.getFingerprint())
+                .ipAddress(sessionToRevoke.getIpAddress())
+                .userAgent(sessionToRevoke.getUserAgent())
+                .createdAt(sessionToRevoke.getCreatedAt())
+                .expiresAt(sessionToRevoke.getExpiresAt())
+                .revokedAt(now)
+                .reason(revocationReason)
+                .build();
+    }
 }
