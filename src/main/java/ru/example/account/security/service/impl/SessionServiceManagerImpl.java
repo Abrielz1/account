@@ -35,8 +35,6 @@ public class SessionServiceManagerImpl implements SessionServiceManager {
 
     private final MailSendService mailSendService;
 
-    private final SessionRevocationService sessionRevocationService;
-
     @Override
     @Transactional(value = "securityTransactionManager", propagation = Propagation.REQUIRES_NEW)
     public AuthResponse createSession(AppUserDetails currentUser,
@@ -101,7 +99,7 @@ public class SessionServiceManagerImpl implements SessionServiceManager {
         if (sessionFromDb.getExpiresAt().isBefore(Instant.now())) {
             // ... (архивируем с причиной EXPIRED и кидаем исключение)
             log.trace("");
-            this.sessionRevocationService.revoke(sessionFromDb, RevocationReason.REASON_EXPIRED);
+            this.sessionCommandService.archive(sessionFromDb, RevocationReason.REASON_EXPIRED);
             throw new SessionExpiredException("");
         }
 
@@ -135,10 +133,8 @@ public class SessionServiceManagerImpl implements SessionServiceManager {
 
         // ... (Штатная ротация, отзываем старую, создаем новую) ...
 
-         // 3. ОТЗЫВАЕМ СТАРУЮ СЕССИЮ
-
-        this.sessionRevocationService.revoke(sessionFromDb, RevocationReason.REASON_TOKEN_ROTATED);
-
+         // 3. Архивируем и отзываем старую сессию
+          this.sessionCommandService.archive(sessionFromDb, RevocationReason.REASON_TOKEN_ROTATED);
 
         // 4. СОЗДАЕМ НОВУЮ СЕССИЮ (переиспользуем логику из `createSession`)
         //    Это предполагает, что в `createSession` ты уже вынес логику `isNewDevice`.

@@ -107,7 +107,6 @@ public class SessionPersistenceServiceImpl implements SessionPersistenceService 
 
     @Override
     public void saveFingerPrint(String fingerprint, String ipAddress, String userAgent, ZonedDateTime lastSeenAt, Long userId) {
-        // todo
         fingerprintService.save(fingerprint, ipAddress, userAgent, lastSeenAt, userId);
     }
 }

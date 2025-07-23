@@ -12,7 +12,6 @@ import ru.example.account.security.entity.RevokedSessionArchive;
 import ru.example.account.security.entity.SessionStatus;
 import ru.example.account.security.jwt.JwtUtils;
 import ru.example.account.security.repository.AuthSessionRepository;
-import ru.example.account.security.repository.RevokedTokenArchiveRepository;
 import ru.example.account.security.service.AccessTokenBlacklistService;
 import ru.example.account.security.service.SessionRevocationService;
 import java.time.Duration;
@@ -26,61 +25,33 @@ public class SessionRevocationServiceImpl implements SessionRevocationService {
 
     private final AuthSessionRepository authSessionRepository;
 
-    private final RevokedTokenArchiveRepository archiveRepository;
-
     private final AccessTokenBlacklistService blacklistService;
 
     private final JwtUtils jwtUtils;
 
     @Override
     @Transactional(value = "securityTransactionManager", propagation = Propagation.REQUIRES_NEW)
-    public void revoke(AuthSession sessionToRevoke, RevocationReason reason) {
+    public void revoke(RevokedSessionArchive sessionToRevoke) {
 
         if (sessionToRevoke == null) {
             log.error("Attempt to revoke a null session");
             return;
         }
 
-        if (sessionToRevoke.getStatus() != SessionStatus.STATUS_ACTIVE) {
-            log.error("Attempt to revoke an already inactive session with ID: {}. Revocation skipped.", sessionToRevoke.getId());
-            return;
-        }
-
-        Instant now = Instant.now();
-
-        RevokedSessionArchive newRevokedTokenArchive = RevokedSessionArchive.builder()
-                .sessionId(sessionToRevoke.getId())
-                .userId(sessionToRevoke.getUserId())
-                .fingerprint(sessionToRevoke.getFingerprint())
-                .ipAddress(sessionToRevoke.getIpAddress())
-                .userAgent(sessionToRevoke.getUserAgent())
-                .createdAt(sessionToRevoke.getCreatedAt())    // Время создания оригинальной сессии
-                .expiresAt(sessionToRevoke.getExpiresAt())      // Когда она должна была истечь
-                .revokedAt(now)                           // Время фактического отзыва
-                .reason(reason)
-                .build();
-
-        // 2. Помечаем основную сессию как отозванную. Мы ее НЕ удаляем.
-        sessionToRevoke.setStatus(sessionToRevoke.getStatus() == SessionStatus.STATUS_COMPROMISED ?
-                SessionStatus.STATUS_RED_ALERT : SessionStatus.STATUS_REVOKED_BY_USER);
         try {
          Claims claims = jwtUtils.getAllClaimsFromToken(sessionToRevoke.getAccessToken());
          Instant expiration  = jwtUtils.getExpiration(claims);
-            blacklistService.addToBlacklist(sessionToRevoke.getId(), Duration.between(now, expiration));
+            blacklistService.addToBlacklist(sessionToRevoke.getSessionId(), Duration.between(sessionToRevoke.getRevokedAt(), expiration));
         } catch (Exception e) {
-            log.warn("Could not parse access token for session {} to add to blacklist. It may be malformed or expired.", sessionToRevoke.getId());
+            log.warn("Could not parse access token for session {} to add to blacklist. It may be malformed or expired.", sessionToRevoke.getSessionId());
         }
 
-        log.info("Session {} for user {} has been REVOKED. Reason: {}", sessionToRevoke.getId(), sessionToRevoke.getUserId(), reason);
-        archiveRepository.save(newRevokedTokenArchive);
-        log.info("Session archived successfully!");
-        authSessionRepository.save(sessionToRevoke);
-        log.info("session successfully saved");
+        log.info("Session {} for user {} has been REVOKED. Reason: {}", sessionToRevoke.getSessionId(), sessionToRevoke.getUserId(), sessionToRevoke.getReason());
 
         log.info("Session {} for user {} has been REVOKED with reason: {}",
-                sessionToRevoke.getId(),
+                sessionToRevoke.getSessionId(),
                 sessionToRevoke.getUserId(),
-                reason);
+                sessionToRevoke.getReason());
     }
 
 
