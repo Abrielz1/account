@@ -2,16 +2,20 @@ package ru.example.account.security.service;
 
 import ru.example.account.security.model.response.AuthResponse;
 import ru.example.account.security.service.impl.AppUserDetails;
+import java.time.ZonedDateTime;
 
 public interface SessionServiceManager {
 
-    AuthResponse createSession(AppUserDetails userDetails,
+    AuthResponse createSession(AppUserDetails currentUser,
                                String ipAddress,
                                String fingerprint,
-                               String userAgent);
+                               String userAgent,
+                               ZonedDateTime lastSeenAt);
 
     AuthResponse rotateSessionAndTokens(String refreshToken,
                                         String accessesToken,
-                                        String fingerPrint,
+                                        String fingerprint,
+                                        String ipAddress,
+                                        String userAgent,
                                         AppUserDetails currentUser);
 }

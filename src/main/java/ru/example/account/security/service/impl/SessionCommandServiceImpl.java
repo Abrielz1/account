@@ -2,41 +2,50 @@ package ru.example.account.security.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import ru.example.account.security.entity.AuthSession;
 import ru.example.account.security.entity.RevocationReason;
-import ru.example.account.security.jwt.JwtUtils;
-import ru.example.account.security.repository.ActiveSessionCacheRepository;
-import ru.example.account.security.repository.AuthSessionRepository;
-import ru.example.account.security.repository.RevokedTokenArchiveRepository;
+import ru.example.account.security.entity.RevokedClientData;
+import ru.example.account.security.repository.RevokedDataRepository;
 import ru.example.account.security.service.IdGenerationService;
 import ru.example.account.security.service.SessionCommandService;
+import ru.example.account.security.service.SessionRevocationService;
+import java.time.Instant;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class SessionCommandServiceImpl implements SessionCommandService {
 
-    private final AuthSessionRepository authSessionRepository;
-
-    private final RevokedTokenArchiveRepository archiveRepository;
-
-    private final ActiveSessionCacheRepository activeSessionCacheRepository;
-
-    private final RedissonClient redissonClient;
-
-    private final JwtUtils jwtUtils;
+    private final RevokedDataRepository revokedDataRepository;
 
     private final IdGenerationService idGenerationService;
 
+    private final SessionRevocationService sessionRevocationService;
+
     @Override
+    @Transactional(value = "securityTransactionManager", propagation = Propagation.REQUIRES_NEW)
     public void archive(AuthSession session, RevocationReason reason) {
 
     }
 
     @Override
-    public void archiveAllForUser(Long userId, RevocationReason reason) {
+    @Transactional(value = "securityTransactionManager", propagation = Propagation.REQUIRES_NEW)
+    public void archiveAllForUser(Long userId, String fingerprint, String ipAddress, String userAgent, RevocationReason revocationReason) {
 
+        RevokedClientData data = RevokedClientData.builder()
+                .id(this.idGenerationService.generateSessionId()) // Уникальный ID инцидента
+                .userId(userId)
+                .fingerprint(fingerprint)
+                .ipAddress(ipAddress)
+                .userAgent(userAgent)
+                .createdAlertAt(Instant.now())
+                .revocationReason(revocationReason)
+                .build();
+        revokedDataRepository.save(data);
+
+        sessionRevocationService.revokeAllSessionsForUser(userId, RevocationReason.REASON_RED_ALERT);
     }
 }

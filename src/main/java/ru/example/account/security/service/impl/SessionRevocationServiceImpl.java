@@ -4,6 +4,8 @@ import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import ru.example.account.security.entity.AuthSession;
 import ru.example.account.security.entity.RevocationReason;
 import ru.example.account.security.entity.RevokedSessionArchive;
@@ -13,12 +15,9 @@ import ru.example.account.security.repository.AuthSessionRepository;
 import ru.example.account.security.repository.RevokedTokenArchiveRepository;
 import ru.example.account.security.service.AccessTokenBlacklistService;
 import ru.example.account.security.service.SessionRevocationService;
-
 import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.TemporalField;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -34,6 +33,7 @@ public class SessionRevocationServiceImpl implements SessionRevocationService {
     private final JwtUtils jwtUtils;
 
     @Override
+    @Transactional(value = "securityTransactionManager", propagation = Propagation.REQUIRES_NEW)
     public void revoke(AuthSession sessionToRevoke, RevocationReason reason) {
 
         if (sessionToRevoke == null) {
@@ -85,7 +85,20 @@ public class SessionRevocationServiceImpl implements SessionRevocationService {
 
 
     @Override
+    @Transactional(value = "securityTransactionManager", propagation = Propagation.REQUIRES_NEW)
     public void revokeAllSessionsForUser(Long userId, RevocationReason reason) {
 
+        List<AuthSession> activeClientSessionsList = this.authSessionRepository.findAllByUserIdAndStatus(userId, reason)
+                .stream()
+                .map(s -> {
+                    s.setStatus(SessionStatus.STATUS_COMPROMISED);
+                    s.setRevokedAt(Instant.now());
+                    s.setRevocationReason(reason);
+                    return s;
+                })
+                .toList();
+
+        authSessionRepository.saveAll(activeClientSessionsList);
+        log.info("all clients sessions revoked successfully");
     }
 }

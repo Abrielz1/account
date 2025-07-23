@@ -19,25 +19,19 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "revoked_sessions_archive", schema = "security") // Кладем в security-схему
+@Table(name = "revoked_client data", schema = "security")
 @Getter
 @Setter
 @Builder
-@EqualsAndHashCode(of = "sessionId")
-@ToString()
+@EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor
-public class RevokedSessionArchive {
+@ToString(of = {"id", "userId", "revocationReason"})
+public class RevokedClientData {
 
     @Id
-    @Column(name = "session_id")
-    private UUID sessionId;
-
-    @Column(name = "refresh_token", unique = true)
-    private String refreshToken;
-
-    @Column(name = "access_token", unique = true)
-    private String accessToken;
+    @Column(name = "id")
+    private UUID id;
 
     @Column(name = "user_id", nullable = false)
     private Long userId;
@@ -51,17 +45,11 @@ public class RevokedSessionArchive {
     @Column(name = "user_agent", columnDefinition = "TEXT")
     private String userAgent;
 
-    @Column(name = "created_at", nullable = false)
-    private Instant createdAt;
-
-    @Column(name = "expires_at", nullable = false)
-    private Instant expiresAt;
-
-    @Column(name = "revoked_at", nullable = false)
-    private Instant revokedAt;
+    @Column(name = "created_alert_at", nullable = false, updatable = false)
+    private Instant createdAlertAt;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "reason", nullable = false)
+    @Column(name = "revocation_reason")
     @JdbcType(PostgreSQLEnumJdbcType.class)
-    private RevocationReason reason;
+    private RevocationReason revocationReason;
 }

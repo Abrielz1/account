@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import ru.example.account.security.entity.AuthSession;
+import ru.example.account.security.entity.RevocationReason;
 import ru.example.account.security.entity.SessionStatus;
 import java.util.List;
 import java.util.Optional;
@@ -15,7 +16,11 @@ public interface AuthSessionRepository extends JpaRepository<AuthSession, UUID> 
 
     Optional<AuthSession> findByRefreshTokenAndStatus(String refreshToken, SessionStatus status);
 
-    List<AuthSession> findAllByUserIdAndStatus(Long userId, SessionStatus status);
+    @Query(value = """
+                   FROM AuthSession au
+                   WHERE au.userId = :userId AND au.status = :reason
+                   """)
+    List<AuthSession> findAllByUserIdAndStatus(@Param("userId") Long userId, @Param("reason") RevocationReason reason);
 
     @Query("""
             SELECT EXISTS (SELECT 1 FROM AuthSession auth  WHERE auth.id = :sessionId)
@@ -24,5 +29,5 @@ public interface AuthSessionRepository extends JpaRepository<AuthSession, UUID> 
 
     Boolean existsByRefreshToken(String token);
 
-    Boolean existsByFingerprintHash(String fingerprintHash);
+    Boolean existsByFingerprint(String fingerprintHash);
 }

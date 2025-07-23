@@ -13,4 +13,6 @@ public interface SessionQueryService {
     AuthSession findByRefreshToken(String refreshToken);
 
     Optional<AuthSession> findActiveByRefreshToken(String token);
+
+    boolean isTokenArchived(String refreshToken);
 }

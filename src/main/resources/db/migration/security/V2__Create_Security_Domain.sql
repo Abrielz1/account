@@ -17,7 +17,7 @@ CREATE TYPE security.order_basis_enum AS ENUM (
     'LAW_ENFORCEMENT_REQUEST'
     );
 
-CREATE TYPE security.order_basis_enum AS ENUM (
+CREATE TYPE security.order_action_enum AS ENUM (
     'INTERNAL_REQUEST',         -- Запрос от другого сотрудника/отдела
     'COURT_ORDER',              -- Решение суда
     'LAW_ENFORCEMENT_REQUEST',    -- Запрос от "ФБР", etc
@@ -57,15 +57,17 @@ CREATE TABLE auth_sessions (
 -- Структура полностью повторяет auth_sessions
 -- Он заполняется, когда сессия в auth_sessions окончательно завершается.
 CREATE TABLE revoked_sessions_archive (
-                                          session_id        UUID PRIMARY KEY,
-                                          user_id           BIGINT NOT NULL,
-                                          fingerprint       TEXT NOT NULL,
-                                          ip_address        VARCHAR(45),
-                                          user_agent        TEXT,
-                                          created_at        TIMESTAMPTZ NOT NULL, -- Время создания оригинальной сессии
-                                          expires_at        TIMESTAMPTZ NOT NULL, -- Когда она должна была истечь
-                                          revoked_at        TIMESTAMPTZ NOT NULL, -- Когда ее отозвали
-                                          reason            revocation_reason_enum NOT NULL
+                                          session_id             UUID PRIMARY KEY,
+                                          refresh_token  TEXT NOT NULL UNIQUE ,
+                                          access_token TEXT NOT NULL UNIQUE ,
+                                          user_id                BIGINT NOT NULL,
+                                          fingerprint            TEXT NOT NULL,
+                                          ip_address             VARCHAR(45),
+                                          user_agent             TEXT,
+                                          created_at             TIMESTAMPTZ NOT NULL, -- Время создания оригинальной сессии
+                                          expires_at             TIMESTAMPTZ NOT NULL, -- Когда она должна была истечь
+                                          revoked_at             TIMESTAMPTZ NOT NULL, -- Когда ее отозвали
+                                          reason                 revocation_reason_enum NOT NULL
 );
 
 -- === ТАБЛИЦА АУДИТА И ФИНГЕРПРИНТОВ ===
@@ -92,14 +94,20 @@ CREATE TABLE admin_action_orders (
                                      notes                   TEXT
 );
 
-CREATE TABLE session_audit_log (
-                                   session_id          UUID PRIMARY KEY,
-                                   user_id             BIGINT NOT NULL,
-                                   fingerprint         TEXT,
-                                   ip_address          VARCHAR(45),
-                                   user_agent          TEXT,
-                                   created_at          TIMESTAMPTZ NOT NULL,
-                                   is_compromised      BOOLEAN DEFAULT FALSE NOT NULL
+-- Таблица для хранения известных и доверенных фингерпринтов
+CREATE TABLE client_fingerprints_history (
+                                                  id                    BIGSERIAL PRIMARY KEY,
+                                                  user_id               BIGINT NOT NULL,          -- Ссылка на ID пользователя из business.users
+                                                  fingerprint           TEXT NOT NULL,            -- Фингерпринт
+                                                  first_seen_at         TIMESTAMPTZ NOT NULL,     -- Когда впервые увидели
+                                                  last_seen_at          TIMESTAMPTZ NOT NULL,     -- Когда в последний раз видели
+                                                  ip_address            VARCHAR(256) NOT NULL,
+                                                  location_geo_info     TEXT,                     -- Опционально: GeoIP инфо (Город, Страна)
+                                                  user_agent            TEXT,                     -- Опционально: User-Agent
+                                                  is_trusted            BOOLEAN DEFAULT TRUE,     -- Флаг, доверяем ли мы этому устройству
+
+    -- Один юзер - один уникальный фингерпринт
+                                                  UNIQUE (user_id, fingerprint)
 );
 
 CREATE INDEX IF NOT EXISTS idx_admin_orders_user ON admin_action_orders(target_user_id);
@@ -112,6 +120,7 @@ CREATE INDEX IF NOT EXISTS idx_session_fingerprint ON auth_sessions(fingerprint)
 CREATE INDEX IF NOT EXISTS idx_revoked_sessions_user_id ON revoked_sessions_archive(user_id);
 CREATE INDEX IF NOT EXISTS idx_session_audit_log_user_id ON session_audit_log(user_id);
 CREATE INDEX IF NOT EXISTS idx_session_audit_log_created_at ON session_audit_log(created_at);
+CREATE INDEX IF NOT EXISTS idx_user_fingerprints_user ON client_fingerprints_history(user_id);
 
 
 

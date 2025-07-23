@@ -10,6 +10,7 @@ import ru.example.account.security.repository.RefreshTokenRepository;
 import ru.example.account.security.repository.RevokedTokenArchiveRepository;
 import ru.example.account.security.repository.SessionAuditLogRepository;
 import ru.example.account.security.service.IdGenerationService;
+import java.security.SecureRandom;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -31,6 +32,8 @@ public class IdGenerationServiceImpl implements IdGenerationService {
 
     private final RedissonClient redissonClient;
 
+    private final SecureRandom secureRandom = new SecureRandom();
+
     private static final int MAX_ATTEMPTS = 5;
 
     @Override
@@ -42,7 +45,11 @@ public class IdGenerationServiceImpl implements IdGenerationService {
             if (!lock.tryLock(5, TimeUnit.SECONDS)) {
                 throw new IllegalStateException("Cannot acquire lock for sessionId");
             }
-            UUID sessionId = UUID.randomUUID();
+
+            byte[] sessionBytes = new byte[16];
+            secureRandom.nextBytes(sessionBytes);
+
+            UUID sessionId = UUID.nameUUIDFromBytes(sessionBytes);
 
             final int MAX_VALUE = 4;
 
@@ -53,7 +60,7 @@ public class IdGenerationServiceImpl implements IdGenerationService {
                 if (authSessionPostgresRepo.checkSessionIdAuditLog(sessionId.toString())
                         && sessionAuditLogRepository.checkSessionIdAuthSession(sessionId.toString())) {
 
-                    sessionId = UUID.randomUUID();
+                    sessionId = UUID.nameUUIDFromBytes(sessionBytes);;
                     ++CURRENT_VALUE;
                 } else {
 
@@ -85,14 +92,19 @@ public class IdGenerationServiceImpl implements IdGenerationService {
                 throw new IllegalStateException("Failed to acquire lock for refresh token generation");
             }
 
+            byte[] sessionBytes = new byte[16];
+            secureRandom.nextBytes(sessionBytes);
+
+            String token = UUID.nameUUIDFromBytes(sessionBytes).toString();
+
             int currentAttempt = 0;
             while (currentAttempt < MAX_ATTEMPTS) {
-                String token = UUID.randomUUID().toString();
-
                 // Простая, явная проверка в ОБЕИХ таблицах
                 if (!authSessionPostgresRepo.existsByRefreshToken(token) && !revokedTokenArchiveRepository.existsById(token)) {
                     return token;
                 }
+
+                token = UUID.nameUUIDFromBytes(sessionBytes).toString();
 
                 ++currentAttempt;
             }

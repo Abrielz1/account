@@ -5,120 +5,158 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import ru.example.account.security.entity.ActiveSessionCache;
 import ru.example.account.security.entity.AuthSession;
 import ru.example.account.security.entity.RevocationReason;
-import ru.example.account.security.entity.SessionAuditLog;
-import ru.example.account.security.jwt.JwtUtils;
 import ru.example.account.security.model.response.AuthResponse;
-import ru.example.account.security.service.IdGenerationService;
+import ru.example.account.security.service.MailSendService;
+import ru.example.account.security.service.SessionCommandService;
 import ru.example.account.security.service.SessionPersistenceService;
 import ru.example.account.security.service.SessionQueryService;
 import ru.example.account.security.service.SessionRevocationService;
 import ru.example.account.security.service.SessionServiceManager;
 import ru.example.account.shared.exception.exceptions.SecurityBreachAttemptException;
+import ru.example.account.shared.exception.exceptions.SessionExpiredException;
 import ru.example.account.shared.exception.exceptions.TokenRefreshException;
 import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.Objects;
-import java.util.UUID;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class SessionServiceManagerImpl implements SessionServiceManager {
 
-    private final JwtUtils jwtUtils;
-
-    private final IdGenerationService idGenerationService;
 
     private final SessionPersistenceService sessionPersistenceService;
 
     private final SessionQueryService sessionQueryService;
 
+    private final SessionCommandService sessionCommandService;
+
+    private final MailSendService mailSendService;
+
     private final SessionRevocationService sessionRevocationService;
 
     @Override
     @Transactional(value = "securityTransactionManager", propagation = Propagation.REQUIRES_NEW)
-    public AuthResponse createSession( AppUserDetails userDetails,
-                                       String fingerprint,
-                                       String ipAddress,
-                                       String userAgent) {
+    public AuthResponse createSession(AppUserDetails currentUser,
+                                      String ipAddress,
+                                      String fingerprint,
+                                      String userAgent,
+                                      ZonedDateTime lastSeenAt) {
 
-        log.info("Creating new session for user ID: {}", userDetails.getId());
+        log.info("Creating new session for user ID: {}", currentUser.getId());
 
-        // 1. Делегируем генерацию уникальных ID
-        final UUID sessionId = this.idGenerationService.generateSessionId();
-        final String refreshToken = this.idGenerationService.generateRefreshToken();
-        // --- Шаг 2: Генерация refreshToken ---
-        final String accessToken = this.jwtUtils.generateAccessToken(userDetails, sessionId);
+        boolean isFingerprintAreKnown = this.sessionQueryService.checkExistenceOfFingerprint(fingerprint);
+
+        if (!isFingerprintAreKnown) {
+            log.trace("someone with unknown fingerprint attempt to login! ip: {}, fingerprint: {}, useragent: {}, userId: {}, email: {}",
+                    ipAddress, fingerprint, userAgent, currentUser.getId(), currentUser.getEmail());
+
+            mailSendService.sendAlertMail(fingerprint, ipAddress, userAgent, lastSeenAt, currentUser.getId());
+            this.sessionPersistenceService.saveFingerPrint(fingerprint, ipAddress, userAgent, lastSeenAt, currentUser.getId());
+        }
 
         // --- Шаг 3: Создаем и сохраняем AuthSession в Postgres (наш журнал) ---
-        AuthSession authSession =   this.sessionPersistenceService.createAndSaveSession(
-                sessionId,
-                userDetails.getId(),
+        AuthSession newAuthSession =   this.sessionPersistenceService.createAndSaveSession(
+                currentUser,
                 fingerprint,
                 ipAddress,
-                userAgent,
-                accessToken,
-                refreshToken);
+                userAgent);
 
-        // --- Шаг 4: Создаем и сохраняем ActiveSessionCache в Redis ---
-        this.sessionPersistenceService.createAndSaveActiveSessionCache(authSession);
-        this.sessionPersistenceService.createAndSaveAuditLog(authSession);
+        // --- Шаг 4 и 5: Создаем и сохраняем ActiveSessionCache в Redis и навсегда в Postgres---
+        this.sessionPersistenceService.createAndSaveActiveSessionCache(newAuthSession);
+        this.sessionPersistenceService.createAndSaveAuditLog(newAuthSession);
 
-        return new AuthResponse(accessToken, refreshToken);
+        return new AuthResponse(newAuthSession.getAccessToken(), newAuthSession.getRefreshToken());
     }
 
     @Override
+    @Transactional(value = "securityTransactionManager", propagation = Propagation.REQUIRES_NEW)
     public AuthResponse rotateSessionAndTokens(String refreshToken,
                                                String accessesToken,
-                                               String fingerPrint,
+                                               String fingerprint,
+                                               String ipAddress,
+                                               String userAgent,
                                                AppUserDetails currentUser) {
 
         AuthSession sessionFromDb = this.sessionQueryService.findActiveByRefreshToken(refreshToken).orElseThrow(() -> {
             // Пытаются использовать несуществующий или уже отозванный refresh.
             // Возможно, это replay-атака.
             log.warn("SECURITY: Attempt to use a non-existent or revoked refresh token.");
-            // eventPublisher.publishEvent(... "REPLAY_ATTACK" ...);
+            // todo eventPublisher.publishEvent(... "REPLAY_ATTACK" ...);
+
+            if (sessionQueryService.isTokenArchived(refreshToken)) {
+                this.mailSendService.sendReplayAttackNotification(refreshToken,
+                        accessesToken,
+                        fingerprint,
+                        ipAddress,
+                        userAgent,
+                        currentUser);
+            }
+
             return new TokenRefreshException("Refresh token is invalid.");
         });
 
         if (sessionFromDb.getExpiresAt().isBefore(Instant.now())) {
             // ... (архивируем с причиной EXPIRED и кидаем исключение)
-        }
-
-        if (!this.sessionQueryService.checkExistenceOfFingerprint(fingerPrint)) {
-            // todo обработка вторжения
+            log.trace("");
+            this.sessionRevocationService.revoke(sessionFromDb, RevocationReason.REASON_EXPIRED);
+            throw new SessionExpiredException("");
         }
 
         boolean isTokenBindingValid = Objects.equals(sessionFromDb.getAccessToken(), accessesToken);
         boolean isRefreshTokenValid = Objects.equals(sessionFromDb.getRefreshToken(), refreshToken);
-        boolean isFingerprintValid = Objects.equals(sessionFromDb.getFingerprint(), fingerPrint);
+        boolean isFingerprintValid = Objects.equals(sessionFromDb.getFingerprint(), fingerprint);
 
         if (!(isTokenBindingValid && isRefreshTokenValid && isFingerprintValid)) {
             log.error("Hacker intrusion!. Red Alert!");
-            // todo уведомление о атаке хакером
-            // todo снести все сесси рефреш и акцесс токенов, зажурналить всю сессию и кинуть срочное уведомление на почту
+
             String reason = String.format(
                     "Security violation for session %s: TokenBindingOk=%b, RefreshTokenOk=%b, FingerprintOk=%b",
                     sessionFromDb.getId(), isTokenBindingValid, isRefreshTokenValid, isFingerprintValid
             );
+
             log.error("CRITICAL [SECURITY]: {}", reason);
 
-            // ... (протокол "Красная тревога": отозвать все сессии, отправить алерт) ...
-            sessionRevocationService.revokeAllSessionsForUser(sessionFromDb.getUserId(), RevocationReason.REASON_RED_ALERT);
+            // ... (протокол "Красная тревога": сдампить всю сессию,  отозвать все сессии, отправить алерт) ...
+            this.sessionCommandService.archiveAllForUser(sessionFromDb.getUserId(), fingerprint, ipAddress, userAgent, RevocationReason.REASON_RED_ALERT);
+
+            // шлём срочное уведомление об хакерской атаке
+            this.mailSendService.sendRedAlertNotification(sessionFromDb.getUserId(), fingerprint, ipAddress, userAgent, currentUser, RevocationReason.REASON_RED_ALERT);
 
             // Кидаем общее исключение, чтобы не давать атакующему подсказок.
             throw new SecurityBreachAttemptException("Security validation failed.");
         }
+
         // ==========================================================
         // ВСЕ СТРАЖНИКИ ПРОЙДЕНЫ. ЗАПРОС ЛЕГИТИМНЫЙ.
         // ==========================================================
 
         // ... (Штатная ротация, отзываем старую, создаем новую) ...
 
-        return new AuthResponse(this.idGenerationService.generateRefreshToken(),
-                this.jwtUtils.generateAccessToken(currentUser, sessionFromDb.getId()));
+         // 3. ОТЗЫВАЕМ СТАРУЮ СЕССИЮ
+
+        this.sessionRevocationService.revoke(sessionFromDb, RevocationReason.REASON_TOKEN_ROTATED);
+
+
+        // 4. СОЗДАЕМ НОВУЮ СЕССИЮ (переиспользуем логику из `createSession`)
+        //    Это предполагает, что в `createSession` ты уже вынес логику `isNewDevice`.
+        //    Если мы хотим оставить `createSession` "тупым", то просто создаем сессию здесь.
+
+
+        AuthSession newAuthSession = this.sessionPersistenceService.createAndSaveSession(currentUser,
+                                                                                         fingerprint,
+                                                                                         ipAddress,
+                                                                                         userAgent);
+
+        sessionPersistenceService.createAndSaveActiveSessionCache(newAuthSession);
+        sessionPersistenceService.createAndSaveAuditLog(newAuthSession);
+
+        log.info("Client with id: {} session successfully created!", currentUser.getId());
+
+        return new AuthResponse(newAuthSession.getAccessToken(),
+                                newAuthSession.getRefreshToken());
     }
 }
 

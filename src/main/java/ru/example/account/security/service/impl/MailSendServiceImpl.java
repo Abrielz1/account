@@ -4,9 +4,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import ru.example.account.security.entity.RevocationReason;
 import ru.example.account.security.service.MailSendService;
 import org.springframework.mail.javamail.JavaMailSender;
 import ru.example.account.user.model.response.ActivationClientAccountRequest;
+
+import java.time.ZonedDateTime;
 
 @Slf4j
 @Service
@@ -27,6 +30,21 @@ public class MailSendServiceImpl implements MailSendService {
     @Override
     public void sendActivationMail(ActivationClientAccountRequest activationClientAccountRequest) {
 
+
+    }
+
+    @Override
+    public void sendAlertMail(String fingerprint, String ipAddress, String userAgent, ZonedDateTime lastSeenAt, Long id) {
+
+    }
+
+    @Override
+    public void sendRedAlertNotification(Long userId, String fingerprint, String ipAddress, String userAgent, AppUserDetails currentUser, RevocationReason revocationReason) {
+
+    }
+
+    @Override
+    public void sendReplayAttackNotification(String refreshToken, String accessesToken, String fingerprint, String ipAddress, String userAgent, AppUserDetails currentUser) {
 
     }
 

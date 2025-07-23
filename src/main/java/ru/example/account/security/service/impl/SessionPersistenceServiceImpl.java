@@ -10,12 +10,16 @@ import ru.example.account.security.entity.AuthSession;
 import ru.example.account.security.entity.ActiveSessionCache;
 import ru.example.account.security.entity.SessionAuditLog;
 import ru.example.account.security.entity.SessionStatus;
+import ru.example.account.security.jwt.JwtUtils;
 import ru.example.account.security.repository.ActiveSessionCacheRepository;
 import ru.example.account.security.repository.AuthSessionRepository;
 import ru.example.account.security.repository.SessionAuditLogRepository;
+import ru.example.account.security.service.FingerprintService;
+import ru.example.account.security.service.IdGenerationService;
 import ru.example.account.security.service.SessionPersistenceService;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.UUID;
 
 @Slf4j
@@ -29,27 +33,35 @@ public class SessionPersistenceServiceImpl implements SessionPersistenceService 
 
     private final SessionAuditLogRepository sessionAuditLogRepository;
 
+    private final FingerprintService fingerprintService;
+
+    private final JwtUtils jwtUtils;
+
+    private final IdGenerationService idGenerationService;
+
     @Value("${app.jwt.refresh-token-expiration}")
     private Duration refreshTokenExpiration;
 
     @Override
     @Transactional(value = "securityTransactionManager")
-    public AuthSession createAndSaveSession(UUID sessionId,
-                                            Long userId,
+    public AuthSession createAndSaveSession(AppUserDetails currentUser,
                                             String fingerprint,
                                             String ipAddress,
-                                            String userAgent,
-                                            String accessToken,
-                                            String refreshToken) {
-
+                                            String userAgent) {
 
         Instant currentTime = Instant.now();
-        log.info("Persisting new AuthSession {} for user {}", sessionId, userId);
+
+        // --- Шаг 1. Делегируем генерацию уникальных ID
+        final UUID newSessionId = this.idGenerationService.generateSessionId();
+        // --- Шаг 1: Генерация refreshToken ---
+        final String refreshToken = this.idGenerationService.generateRefreshToken();
+        // --- Шаг 2: Генерация accessToken ---
+        final String accessToken = this.jwtUtils.generateAccessToken(currentUser, newSessionId);
 
         AuthSession session =  AuthSession
                 .builder()
-                .id(sessionId)
-                .userId(userId)
+                .id(newSessionId)
+                .userId(currentUser.getId())
                 .userAgent(userAgent)
                 .ipAddress(ipAddress)
                 .createdAt(currentTime)
@@ -60,6 +72,7 @@ public class SessionPersistenceServiceImpl implements SessionPersistenceService 
                 .refreshToken(refreshToken)
                 .build();
 
+        log.info("Persisting new AuthSession {} for user {}", newSessionId, currentUser.getId());
         return  authSessionRepository.save(session);
     }
 
@@ -90,5 +103,11 @@ public class SessionPersistenceServiceImpl implements SessionPersistenceService 
         log.info("starting saving session log");
         sessionAuditLogRepository.save(newSessionAuditLog);
         log.info("session log saved successfully");
+    }
+
+    @Override
+    public void saveFingerPrint(String fingerprint, String ipAddress, String userAgent, ZonedDateTime lastSeenAt, Long userId) {
+        // todo
+        fingerprintService.save(fingerprint, ipAddress, userAgent, lastSeenAt, userId);
     }
 }

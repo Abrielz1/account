@@ -53,7 +53,6 @@ public class JwtUtils {
         }
     }
 
-
     public ActiveSessionCache generateRefreshToken(String userEmail, String newAccessesToken) {
         ActiveSessionCache newRefreshToken = ActiveSessionCache
                 .builder()

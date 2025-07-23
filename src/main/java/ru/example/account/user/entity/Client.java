@@ -19,7 +19,7 @@ import org.hibernate.annotations.JdbcType;
 import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 import org.hibernate.proxy.HibernateProxy;
 import ru.example.account.security.model.request.UserRegisterRequestDto;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.Objects;
 
 @Entity
@@ -80,7 +80,7 @@ public class Client extends User {
         this.setDateOfBirth(request.birthDate());
         this.getRoles().add(RoleType.ROLE_CLIENT);
         this.setRegistrationSource(request.registrationSource() == null ? null : request.registrationSource());
-        this.setRegistrationDateTime(LocalDateTime.now());
+        this.setRegistrationDateTime(ZonedDateTime.now());
         this.setUsername(request.username());
     }
 }

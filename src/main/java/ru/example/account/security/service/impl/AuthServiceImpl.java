@@ -10,7 +10,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import ru.example.account.security.model.request.LoginRequest;
 import ru.example.account.security.model.request.RefreshTokenRequest;
 import ru.example.account.security.model.response.AuthResponse;
@@ -21,6 +20,7 @@ import ru.example.account.security.service.SessionServiceManager;
 import ru.example.account.security.service.TimezoneService;
 import ru.example.account.security.service.UserService;
 import ru.example.account.shared.exception.exceptions.UserNotVerifiedException;
+import java.time.ZonedDateTime;
 
 @Slf4j
 @Service
@@ -42,7 +42,6 @@ public class AuthServiceImpl implements AuthService {
     private final TimezoneService timezoneService;
 
     @Override
-    @Transactional(value = "securityTransactionManager")
     public AuthResponse login(LoginRequest request, HttpServletRequest httpRequest) {
 
         log.info("Authentication attempt for user: {}", request.email());
@@ -62,30 +61,29 @@ public class AuthServiceImpl implements AuthService {
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        AppUserDetails userDetails = (AppUserDetails) authentication.getPrincipal();
+        AppUserDetails currentUser = (AppUserDetails) authentication.getPrincipal();
 
 
         // Проверка, что аккаунт пользователя активирован (после подтверждения email)
-        if (!userDetails.isEnabled()) {
+        if (!currentUser.isEnabled()) {
             throw new UserNotVerifiedException("User account is not active. Please check your email, especially spam folder.");
         }
 
-        log.info("User {} successfully authenticated.", userDetails.getUsername());
-
-
-        String ipAddress = this.httpUtilsService.getClientIpAddress(httpRequest);
+        log.info("User {} successfully authenticated.", currentUser.getUsername());
 
         String fingerprint = this.fingerprintService.generateUsersFingerprint(httpRequest);
-
+        String ipAddress = this.httpUtilsService.getClientIpAddress(httpRequest);
         String userAgent = httpRequest.getHeader("User-Agent");
+        ZonedDateTime lastSeenAt = ZonedDateTime.now();
 
-        this.userService.updateLastLoginAsync(userDetails.getId(), this.timezoneService.getZoneIdFromRequest(httpRequest));
+        this.userService.updateLastLoginAsync(currentUser.getId(), this.timezoneService.getZoneIdFromRequest(httpRequest));
 
         return  this.sessionManager.createSession(
-                userDetails,
+                currentUser,
                 ipAddress,
                 fingerprint,
-                userAgent);
+                userAgent,
+                lastSeenAt);
     }
 
     @Override
@@ -93,10 +91,14 @@ public class AuthServiceImpl implements AuthService {
 
         log.info("Token refresh process started.");
         AppUserDetails currentUser = (AppUserDetails) userDetailsService.loadUserByUsername(request.username());
+        String ipAddress = this.httpUtilsService.getClientIpAddress(httpRequest);
+        String userAgent = httpRequest.getHeader("User-Agent");
         return this.sessionManager.rotateSessionAndTokens(
                 request.refreshToken(),
                 request.accessesToken(), // Передаем и старый access-token
                 this.fingerprintService.generateUsersFingerprint(httpRequest),
+                ipAddress,
+                userAgent,
                 currentUser
         );
     }

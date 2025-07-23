@@ -23,7 +23,6 @@ import lombok.ToString;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 import org.hibernate.proxy.HibernateProxy;
-import ru.example.account.user.entity.AccountType;
 import ru.example.account.user.entity.User;
 import java.math.BigDecimal;
 import java.util.HashSet;

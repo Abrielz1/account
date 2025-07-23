@@ -1,4 +1,4 @@
-package ru.example.account.user.entity;
+package ru.example.account.business.entity;
 
 public enum AccountType {
     PERSONAL, SHARED
