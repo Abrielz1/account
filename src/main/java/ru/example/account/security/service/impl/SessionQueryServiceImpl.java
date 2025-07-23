@@ -5,11 +5,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.example.account.security.entity.AuthSession;
+import ru.example.account.security.entity.RevocationReason;
 import ru.example.account.security.entity.SessionStatus;
 import ru.example.account.security.repository.AuthSessionRepository;
 import ru.example.account.security.repository.RevokedTokenArchiveRepository;
 import ru.example.account.security.service.FingerprintService;
 import ru.example.account.security.service.SessionQueryService;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -26,7 +28,7 @@ public class SessionQueryServiceImpl implements SessionQueryService {
 
     @Override
     public Optional<AuthSession> findById(UUID sessionId) {
-        return Optional.empty();
+        return this.authSessionRepository.findById(sessionId);
     }
 
     @Override
@@ -40,7 +42,7 @@ public class SessionQueryServiceImpl implements SessionQueryService {
     public AuthSession findByRefreshToken(String refreshToken) {
         return this.authSessionRepository.findByRefreshTokenAndStatus(refreshToken, SessionStatus.STATUS_ACTIVE).orElseThrow(() -> {
             log.error("Hacker ALERT!");
-            return new IllegalStateException(""); // todo
+            return new IllegalStateException("Our Dns fails");
         });
     }
 
@@ -53,5 +55,10 @@ public class SessionQueryServiceImpl implements SessionQueryService {
     @Override
     public boolean isTokenArchived(String refreshToken) {
         return revokedTokenArchiveRepository.checkRefreshTokenInRevokedArchive(refreshToken);
+    }
+
+    @Override
+    public List<AuthSession> getAllActiveSession(Long userId, SessionStatus sessionStatus) {
+        return this.authSessionRepository.findAllByUserIdAndStatus(userId, sessionStatus);
     }
 }

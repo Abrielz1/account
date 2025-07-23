@@ -1,5 +1,7 @@
 package ru.example.account.security.repository;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -18,9 +20,9 @@ public interface AuthSessionRepository extends JpaRepository<AuthSession, UUID> 
 
     @Query(value = """
                    FROM AuthSession au
-                   WHERE au.userId = :userId AND au.status = :reason
+                   WHERE au.userId = :userId AND au.status = :sessionStatus
                    """)
-    List<AuthSession> findAllByUserIdAndStatus(@Param("userId") Long userId, @Param("reason") RevocationReason reason);
+    List<AuthSession> findAllByUserIdAndStatus(@Param("userId") Long userId, @Param("sessionStatus") SessionStatus sessionStatus);
 
     @Query("""
             SELECT EXISTS (SELECT 1 FROM AuthSession auth  WHERE auth.id = :sessionId)
@@ -30,4 +32,11 @@ public interface AuthSessionRepository extends JpaRepository<AuthSession, UUID> 
     Boolean existsByRefreshToken(String token);
 
     Boolean existsByFingerprint(String fingerprintHash);
+
+    @Query(value = """
+                   """, nativeQuery = true)
+    Slice<AuthSession> getAllActiveSession(@Param("cursor") Long cursor,
+                                           @Param("sessionId") UUID sessionId,
+                                           @Param("revocationStatus") RevocationReason revocationReason,
+                                           Pageable pageRequest);
 }

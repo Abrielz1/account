@@ -26,7 +26,6 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class SessionServiceManagerImpl implements SessionServiceManager {
 
-
     private final SessionPersistenceService sessionPersistenceService;
 
     private final SessionQueryService sessionQueryService;
@@ -84,10 +83,9 @@ public class SessionServiceManagerImpl implements SessionServiceManager {
             // Пытаются использовать несуществующий или уже отозванный refresh.
             // Возможно, это replay-атака.
             log.warn("SECURITY: Attempt to use a non-existent or revoked refresh token.");
-            // todo eventPublisher.publishEvent(... "REPLAY_ATTACK" ...);
 
             if (sessionQueryService.isTokenArchived(refreshToken)) {
-                this.sessionRevocationService.revokeAllSessionsForUser(currentUser.getId(), RevocationReason.REASON_RED_ALERT);
+                this.sessionRevocationService.revokeAllSessionsForUser(currentUser.getId(), SessionStatus.STATUS_COMPROMISED, RevocationReason.REASON_RED_ALERT);
                 this.mailSendService.sendReplayAttackNotification(refreshToken,
                         accessesToken,
                         fingerprint,
@@ -178,6 +176,20 @@ public class SessionServiceManagerImpl implements SessionServiceManager {
 
         return new AuthResponse(newAuthSession.getAccessToken(),
                                 newAuthSession.getRefreshToken());
+    }
+
+    @Override
+    public void logout(AppUserDetails userToLogOut) {
+
+        sessionQueryService.findById(userToLogOut.getSessionId())
+                .ifPresent(sessionToRevoke -> sessionRevocationService.revokeAndArchive(sessionToRevoke, RevocationReason.REASON_USER_LOGOUT));
+    }
+
+    @Override
+    @Transactional(value = "securityTransactionManager", propagation = Propagation.REQUIRES_NEW)
+    public void logoutAll(AppUserDetails userToLogOut) {
+
+        this.sessionRevocationService.revokeAllSessionsForUser(userToLogOut.getId(), SessionStatus.STATUS_POTENTIAL_COMPROMISED, RevocationReason.REASON_REVOKED_BY_USER_ON_ALL_DEVICES_SECURITY_ATTENTION);
     }
 }
 

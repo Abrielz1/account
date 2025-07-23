@@ -14,5 +14,5 @@ public interface AuthService {
 
     void logout(AppUserDetails userDetails);
 
-    void logoutAll(Long userId);
+    void logoutAll(AppUserDetails userDetails);
 }

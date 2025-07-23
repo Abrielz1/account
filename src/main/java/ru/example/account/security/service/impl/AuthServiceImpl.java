@@ -105,11 +105,12 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void logout(AppUserDetails userDetails) {
-
+        this.sessionManager.logout(userDetails);
     }
 
     @Override
-    public void logoutAll(Long userId) {
+    public void logoutAll(AppUserDetails userToLogOut) {
 
+        this.sessionManager.logoutAll(userToLogOut);
     }
 }

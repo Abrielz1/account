@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.example.account.security.entity.RevocationReason;
 import ru.example.account.security.entity.RevokedClientData;
+import ru.example.account.security.entity.SessionStatus;
 import ru.example.account.security.repository.RevokedDataRepository;
 import ru.example.account.security.service.IdGenerationService;
 import ru.example.account.security.service.SessionCommandService;
@@ -39,6 +40,6 @@ public class SessionCommandServiceImpl implements SessionCommandService {
                 .build();
         revokedDataRepository.save(data);
 
-        sessionRevocationService.revokeAllSessionsForUser(userId, RevocationReason.REASON_RED_ALERT);
+        sessionRevocationService.revokeAllSessionsForUser(userId, SessionStatus.STATUS_COMPROMISED, RevocationReason.REASON_RED_ALERT);
     }
 }

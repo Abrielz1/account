@@ -11,6 +11,10 @@ public enum SessionStatus {
      */
     STATUS_COMPROMISED,
 
+    /**
+     * Сессия потенциально скомпрометирована СБ проверить потенциальную угрозу.
+     */
+    STATUS_POTENTIAL_COMPROMISED,
 
     /**
      * Сессия отозвана пользователем (logout).

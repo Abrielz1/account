@@ -14,6 +14,7 @@ import ru.example.account.security.jwt.JwtUtils;
 import ru.example.account.security.repository.AuthSessionRepository;
 import ru.example.account.security.repository.RevokedTokenArchiveRepository;
 import ru.example.account.security.service.AccessTokenBlacklistService;
+import ru.example.account.security.service.SessionQueryService;
 import ru.example.account.security.service.SessionRevocationService;
 import java.time.Duration;
 import java.time.Instant;
@@ -31,6 +32,8 @@ public class SessionRevocationServiceImpl implements SessionRevocationService {
     private final JwtUtils jwtUtils;
 
     private final RevokedTokenArchiveRepository revokedTokenArchiveRepository;
+
+    private final SessionQueryService sessionQueryService;
 
     @Override
     @Transactional(value = "securityTransactionManager", propagation = Propagation.REQUIRES_NEW)
@@ -77,18 +80,23 @@ public class SessionRevocationServiceImpl implements SessionRevocationService {
 
     @Override
     @Transactional(value = "securityTransactionManager", propagation = Propagation.REQUIRES_NEW)
-    public void revokeAllSessionsForUser(Long userId, RevocationReason reason) {
+    public void revokeAllSessionsForUser(Long userId, SessionStatus status, RevocationReason reason) {
 
-        List<AuthSession> activeClientSessionsList = this.authSessionRepository.findAllByUserIdAndStatus(userId, reason)
+        List<AuthSession> activeClientSessionsList = this.sessionQueryService.getAllActiveSession(userId, SessionStatus.STATUS_ACTIVE)
                 .stream()
                 .map(s -> {
-                    s.setStatus(SessionStatus.STATUS_COMPROMISED);
-                    s.setRevokedAt(Instant.now());
-                    s.setRevocationReason(reason);
+                    try {
+                    this.revokeAndArchive(s, reason);
+
+                    } catch (Exception e) {
+                        log.error("Failed to revoke session {} for user {}. Continuing...", s.getId(), userId, e);
+                    }
                     return s;
                 })
                 .toList();
-
+        if (activeClientSessionsList.isEmpty()) {
+            return;
+        }
         authSessionRepository.saveAll(activeClientSessionsList);
         log.info("all clients sessions revoked successfully");
     }
