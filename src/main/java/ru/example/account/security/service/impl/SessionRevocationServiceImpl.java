@@ -50,14 +50,15 @@ public class SessionRevocationServiceImpl implements SessionRevocationService {
     public void revokeAndArchive(AuthSession sessionToRevoke, SessionStatus status, RevocationReason reason) {
 
         // 1. ПРОВЕРКИ ("СТРАЖНИК")
-        if (isSessionInvalid(sessionToRevoke)) {
+        if (sessionToRevoke == null) {
+            log.warn("Attempt to revoke a null session.");
             return;
         }
 
         Instant now = Instant.now();
 
         // 2. ОБНОВЛЕНИЕ АУДИТА (ТВОЯ ЛОГИКА)
-        auditLogRepository.findBySessionId(sessionToRevoke.getId()).ifPresent(auditLog -> {
+        this.auditLogRepository.findBySessionId(sessionToRevoke.getId()).ifPresent(auditLog -> {
             // Если причина или переданный статус - тревожные, помечаем аудит
             if (reason.equals(RevocationReason.REASON_ADMIN_ACTION) || isStatusSecurityAlert(status)) {
                 auditLog.setCompromised(true);
@@ -65,14 +66,14 @@ public class SessionRevocationServiceImpl implements SessionRevocationService {
         });
 
         // 3. АРХИВАЦИЯ В POSTGRES
-        revokedTokenArchiveRepository.save(RevokedSessionArchive.from(sessionToRevoke, now, reason));
+        this.revokedTokenArchiveRepository.save(RevokedSessionArchive.from(sessionToRevoke, now, reason));
 
         // 4. БЛЭКЛИСТИНГ ACCESS TOKEN'А В REDIS
-        addAccessTokenToBlacklist(sessionToRevoke, now);
+        this.addAccessTokenToBlacklist(sessionToRevoke, now);
 
         // 5. ЗАЧИСТКА "ГОРЯЧИХ" ХРАНИЛИЩ
-        activeSessionCacheRepository.deleteById(sessionToRevoke.getRefreshToken());
-        authSessionRepository.delete(sessionToRevoke);
+        this.activeSessionCacheRepository.deleteById(sessionToRevoke.getRefreshToken());
+        this.authSessionRepository.delete(sessionToRevoke);
 
         log.info("Session {} successfully REVOKED and ARCHIVED. Reason: {}",
                 sessionToRevoke.getId(), reason);
@@ -109,20 +110,6 @@ public class SessionRevocationServiceImpl implements SessionRevocationService {
         log.info("Finished mass revocation process for user {}", userId);
     }
 
-    // --- ПРИВАТНЫЕ МЕТОДЫ-"ПОМОЩНИКИ" ---
-
-    private boolean isSessionInvalid(AuthSession sessionToRevoke) {
-        if (sessionToRevoke == null) {
-            log.warn("Attempt to revoke a null session.");
-            return true;
-        }
-        if (sessionToRevoke.getStatus() != SessionStatus.STATUS_ACTIVE) {
-            log.warn("Attempt to revoke a non-active session: {}. Skipping.", sessionToRevoke.getId());
-            return true;
-        }
-        return false;
-    }
-
     private boolean isStatusSecurityAlert(SessionStatus status) {
         return status == SessionStatus.STATUS_COMPROMISED ||
                 status == SessionStatus.STATUS_POTENTIAL_COMPROMISED ||
@@ -132,9 +119,7 @@ public class SessionRevocationServiceImpl implements SessionRevocationService {
     private void addAccessTokenToBlacklist(AuthSession session, Instant revocationTime) {
         try {
             Claims claims = jwtUtils.getAllClaimsFromToken(session.getAccessToken());
-            Instant expiration = claims.getExpiration().toInstant();
-            Duration remainingTime = Duration.between(revocationTime, expiration);
-            blacklistService.addToBlacklist(session.getId(), remainingTime);
+            this.blacklistService.addToBlacklist(session.getId(), Duration.between(revocationTime, claims.getExpiration().toInstant()));
         } catch (Exception e) {
             log.warn("Could not add access token for session {} to blacklist: {}",
                     session.getId(), e.getMessage());
