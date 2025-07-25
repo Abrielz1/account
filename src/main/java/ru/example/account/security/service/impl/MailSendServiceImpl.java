@@ -8,7 +8,6 @@ import ru.example.account.security.entity.RevocationReason;
 import ru.example.account.security.service.MailSendService;
 import org.springframework.mail.javamail.JavaMailSender;
 import ru.example.account.user.model.response.ActivationClientAccountRequest;
-
 import java.time.ZonedDateTime;
 
 @Slf4j

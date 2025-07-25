@@ -1,8 +1,6 @@
 package ru.example.account.security.service;
 
 import jakarta.servlet.http.HttpServletRequest;
-import ru.example.account.security.service.impl.AppUserDetails;
-
 import java.time.ZonedDateTime;
 
 public interface FingerprintService {

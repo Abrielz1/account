@@ -6,7 +6,7 @@ import ru.example.account.security.entity.SessionStatus;
 
 public interface SessionRevocationService {
 
-   void revokeAndArchive(AuthSession sessionToRevoke, RevocationReason revocationReason);
+   void revokeAndArchive(AuthSession sessionToRevoke, SessionStatus status, RevocationReason revocationReason);
 
    void revokeAllSessionsForUser(Long userId, SessionStatus status, RevocationReason reason);
 }

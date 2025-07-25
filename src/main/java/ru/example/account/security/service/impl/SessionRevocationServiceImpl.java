@@ -3,7 +3,6 @@ package ru.example.account.security.service.impl;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,83 +41,103 @@ public class SessionRevocationServiceImpl implements SessionRevocationService {
 
     private final ActiveSessionCacheRepository activeSessionCacheRepository;
 
+    /**
+     * Выполняет штатный, атомарный процесс отзыва и архивации ОДНОЙ сессии.
+     * Реализует ТВОЮ гибкую логику с передачей статуса.
+     */
     @Override
     @Transactional(value = "securityTransactionManager", propagation = Propagation.REQUIRES_NEW)
-    public void revokeAndArchive(AuthSession sessionToRevoke, RevocationReason revocationReason) {
+    public void revokeAndArchive(AuthSession sessionToRevoke, SessionStatus status, RevocationReason reason) {
 
-        if (sessionToRevoke == null) {
-            log.warn("Attempt to revoke a null session");
-            return;
-        }
-
-        if (sessionToRevoke.getStatus() != SessionStatus.STATUS_ACTIVE) {
-            log.warn("Attempt to revoke an already inactive session with ID: {}. Revocation skipped.", sessionToRevoke.getId());
+        // 1. ПРОВЕРКИ ("СТРАЖНИК")
+        if (isSessionInvalid(sessionToRevoke)) {
             return;
         }
 
         Instant now = Instant.now();
 
-        this.auditLogRepository.findBySessionId(sessionToRevoke.getId()).ifPresent(auditLog -> {
-            // Вся логика внутри лямбды. Hibernate видит изменения.
-            if (revocationReason == RevocationReason.REASON_RED_ALERT ||
-                    revocationReason == RevocationReason.REASON_REVOKED_BY_USER_ON_ALL_DEVICES_SECURITY_ATTENTION) {
-
-                auditLog.setCompromised (true);
-                log.debug("Marking session {} as COMPROMISED in audit log.", sessionToRevoke.getId());
+        // 2. ОБНОВЛЕНИЕ АУДИТА (ТВОЯ ЛОГИКА)
+        auditLogRepository.findBySessionId(sessionToRevoke.getId()).ifPresent(auditLog -> {
+            // Если причина или переданный статус - тревожные, помечаем аудит
+            if (reason.equals(RevocationReason.REASON_ADMIN_ACTION) || isStatusSecurityAlert(status)) {
+                auditLog.setCompromised(true);
             }
         });
 
-        log.debug("Revocation for session {} recorded in audit log.", sessionToRevoke.getId());
+        // 3. АРХИВАЦИЯ В POSTGRES
+        revokedTokenArchiveRepository.save(RevokedSessionArchive.from(sessionToRevoke, now, reason));
 
-        RevokedSessionArchive newRevokedTokenArchive = RevokedSessionArchive.from(
-                                                                            sessionToRevoke,
-                                                                            now,
-                                                                            revocationReason);
-        // ШАГ 1: АРХИВИРУЕМ (POSTGRES)
-        this.revokedTokenArchiveRepository.save(newRevokedTokenArchive);
+        // 4. БЛЭКЛИСТИНГ ACCESS TOKEN'А В REDIS
+        addAccessTokenToBlacklist(sessionToRevoke, now);
 
-        // ШАГ 2: БЛЭКЛИСТИМ (REDIS)
-        try {
-         Claims claims = jwtUtils.getAllClaimsFromToken(sessionToRevoke.getAccessToken());
-         this.blacklistService.addToBlacklist(sessionToRevoke.getId(), Duration.between(now, jwtUtils.getExpiration(claims)));
-        } catch (Exception e) {
-            log.warn("Could not parse access token for session {} to add to blacklist. It may be malformed or expired.", sessionToRevoke.getId());
-        }
-
-        // ШАГ 3: ЧИСТИМ "ГОРЯЧИЕ" ХРАНИЛИЩА (POSTGRES + REDIS)
+        // 5. ЗАЧИСТКА "ГОРЯЧИХ" ХРАНИЛИЩ
         activeSessionCacheRepository.deleteById(sessionToRevoke.getRefreshToken());
         authSessionRepository.delete(sessionToRevoke);
 
-        log.info("Session {} for user {} has been REVOKED. Reason: {}", sessionToRevoke.getId(), sessionToRevoke.getUserId(), revocationReason);
-
-        log.info("Session {} for user {} has been REVOKED with reason: {}",
-                sessionToRevoke.getId(),
-                sessionToRevoke.getUserId(),
-                sessionToRevoke.getRevocationReason());
+        log.info("Session {} successfully REVOKED and ARCHIVED. Reason: {}",
+                sessionToRevoke.getId(), reason);
     }
 
-
+    /**
+     * Выполняет экстренный отзыв ВСЕХ активных сессий пользователя.
+     * Реализует ТВОЙ подход с циклом.
+     */
     @Override
-    @Transactional(value = "securityTransactionManager", propagation = Propagation.REQUIRES_NEW)
+    @Transactional(value = "securityTransactionManager")
     public void revokeAllSessionsForUser(Long userId, SessionStatus status, RevocationReason reason) {
 
-        List<AuthSession> activeClientSessionsList = this.sessionQueryService.getAllActiveSession(userId, SessionStatus.STATUS_ACTIVE);
+        // Находим сессии по ПРАВИЛЬНОМУ статусу - ACTIVE.
+        // Переданный `status` будем использовать для ЛОГИКИ, а не для поиска.
+        List<AuthSession> activeSessions = sessionQueryService.getAllActiveSession(userId, SessionStatus.STATUS_ACTIVE);
 
-        if (activeClientSessionsList.isEmpty()) {
-            log.info("No active sessions!");
-            return;
-        }
+        if (activeSessions.isEmpty()) return;
 
-        activeClientSessionsList.parallelStream().forEach(authSession -> {
+        log.warn("Revoking all ({}) sessions for user {} with reason: {}",
+                activeSessions.size(), userId, reason);
+
+        // В цикле вызываем наш основной "работяга"-метод
+        activeSessions.forEach(session -> {
             try {
-                this.revokeAndArchive(authSession, reason);
-            } catch (DataAccessException dataAccessException) {
-                log.error("Failed to revoke session {}. Continuing...", authSession.getId(), dataAccessException);
-            } catch (RuntimeException runtimeException) {
-                log.error("Something goes wrong: {}", runtimeException.getMessage());
+                // Передаем и новый статус, и новую причину
+                this.revokeAndArchive(session, status, reason);
+            } catch (Exception e) {
+                log.error("Failed to revoke single session {} during mass-revocation. Continuing...",
+                        session.getId(), e);
             }
         });
 
-        log.info("all clients sessions revoked successfully");
+        log.info("Finished mass revocation process for user {}", userId);
+    }
+
+    // --- ПРИВАТНЫЕ МЕТОДЫ-"ПОМОЩНИКИ" ---
+
+    private boolean isSessionInvalid(AuthSession sessionToRevoke) {
+        if (sessionToRevoke == null) {
+            log.warn("Attempt to revoke a null session.");
+            return true;
+        }
+        if (sessionToRevoke.getStatus() != SessionStatus.STATUS_ACTIVE) {
+            log.warn("Attempt to revoke a non-active session: {}. Skipping.", sessionToRevoke.getId());
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isStatusSecurityAlert(SessionStatus status) {
+        return status == SessionStatus.STATUS_COMPROMISED ||
+                status == SessionStatus.STATUS_POTENTIAL_COMPROMISED ||
+                status == SessionStatus.STATUS_RED_ALERT;
+    }
+
+    private void addAccessTokenToBlacklist(AuthSession session, Instant revocationTime) {
+        try {
+            Claims claims = jwtUtils.getAllClaimsFromToken(session.getAccessToken());
+            Instant expiration = claims.getExpiration().toInstant();
+            Duration remainingTime = Duration.between(revocationTime, expiration);
+            blacklistService.addToBlacklist(session.getId(), remainingTime);
+        } catch (Exception e) {
+            log.warn("Could not add access token for session {} to blacklist: {}",
+                    session.getId(), e.getMessage());
+        }
     }
 }

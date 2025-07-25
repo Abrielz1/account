@@ -1,12 +1,9 @@
 package ru.example.account.security.service;
 
-import jakarta.servlet.http.HttpServletRequest;
 import ru.example.account.security.entity.AuthSession;
 import ru.example.account.security.entity.ActiveSessionCache;
 import ru.example.account.security.service.impl.AppUserDetails;
-
 import java.time.ZonedDateTime;
-import java.util.UUID;
 
 public interface SessionPersistenceService {
     // Этот метод - атомарная операция запис

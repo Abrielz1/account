@@ -100,7 +100,7 @@ public class SessionServiceManagerImpl implements SessionServiceManager {
         if (sessionFromDb.getExpiresAt().isBefore(Instant.now())) {
             // ... (архивируем с причиной EXPIRED и кидаем исключение)
             log.trace("");
-            this.sessionRevocationService.revokeAndArchive(sessionFromDb, RevocationReason.REASON_EXPIRED);
+            this.sessionRevocationService.revokeAndArchive(sessionFromDb, SessionStatus.STATUS_COMPROMISED, RevocationReason.REASON_EXPIRED);
             throw new SessionExpiredException("");
         }
 
@@ -157,7 +157,7 @@ public class SessionServiceManagerImpl implements SessionServiceManager {
         // ... (Штатная ротация, отзываем старую, создаем новую) ..
 
          // 3. Архивируем и отзываем старую сессию
-          this.sessionRevocationService.revokeAndArchive(sessionFromDb, RevocationReason.REASON_TOKEN_ROTATED);
+          this.sessionRevocationService.revokeAndArchive(sessionFromDb, SessionStatus.STATUS_REVOKED_BY_USER, RevocationReason.REASON_TOKEN_ROTATED);
 
         // 4. СОЗДАЕМ НОВУЮ СЕССИЮ (переиспользуем логику из `createSession`)
         //    Это предполагает, что в `createSession` ты уже вынес логику `isNewDevice`.
@@ -182,14 +182,18 @@ public class SessionServiceManagerImpl implements SessionServiceManager {
     public void logout(AppUserDetails userToLogOut) {
 
         sessionQueryService.findById(userToLogOut.getSessionId())
-                .ifPresent(sessionToRevoke -> sessionRevocationService.revokeAndArchive(sessionToRevoke, RevocationReason.REASON_USER_LOGOUT));
+                .ifPresent(sessionToRevoke -> sessionRevocationService.revokeAndArchive(sessionToRevoke,
+                        SessionStatus.STATUS_REVOKED_BY_USER,
+                        RevocationReason.REASON_USER_LOGOUT));
     }
 
     @Override
     @Transactional(value = "securityTransactionManager", propagation = Propagation.REQUIRES_NEW)
     public void logoutAll(AppUserDetails userToLogOut) {
 
-        this.sessionRevocationService.revokeAllSessionsForUser(userToLogOut.getId(), SessionStatus.STATUS_POTENTIAL_COMPROMISED, RevocationReason.REASON_REVOKED_BY_USER_ON_ALL_DEVICES_SECURITY_ATTENTION);
+        this.sessionRevocationService.revokeAllSessionsForUser(userToLogOut.getId(),
+                SessionStatus.STATUS_POTENTIAL_COMPROMISED,
+                RevocationReason.REASON_REVOKED_BY_USER_ON_ALL_DEVICES_SECURITY_ATTENTION);
     }
 }
 

@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.example.account.security.service.TimezoneService;
 import ru.example.account.shared.util.TimezoneUtils;
-
 import java.time.ZoneId;
 
 @Slf4j
