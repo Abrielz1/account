@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
-import ru.example.account.security.entity.ActiveSessionCache;
 import ru.example.account.security.service.impl.AppUserDetails;
 import ru.example.account.shared.exception.exceptions.InvalidJwtAuthenticationException;
 import javax.crypto.SecretKey;
@@ -29,6 +28,8 @@ import java.util.UUID;
 @Component
 @Slf4j
 public class JwtUtils {
+
+    private final String ROLES = "roles";
 
     @Value("${app.jwt.secret}")
     private String rawSecret;
@@ -53,14 +54,6 @@ public class JwtUtils {
         }
     }
 
-    public ActiveSessionCache generateRefreshToken(String userEmail, String newAccessesToken) {
-        ActiveSessionCache newRefreshToken = ActiveSessionCache
-                .builder()
-                .accessToken(newAccessesToken)
-                .build();
-        return newRefreshToken;
-    }
-
     public String generateAccessToken(AppUserDetails userDetails, UUID sessionId) {
         Instant now = Instant.now();
         List<String> roles = userDetails.getAuthorities().stream()
@@ -70,7 +63,7 @@ public class JwtUtils {
         return Jwts.builder()
                 .subject(userDetails.getEmail())
                 .claim("userId", userDetails.getId())
-                .claim("roles", roles)
+                .claim(ROLES, roles)
                 .id(sessionId.toString())
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plus(tokenExpiration)))
@@ -134,7 +127,7 @@ public class JwtUtils {
     }
 
     public List<? extends GrantedAuthority> getAuthorities(Claims claims) {
-        List<String> roles = claims.get("roles", List.class);
+        List<String> roles = claims.get(ROLES, List.class);
         if (roles == null || roles.isEmpty()) {
             return Collections.emptyList();
         }

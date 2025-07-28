@@ -1,6 +1,5 @@
 package ru.example.account.security.service.impl;
 
-import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -10,15 +9,13 @@ import ru.example.account.security.entity.AuthSession;
 import ru.example.account.security.entity.RevocationReason;
 import ru.example.account.security.entity.RevokedSessionArchive;
 import ru.example.account.security.entity.SessionStatus;
-import ru.example.account.security.jwt.JwtUtils;
 import ru.example.account.security.repository.ActiveSessionCacheRepository;
 import ru.example.account.security.repository.AuthSessionRepository;
 import ru.example.account.security.repository.RevokedTokenArchiveRepository;
 import ru.example.account.security.repository.SessionAuditLogRepository;
-import ru.example.account.security.service.AccessTokenBlacklistService;
+import ru.example.account.security.service.BlacklistService;
 import ru.example.account.security.service.SessionQueryService;
 import ru.example.account.security.service.SessionRevocationService;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 
@@ -29,9 +26,7 @@ public class SessionRevocationServiceImpl implements SessionRevocationService {
 
     private final AuthSessionRepository authSessionRepository;
 
-    private final AccessTokenBlacklistService blacklistService;
-
-    private final JwtUtils jwtUtils;
+    private final BlacklistService blacklistService;
 
     private final RevokedTokenArchiveRepository revokedTokenArchiveRepository;
 
@@ -60,7 +55,7 @@ public class SessionRevocationServiceImpl implements SessionRevocationService {
         // 2. ОБНОВЛЕНИЕ АУДИТА (ТВОЯ ЛОГИКА)
         this.auditLogRepository.findBySessionId(sessionToRevoke.getId()).ifPresent(auditLog -> {
             // Если причина или переданный статус - тревожные, помечаем аудит
-            if (reason.equals(RevocationReason.REASON_ADMIN_ACTION) || isStatusSecurityAlert(status)) {
+            if (reason.equals(RevocationReason.REASON_ADMIN_ACTION) || this.isStatusSecurityAlert(status)) {
                 auditLog.setCompromised(true);
             }
         });
@@ -69,7 +64,8 @@ public class SessionRevocationServiceImpl implements SessionRevocationService {
         this.revokedTokenArchiveRepository.save(RevokedSessionArchive.from(sessionToRevoke, now, reason));
 
         // 4. БЛЭКЛИСТИНГ ACCESS TOKEN'А В REDIS
-        this.addAccessTokenToBlacklist(sessionToRevoke, now);
+     //   this.addAccessTokenToBlacklist(sessionToRevoke, now);
+        this. blacklistService.blacklistSessionTokens(sessionToRevoke, now);
 
         // 5. ЗАЧИСТКА "ГОРЯЧИХ" ХРАНИЛИЩ
         this.activeSessionCacheRepository.deleteById(sessionToRevoke.getRefreshToken());
@@ -91,7 +87,9 @@ public class SessionRevocationServiceImpl implements SessionRevocationService {
         // Переданный `status` будем использовать для ЛОГИКИ, а не для поиска.
         List<AuthSession> activeSessions = sessionQueryService.getAllActiveSession(userId, SessionStatus.STATUS_ACTIVE);
 
-        if (activeSessions.isEmpty()) return;
+        if (activeSessions.isEmpty()) {
+            return;
+        }
 
         log.warn("Revoking all ({}) sessions for user {} with reason: {}",
                 activeSessions.size(), userId, reason);
@@ -117,12 +115,12 @@ public class SessionRevocationServiceImpl implements SessionRevocationService {
     }
 
     private void addAccessTokenToBlacklist(AuthSession session, Instant revocationTime) {
-        try {
-            Claims claims = jwtUtils.getAllClaimsFromToken(session.getAccessToken());
-            this.blacklistService.addToBlacklist(session.getId(), Duration.between(revocationTime, claims.getExpiration().toInstant()));
-        } catch (Exception e) {
-            log.warn("Could not add access token for session {} to blacklist: {}",
-                    session.getId(), e.getMessage());
-        }
+//        try {
+//            Claims claims = jwtUtils.getAllClaimsFromToken(session.getAccessToken());
+//            this.blacklistService.addToBlacklist(claims, revocationTime, Duration.between(revocationTime, claims.getExpiration().toInstant()));
+//        } catch (Exception e) {
+//            log.warn("Could not add access token for session {} to blacklist: {}",
+//                    session.getId(), e.getMessage());
+//        }
     }
 }

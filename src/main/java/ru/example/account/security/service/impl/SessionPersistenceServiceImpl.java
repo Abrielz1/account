@@ -1,4 +1,3 @@
-
 package ru.example.account.security.service.impl;
 
 import lombok.RequiredArgsConstructor;

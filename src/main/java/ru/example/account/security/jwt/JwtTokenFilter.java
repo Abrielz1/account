@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import ru.example.account.security.entity.EventType;
 import ru.example.account.security.entity.SecurityEvent;
-import ru.example.account.security.service.AccessTokenBlacklistService;
+import ru.example.account.security.service.BlacklistService;
 import ru.example.account.security.service.impl.AppUserDetails;
 import ru.example.account.user.entity.RoleType;
 import java.io.IOException;
@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 public class JwtTokenFilter extends OncePerRequestFilter {
 
     private final JwtUtils jwtUtils;
-    private final AccessTokenBlacklistService blacklistService;
+    private final BlacklistService blacklistService;
     private final ApplicationEventPublisher eventPublisher;
 
     private static final Set<String> VALID_ROLES = Arrays.stream(RoleType.values())
@@ -67,7 +67,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             final UUID sessionId = jwtUtils.getSessionId(claims);
             final Long userId = jwtUtils.getUserId(claims);
 
-            if (blacklistService.isBlacklisted(sessionId)) {
+            if (blacklistService.isAccessTokenBlacklisted(token)) {
                 log.warn("Access denied for blacklisted session ID: {}", sessionId);
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Session has been terminated.");
                 return;
