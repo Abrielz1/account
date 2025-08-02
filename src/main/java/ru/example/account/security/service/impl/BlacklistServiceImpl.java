@@ -34,7 +34,6 @@ public class BlacklistServiceImpl implements BlacklistService {
         log.info("");
         redisTemplate.opsForValue().set(BANNED_ACCESS_PREFIX + accessToken, "revoked",
                 Duration.ofMinutes(15).toSeconds(), TimeUnit.SECONDS);
-
     }
 
     @Override
@@ -43,7 +42,6 @@ public class BlacklistServiceImpl implements BlacklistService {
         log.info("");
         redisTemplate.opsForValue().set(BANNED_REFRESH_PREFIX + refreshToken,
                 "revoked", Duration.ofMinutes(15).toSeconds(), TimeUnit.SECONDS);
-
     }
 
     @Override

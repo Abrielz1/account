@@ -47,7 +47,7 @@ public class AuthSession {
     private SessionStatus status;
 
     @Column(name = "fingerprint", columnDefinition = "TEXT")
-    private String fingerprint;
+    private String fingerprint; // "Сырой" фингерпринт для аналитики
 
     @Column(name = "ip_address", length = 45)
     private String ipAddress;
@@ -69,6 +69,9 @@ public class AuthSession {
     @JdbcType(PostgreSQLEnumJdbcType.class)
     private RevocationReason revocationReason;
 
+    // --- НОВОЕ, КЛЮЧЕВОЕ ПОЛЕ ---
+    @Column(name = "fingerprint_hash", columnDefinition = "TEXT")
+    private String fingerprintHash; // Хэш для Token Binding
 
     @Override
     public final boolean equals(Object o) {

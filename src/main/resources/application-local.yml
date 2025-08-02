@@ -9,6 +9,46 @@ spring:
     activate:
       on-profile: local # Этот файл активируется только с профилем 'local'
 
+  # --- НАСТРОЙКИ ДЛЯ БАЗЫ ДАННЫХ "BUSINESS" ---
+  # Используем плейсхолдеры `${...}` для чтения из .env
+  datasource-business:
+    url: jdbc:postgresql://${BUSINESS_DB_HOST}:${BUSINESS_DB_PORT}/${BUSINESS_DB_NAME}
+    username: ${BUSINESS_DB_USER}
+    password: ${BUSINESS_DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  # --- НАСТРОЙКИ ДЛЯ БАЗЫ ДАННЫХ "SECURITY" ---
+  datasource-security:
+    url: jdbc:postgresql://${SECURITY_DB_HOST}:${SECURITY_DB_PORT}/${SECURITY_DB_NAME}
+    username: ${SECURITY_DB_USER}
+    password: ${SECURITY_DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  # --- НАСТРОЙКИ JPA ---
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+  # --- НАСТРОЙКИ REDIS ---
+  data:
+    redis:
+      host: localhost # Для Docker Compose можно использовать имя сервиса: redis
+      port: ${REDIS_PORT}
+
+# --- Кастомные настройки приложения ---
+app:
+  jwt:
+    secret: "${APP_SECRET}" # Кавычки важны, если секрет содержит спец. символы
+
+# --- Имена схем для Flyway и JPA ---
+db:
+  schema:
+    business: ${DB_SCHEMA_BUSINESS}
+    security: ${DB_SCHEMA_SECURITY}
+
 # --- Локальные настройки DataSource ---
 # Мы не используем переменные окружения, а хардкодим значения для простоты
 datasource-business:

@@ -14,13 +14,16 @@ import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import ru.example.account.security.entity.EventType;
 import ru.example.account.security.entity.SecurityEvent;
 import ru.example.account.security.service.BlacklistService;
+import ru.example.account.security.service.FingerprintService;
 import ru.example.account.security.service.impl.AppUserDetails;
+import ru.example.account.shared.util.SecurityContextValidator;
 import ru.example.account.user.entity.RoleType;
 import java.io.IOException;
 import java.util.Arrays;
@@ -30,14 +33,22 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@Component
 @Slf4j
+@Component
 @RequiredArgsConstructor
 public class JwtTokenFilter extends OncePerRequestFilter {
 
     private final JwtUtils jwtUtils;
+
     private final BlacklistService blacklistService;
+
     private final ApplicationEventPublisher eventPublisher;
+
+    private final SecurityContextValidator contextValidator;
+
+    private final UserDetailsService userDetailsService;
+
+    private final FingerprintService fingerprintService;
 
     private static final Set<String> VALID_ROLES = Arrays.stream(RoleType.values())
             .map(Enum::name)
@@ -82,6 +93,13 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
                 this.setAuthentication(request, claims);
             }
+
+            AppUserDetails userDetails = (AppUserDetails) userDetailsService.loadUserByUsername(jwtUtils.getEmail(claims));
+            String currentFingerprint = fingerprintService.generateUsersFingerprint(request);
+            String ipAddress = request.getRemoteAddr(); // Или через HttpUtilsService
+
+            contextValidator.validate(userDetails, currentFingerprint, ipAddress);
+
         } catch (Exception e) {
             log.error("Could not set user authentication in security context", e);
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid Token");

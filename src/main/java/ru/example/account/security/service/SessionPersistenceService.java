@@ -13,7 +13,7 @@ public interface SessionPersistenceService {
                                      String userAgent);
 
     // Этот метод - атомарная операция записи в Redis
-    ActiveSessionCache createAndSaveActiveSessionCache(AuthSession session);
+    ActiveSessionCache createAndSaveActiveSessionCache(AuthSession session, AppUserDetails currentUser);
 
     // Этот метод - атомарная операция записи в Аудит
     void createAndSaveAuditLog(AuthSession session);

@@ -1,15 +1,14 @@
 package ru.example.account.security.entity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,8 +18,9 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.dialect.PostgreSQLEnumJdbcType;
-import ru.example.account.user.entity.Employee;
 import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "blocked_entities", schema = "security")
@@ -60,12 +60,31 @@ public class BannedEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "block_type")
     @JdbcType(PostgreSQLEnumJdbcType.class)
-    private BlockType blockTypeит ;
+    private BlockType blockType;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "banned_by_employee_id")
-    private Employee bannedBy; // Ссылка на сотрудника, кто забанил (может быть null для автобана)
+    @Column(name = "banned_by_employee_id")
+    private Long bannedByEmployeeId; // Ссылка на сотрудника, кто забанил (может быть null для автобана)
 
     @Column(name = "banned_user_id") // Можно хранить ID, а не полную связь
     private Long bannedUserId; // Если банили конкретного юзера, сохраняем его ID.
+
+    @OneToMany(mappedBy = "ban", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<BanContextDetail> contextDetails = new HashSet<>();
+
+    // Хелпер, как ты любишь
+    public void addDetail(String key, String value) {
+
+        // 1. Создаем "пустого" ребенка
+        BanContextDetail detail = new BanContextDetail();
+
+        // 2. "Родитель" САМ, своей "рукой", устанавливает связь
+        detail.setBan(this); // <<<--- ГЛАВНАЯ МАГИЯ!
+
+        // 3. Заполняем остальные поля
+        detail.setDetailKey(key);
+        detail.setDetailValue(value);
+
+        // 4. "Усыновляем" ребенка
+        this.contextDetails.add(detail);
+    }
 }

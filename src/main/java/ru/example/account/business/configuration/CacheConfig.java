@@ -1,4 +1,4 @@
-package ru.example.account.business.config;
+package ru.example.account.business.configuration;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.cache.RedisCacheManagerBuilderCustomizer;

@@ -37,6 +37,30 @@ app:
     refresh-token-expiration: "P7D"
     ttl: 300
 
+  redis:
+    keys:
+      blacklist:
+        access-token-prefix: "banned:access_token::"
+        # Для refresh-токенов черный список теперь не нужен,
+        # т.к. мы их просто удаляем и архивируем. Но можем оставить.
+        refresh-token-prefix: "banned:refresh_token::"
+
+      whitelist:
+        # ТВОЙ, "простой" формат: ключ - сам фингерпринт
+        fingerprint-key-format: "trusted_fp::{fingerprint}"
+
+      verification:
+        # Ключ для хранения временного кода верификации
+        device-code-format: "device_verify:{userId}:{fingerprint}"
+
+    ttl:
+      banned-access-token: "15m" # Твой "горячий кеш"
+
+      # TTL Доверия = TTL Рефреш-токена (90 дней, как ты и сказал!)
+      trusted-fingerprint: "90d"
+
+      # Код верификации живет 10 минут
+      device-verification-code: "10m"
 # --- Настройки внешних инструментов ---
 management:
   endpoints:
@@ -49,12 +73,6 @@ springdoc:
     path: /api-docs
   swagger-ui:
     path: /swagger-ui.html
-
-# Плейсхолдеры для схем, которые мы используем в @Table аннотациях
-db:
-  schema:
-    business: business
-    security: security
 
 EMAIL_USERNAME:  ${EMAIL_USERNAME}
 EMAIL_FROM: ${EMAIL_FROM}

@@ -64,7 +64,7 @@ public class SessionServiceManagerImpl implements SessionServiceManager {
                 userAgent);
 
         // --- Шаг 4 и 5: Создаем и сохраняем ActiveSessionCache в Redis и навсегда в Postgres---
-        this.sessionPersistenceService.createAndSaveActiveSessionCache(newAuthSession);
+        this.sessionPersistenceService.createAndSaveActiveSessionCache(newAuthSession, currentUser);
         this.sessionPersistenceService.createAndSaveAuditLog(newAuthSession);
 
         return new AuthResponse(newAuthSession.getAccessToken(), newAuthSession.getRefreshToken());
@@ -169,7 +169,7 @@ public class SessionServiceManagerImpl implements SessionServiceManager {
                                                                                          ipAddress,
                                                                                          userAgent);
 
-        sessionPersistenceService.createAndSaveActiveSessionCache(newAuthSession);
+        sessionPersistenceService.createAndSaveActiveSessionCache(newAuthSession, currentUser);
         sessionPersistenceService.createAndSaveAuditLog(newAuthSession);
 
         log.info("Client with id: {} session successfully created!", currentUser.getId());

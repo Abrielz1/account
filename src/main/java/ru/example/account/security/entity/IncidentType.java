@@ -1,0 +1,9 @@
+package ru.example.account.security.entity;
+
+public enum IncidentType {
+    REFRESH_TOKEN_REPLAY_ATTACK,
+    UNTRUSTED_DEVICE_LOGIN_ATTEMPT,
+    TOKEN_BINDING_FAILURE,
+    SUSPICIOUS_TOKEN_PAYLOAD,
+    VERIFICATION_ATTEMPTS_EXCEEDED
+}

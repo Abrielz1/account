@@ -22,12 +22,8 @@ public class ActiveSessionCache implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
-    /**
-
-     САМ refresh-токен является первичным ключом в этом хранилище.
-     */
-    @Id
-    private String refreshToken;
+    // --- КЛЮЧ: HMAC-ХЭШ ФИНГЕРПРИНТА! ---
+    private String fingerprintHash;
     /**
 
      ID сессии (из AuthSession).
@@ -52,16 +48,30 @@ public class ActiveSessionCache implements Serializable {
     private String accessToken;
 
     @Indexed
+    private String refreshToken;
+
+    @Indexed
     private String fingerprint;
 
+    @Indexed
+    private String roles;
+
     @Builder
-    private ActiveSessionCache(UUID sessionId, Long userId, String refreshToken, Duration ttl, String accessToken, String fingerprint) {
-        this.sessionId = sessionId;
+    public ActiveSessionCache(
+            String fingerprintHash,
+            Long userId,
+            UUID sessionId,
+            String accessToken,
+            String refreshToken,
+            String roles, // Добавляем в конструктор
+            Duration ttl
+    ) {
+        this.fingerprintHash = fingerprintHash;
         this.userId = userId;
-        this.refreshToken = refreshToken;
-        this.expiresAt = Instant.now().plus(ttl);
-        this.timeToLive = ttl.toSeconds();
+        this.sessionId = sessionId;
         this.accessToken = accessToken;
-        this.fingerprint = fingerprint;
+        this.refreshToken = refreshToken;
+        this.roles = roles;
+        this.timeToLive = ttl.toSeconds();
     }
 }

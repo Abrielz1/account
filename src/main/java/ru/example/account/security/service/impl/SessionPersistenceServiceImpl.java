@@ -3,6 +3,7 @@ package ru.example.account.security.service.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.example.account.security.entity.AuthSession;
@@ -20,11 +21,13 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class SessionPersistenceServiceImpl implements SessionPersistenceService {
+
 
     private final AuthSessionRepository authSessionRepository;
 
@@ -55,7 +58,7 @@ public class SessionPersistenceServiceImpl implements SessionPersistenceService 
         // --- Шаг 1: Генерация refreshToken ---
         final String refreshToken = this.idGenerationService.generateRefreshToken();
         // --- Шаг 2: Генерация accessToken ---
-        final String accessToken = this.jwtUtils.generateAccessToken(currentUser, newSessionId);
+        final String accessToken = this.jwtUtils.generateAccessToken(currentUser, newSessionId, fingerprint);
 
         AuthSession session =  AuthSession
                 .builder()
@@ -67,6 +70,7 @@ public class SessionPersistenceServiceImpl implements SessionPersistenceService 
                 .expiresAt(currentTime.plus(refreshTokenExpiration))
                 .status(SessionStatus.STATUS_ACTIVE)
                 .fingerprint(fingerprint)
+                .fingerprintHash(this.jwtUtils.createFingerprintHash(fingerprint)) //
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
@@ -76,13 +80,19 @@ public class SessionPersistenceServiceImpl implements SessionPersistenceService 
     }
 
     @Override
-    public ActiveSessionCache createAndSaveActiveSessionCache(AuthSession session) {
+    public ActiveSessionCache createAndSaveActiveSessionCache(AuthSession session, AppUserDetails currentUser) {
+
+        String roles = currentUser.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.joining(","));
+
         ActiveSessionCache redisSession = ActiveSessionCache.builder()
-                .refreshToken(session.getRefreshToken())
-                .sessionId(session.getId())
+                .fingerprintHash(session.getFingerprintHash())
                 .userId(session.getUserId())
+                .sessionId(session.getId())
                 .accessToken(session.getAccessToken())
-                .fingerprint(session.getFingerprint())
+                .refreshToken(session.getRefreshToken())
+                .roles(roles)
                 .ttl(refreshTokenExpiration)
                 .build();
 

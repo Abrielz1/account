@@ -1,4 +1,4 @@
-package ru.example.account.business.config;
+package ru.example.account.business.configuration;
 
 import org.flywaydb.core.Flyway;
 import org.springframework.beans.factory.annotation.Qualifier;
