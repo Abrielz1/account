@@ -22,19 +22,21 @@ public class BlacklistServiceImpl implements BlacklistService {
     public boolean isAccessTokenBlacklisted(String accessToken) {
         if (accessToken == null || accessToken.isBlank()) return false;
 
-        // --- ЭШЕЛОН 1: REDIS ---
+        // --- ЭШЕЛОН 1: REDIS ("Горячий" кеш) ---
         try {
             if (Boolean.TRUE.equals(redisTemplate.hasKey(buildAccessKey(accessToken)))) {
+                log.trace("Blacklisted access token found in Redis cache. Access denied.");
                 return true;
             }
         } catch (RedisConnectionFailureException e) {
             log.error("REDIS IS DOWN! Blacklist check for access token will rely on Postgres.", e);
         }
 
-        // --- ЭШЕЛОН 2: POSTGRES (Архив) ---
+        // --- ЭШЕЛОН 2: POSTGRES ("Холодный" архив) ---
         log.warn("Blacklist cache miss for access token. Checking Postgres archive.");
         if (revokedTokenArchiveRepository.existsByAccessToken(accessToken)) {
             // "Ленивый прогрев"
+            log.info("Warming up access token blacklist cache after Postgres lookup.");
             warmUpAccessCache(accessToken);
             return true;
         }
@@ -49,6 +51,7 @@ public class BlacklistServiceImpl implements BlacklistService {
         // --- ЭШЕЛОН 1: REDIS ---
         try {
             if (Boolean.TRUE.equals(redisTemplate.hasKey(buildRefreshKey(refreshToken)))) {
+                log.trace("Blacklisted refresh token found in Redis cache. Access denied.");
                 return true;
             }
         } catch (RedisConnectionFailureException e) {
@@ -59,6 +62,7 @@ public class BlacklistServiceImpl implements BlacklistService {
         log.warn("Blacklist cache miss for refresh token. Checking Postgres archive.");
         if (revokedTokenArchiveRepository.existsByRefreshToken(refreshToken)) {
             // "Ленивый прогрев"
+            log.info("Warming up refresh token blacklist cache after Postgres lookup.");
             warmUpRefreshCache(refreshToken);
             return true;
         }
@@ -66,7 +70,7 @@ public class BlacklistServiceImpl implements BlacklistService {
         return false;
     }
 
-    // --- Методы "поклажи" ("тупые" команды, которые просто пишут в Redis) ---
+    // --- Методы "поклажи" ("тупые" команды, которые только пишут в Redis) ---
     @Override
     public void blacklistAccessToken(String accessToken) {
         if (accessToken == null || accessToken.isBlank()) return;
@@ -85,6 +89,7 @@ public class BlacklistServiceImpl implements BlacklistService {
         try {
             String key = buildAccessKey(accessToken);
             redisTemplate.opsForValue().set(key, "revoked", redisKeys.getTtl().getBannedAccessToken());
+            log.debug("Access token added to Redis blacklist cache: {}", key);
         } catch (RedisConnectionFailureException e) {
             log.error("REDIS IS DOWN! Could not warm up access token blacklist cache.", e);
         }
@@ -94,6 +99,7 @@ public class BlacklistServiceImpl implements BlacklistService {
         try {
             String key = buildRefreshKey(refreshToken);
             redisTemplate.opsForValue().set(key, "revoked", redisKeys.getTtl().getBannedRefreshToken());
+            log.debug("Refresh token added to Redis blacklist cache: {}", key);
         } catch (RedisConnectionFailureException e) {
             log.error("REDIS IS DOWN! Could not warm up refresh token blacklist cache.", e);
         }
