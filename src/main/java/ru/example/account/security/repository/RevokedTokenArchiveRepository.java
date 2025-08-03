@@ -13,5 +13,13 @@ public interface RevokedTokenArchiveRepository extends JpaRepository<RevokedSess
            SELECT EXISTS (SELECT 1 FROM RevokedSessionArchive rsa WHERE rsa.refreshToken = :refreshToken)
            """)
     Boolean checkRefreshTokenInRevokedArchive(@Param("refreshToken") String refreshToken);
+
+    @Query(value = "SELECT EXISTS(SELECT 1 FROM security.revoked_sessions_archive WHERE access_token = :token)",
+            nativeQuery = true)
+    boolean existsByAccessToken(@Param("token") String accessToken);
+
+    @Query(value = "SELECT EXISTS(SELECT 1 FROM security.revoked_sessions_archive WHERE refresh_token = :token)",
+            nativeQuery = true)
+    boolean existsByRefreshToken(@Param("token") String refreshToken);
 }
 

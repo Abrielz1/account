@@ -60,4 +60,9 @@ public class SessionQueryServiceImpl implements SessionQueryService {
     public List<AuthSession> getAllActiveSession(Long userId, SessionStatus sessionStatus) {
         return this.authSessionRepository.findAllByUserIdAndStatus(userId, sessionStatus);
     }
+
+    @Override
+    public Optional<String> getFingerPrint(String refreshToken) {
+        return this.authSessionRepository.findOriginalFingerprintByActiveRefreshToken(refreshToken);
+    }
 }

@@ -1,21 +1,34 @@
 package ru.example.account.security.service;
 
-import ru.example.account.security.entity.AuthSession;
-import java.time.Instant;
-
+/**
+ * Сервис для управления "Черным Списком" отозванных токенов.
+ * Реализует "эшелонированную" проверку (Redis -> Postgres) и "ленивый прогрев" кеша.
+ * "Источник Правды" для архива - RevokedSessionArchiveRepository.
+ */
 public interface BlacklistService {
 
-//    void addToBlacklist(Claims claims, Instant revocationTime, Duration duration);
-//
-//    boolean isBlacklisted(UUID sessionId);
-
-    void blacklistAccessToken(String accessToken, Instant now);
-    // Метод для refresh-токена
-    void blacklistRefreshToken(String refreshToken, Instant now);
-
-    // Методы-проверки
+    /**
+     * ПРОВЕРЯЕТ, находится ли access-токен в черном списке.
+     * @param accessToken "Сырой" access-токен.
+     * @return true, если токен отозван.
+     */
     boolean isAccessTokenBlacklisted(String accessToken);
+
+    /**
+     * ПРОВЕРЯЕТ, находится ли refresh-токен в черном списке.
+     * @param refreshToken "Сырой" refresh-токен.
+     * @return true, если токен отозван.
+     */
     boolean isRefreshTokenBlacklisted(String refreshToken);
 
-    void blacklistSessionTokens(AuthSession sessionToRevoke, Instant now);
+    /**
+     * ДОБАВЛЯЕТ access-токен в "горячий" черный список Redis.
+     * Вызывается из SessionRevocationService при отзыве сессии.
+     */
+    void blacklistAccessToken(String accessToken);
+
+    /**
+     * ДОБАВЛЯЕТ refresh-токен в "горячий" черный список Redis.
+     */
+    void blacklistRefreshToken(String refreshToken);
 }

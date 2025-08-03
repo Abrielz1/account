@@ -31,12 +31,25 @@ public interface AuthSessionRepository extends JpaRepository<AuthSession, UUID> 
 
     Boolean existsByRefreshToken(String token);
 
-    Boolean existsByFingerprint(String fingerprintHash);
+    /**
+     * Получает HMAC-хэш фингерпринта из АКТИВНОЙ сессии по ее refresh-токену.
+     * Возвращает ТОЛЬКО одну строку.
+     * @param refreshToken "Сырой" refresh-токен.
+     * @return Optional, содержащий хэш, если сессия найдена.
+     */
+    @Query(value = "SELECT fingerprint_hash FROM security.auth_sessions " +
+            "WHERE refresh_token = :token AND status = 'STATUS_ACTIVE'",
+            nativeQuery = true)
+    Optional<String> findFingerprintHashByActiveRefreshToken(@Param("token") String refreshToken);
 
-    @Query(value = """
-                   """, nativeQuery = true)
-    Slice<AuthSession> getAllActiveSession(@Param("cursor") Long cursor,
-                                           @Param("sessionId") UUID sessionId,
-                                           @Param("revocationStatus") RevocationReason revocationReason,
-                                           Pageable pageRequest);
+    /**
+     * Получает "сырой" фингерпринт из АКТИВНОЙ сессии по ее refresh-токену.
+     * Возвращает ТОЛЬКО одну строку.
+     * @param refreshToken "Сырой" refresh-токен.
+     * @return Optional, содержащий "сырой" фингерпринт, если сессия найдена.
+     */
+    @Query(value = "SELECT fingerprint FROM security.auth_sessions " +
+            "WHERE refresh_token = :token AND status = 'STATUS_ACTIVE'",
+            nativeQuery = true)
+    Optional<String> findOriginalFingerprintByActiveRefreshToken(@Param("token") String refreshToken);
 }

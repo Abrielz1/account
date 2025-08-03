@@ -1,4 +1,4 @@
-package ru.example.account.security.entity;
+package ru.example.account.security.configuration;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -46,6 +46,7 @@ public class RedisKeysProperties {
     @Setter
     public static class Ttl {
         private Duration bannedAccessToken;
+        private Duration bannedRefreshToken;
         private Duration trustedFingerprint;
         private Duration deviceVerificationCode;
     }

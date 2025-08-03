@@ -2,7 +2,6 @@ package ru.example.account.security.service;
 
 import ru.example.account.security.entity.AuthSession;
 import ru.example.account.security.entity.SessionStatus;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -20,4 +19,6 @@ public interface SessionQueryService {
     boolean isTokenArchived(String refreshToken);
 
     List<AuthSession> getAllActiveSession(Long userId, SessionStatus sessionStatus);
+
+    Optional<String> getFingerPrint(String refreshToken);
 }
