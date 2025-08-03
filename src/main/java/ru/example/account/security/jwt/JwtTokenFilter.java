@@ -23,6 +23,8 @@ import ru.example.account.security.entity.SecurityEvent;
 import ru.example.account.security.service.BlacklistService;
 import ru.example.account.security.service.FingerprintService;
 import ru.example.account.security.service.impl.AppUserDetails;
+import ru.example.account.shared.exception.exceptions.BadRequestException;
+import ru.example.account.shared.exception.exceptions.InvalidJwtAuthenticationException;
 import ru.example.account.shared.util.SecurityContextValidator;
 import ru.example.account.user.entity.RoleType;
 import java.io.IOException;
@@ -31,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -62,15 +65,25 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 
         if (!StringUtils.hasText(authHeader) || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
+            log.trace("JWT Token does not begin with Bearer String");
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Authorization header must be: Bearer <token>");
             return;
         }
 
         final String token = authHeader.substring(7);
 
         if (!jwtUtils.isTokenValid(token)) {
-            filterChain.doFilter(request, response);
-            return;
+            // Задержка для выравнивания времени ответа
+            try {
+                Thread.sleep(ThreadLocalRandom.current().nextInt(100, 200));
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                log.warn("Security delay interrupted during JWT validation");
+                response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, "Server processing interrupted");
+            }
+            log.warn("Invalid JWT token passed: {}", token);
+            // Это исключение наш ErrorHandler поймает и вернет 401 Unauthorized
+            throw new InvalidJwtAuthenticationException("Token is expired or invalid");
         }
 
         try {
@@ -90,23 +103,29 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 return;
             }
 
+            String currentFingerprint = fingerprintService.generateUsersFingerprint(request);
+            String ipAddress = request.getRemoteAddr(); // Или через HttpUtilsService
+            AppUserDetails userDetails = (AppUserDetails) userDetailsService.loadUserByUsername(jwtUtils.getEmail(claims));
+
+            contextValidator.validate(userDetails, currentFingerprint, ipAddress);
+
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
                 this.setAuthentication(request, claims);
             }
 
-            AppUserDetails userDetails = (AppUserDetails) userDetailsService.loadUserByUsername(jwtUtils.getEmail(claims));
-            String currentFingerprint = fingerprintService.generateUsersFingerprint(request);
-            String ipAddress = request.getRemoteAddr(); // Или через HttpUtilsService
+            filterChain.doFilter(request, response);
 
-            contextValidator.validate(userDetails, currentFingerprint, ipAddress);
-
+        } catch (SecurityException ex) {
+            // Специальная обработка для нарушений безопасности
+            log.error("Security validation failed: {}", ex.getMessage());
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, ex.getMessage());
         } catch (Exception e) {
-            log.error("Could not set user authentication in security context", e);
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid Token");
-            return;
+            // Общая обработка ошибок с уникальным ID для диагностики
+            String errorId = "AUTH-ERR-" + System.currentTimeMillis();
+            log.error("Authentication error [{}]: {}", errorId, e.getMessage());
+            response.setHeader("X-Error-ID", errorId);
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Authentication failed. Reference: " + errorId);
         }
-
-        filterChain.doFilter(request, response);
     }
 
     private void setAuthentication(HttpServletRequest request, Claims claims) {

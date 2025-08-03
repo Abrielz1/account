@@ -24,10 +24,8 @@ public class SecurityContextValidator {
 
     // --- ТОЛЬКО "ЧИТАЮЩИЕ" ЗАВИСИМОСТИ ---
     private final TrustedFingerprintRepository trustedFingerprintRepository;
-    private final BannedEntityRepository bannedEntityRepository;
 
-    // --- УБИРАЕМ RedAlertService! ---
-    // private final RedAlertService redAlertService;
+    private final BannedEntityRepository bannedEntityRepository;
 
     private final Set<String> VALID_ROLES = Arrays.stream(RoleType.values())
             .map(Enum::name)
