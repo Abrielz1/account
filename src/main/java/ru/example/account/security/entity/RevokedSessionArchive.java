@@ -1,6 +1,7 @@
 package ru.example.account.security.entity;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -15,6 +16,8 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.dialect.PostgreSQLEnumJdbcType;
+import ru.example.account.shared.util.AesCryptoConverter;
+
 import java.time.Instant;
 import java.util.UUID;
 
@@ -33,15 +36,18 @@ public class RevokedSessionArchive {
     @Column(name = "session_id")
     private UUID sessionId;
 
+    @Convert(converter = AesCryptoConverter.class)
     @Column(name = "refresh_token", unique = true)
     private String refreshToken;
 
+    @Convert(converter = AesCryptoConverter.class)
     @Column(name = "access_token", unique = true)
     private String accessToken;
 
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
+    @Convert(converter = AesCryptoConverter.class)
     @Column(name = "fingerprint", columnDefinition = "TEXT")
     private String fingerprint;
 

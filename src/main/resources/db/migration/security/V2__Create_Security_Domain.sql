@@ -4,6 +4,8 @@
 CREATE SCHEMA IF NOT EXISTS security;
 SET search_path TO security;
 
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 -- =================================================================================
 --      РАЗДЕЛ 1: СОЗДАЕМ ВСЕ КАСТОМНЫЕ ТИПЫ (ENUMs) ЗАРАНЕЕ
 --      (Используем "параноидальную" обертку DO...EXCEPTION для идемпотентности)

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<settings xmlns="http://maven.apache.org/SETTINGS/1.2.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.2.0 https://maven.apache.org/xsd/settings-1.2.0.xsd">
+
+    <!-- Этот settings.xml предназначен ТОЛЬКО для этого проекта. -->
+    <!-- Он содержит кастомные настройки, необходимые для сборки. -->
+
+    <servers>
+
+
+        <server>
+            <id>jitpack.io</id>
+            <username>Abrielz1</username>
+            <password>jp_5hdiluou2dihjfp4ldiru0nk0c</password>
+        </server>
+    </servers>
+
+</settings>

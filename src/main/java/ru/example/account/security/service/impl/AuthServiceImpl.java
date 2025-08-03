@@ -1,5 +1,6 @@
 package ru.example.account.security.service.impl;
 
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -111,8 +112,10 @@ public class AuthServiceImpl implements AuthService {
             throw new BadRequestException("User send empty tokens");
         }
 
+        Claims claimsFromToken = this.jwtUtils.getAllClaimsFromToken(request.refreshToken());
+
         log.info("Token refresh process started.");
-        AppUserDetails currentUser = (AppUserDetails) userDetailsService.loadUserByUsername(request.username());
+        AppUserDetails currentUser = (AppUserDetails) userDetailsService.loadUserByUsername(claimsFromToken.getIssuer());
 
        String token = "";
 

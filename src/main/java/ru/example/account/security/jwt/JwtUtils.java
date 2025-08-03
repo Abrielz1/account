@@ -69,6 +69,7 @@ public class JwtUtils {
 
         return Jwts.builder()
                 .subject(userDetails.getEmail())
+                .issuer(userDetails.getUsername())
                 .claim("userId", userDetails.getId())
                 .claim(ROLES, roles)
                 .claim(FINGERPRINT_HASH_CLAIM, this.createFingerprintHash(fingerprint))

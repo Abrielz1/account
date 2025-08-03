@@ -1,6 +1,7 @@
 package ru.example.account.security.entity;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -12,9 +13,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 import org.hibernate.proxy.HibernateProxy;
+import ru.example.account.shared.util.AesCryptoConverter;
+
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
@@ -35,9 +39,11 @@ public class AuthSession {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
+    @Convert(converter = AesCryptoConverter.class)
     @Column(name = "refresh_token", columnDefinition = "TEXT", nullable = false, unique = true)
     private String refreshToken;
 
+    @Convert(converter = AesCryptoConverter.class)
     @Column(name = "access_token", columnDefinition = "TEXT", nullable = false, unique = true)
     private String accessToken;
 
@@ -46,6 +52,7 @@ public class AuthSession {
     @JdbcType(PostgreSQLEnumJdbcType.class)
     private SessionStatus status;
 
+    @Convert(converter = AesCryptoConverter.class)
     @Column(name = "fingerprint", columnDefinition = "TEXT")
     private String fingerprint; // "Сырой" фингерпринт для аналитики
 
@@ -69,7 +76,7 @@ public class AuthSession {
     @JdbcType(PostgreSQLEnumJdbcType.class)
     private RevocationReason revocationReason;
 
-    // --- НОВОЕ, КЛЮЧЕВОЕ ПОЛЕ ---
+    @Convert(converter = AesCryptoConverter.class)
     @Column(name = "fingerprint_hash", columnDefinition = "TEXT")
     private String fingerprintHash; // Хэш для Token Binding
 

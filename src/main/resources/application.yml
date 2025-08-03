@@ -13,6 +13,10 @@ spring:
   application:
     name: account-service
 
+  jpa:
+    properties:
+      # "Прокидываем" наш секрет внутрь сессии Hibernate
+      hibernate.properties.session_preload: "SELECT set_config('app.encryption.db-secret-key', '${app.encryption.db-secret-key}', false)"
   # Вся конфигурация DataSource и JPA теперь будет специфичной для профиля
   # Поэтому этот блок мы отсюда убираем
 
@@ -79,3 +83,8 @@ EMAIL_FROM: ${EMAIL_FROM}
 EMAIL_PASSWORD: ${EMAIL_PASSWORD}
 EMAIL_HOST: ${EMAIL_HOST}
 EMAIL_PORT: ${EMAIL_PORT}
+
+jasypt:
+  encryptor:
+    password: ${CRYPTO_PASSWORD}
+    algorithm: "PBEWITHHMACSHA512ANDAES_256"

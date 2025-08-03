@@ -1,6 +1,7 @@
 package ru.example.account.security.entity;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -16,6 +17,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.proxy.HibernateProxy;
+import ru.example.account.shared.util.AesCryptoConverter;
+
 import java.time.ZonedDateTime;
 import java.util.Objects;
 
@@ -27,7 +30,6 @@ import java.util.Objects;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TrustedFingerprint {
-
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -44,9 +46,11 @@ public class TrustedFingerprint {
     @Column(name = "device_name")
     private String deviceName;
 
+    @Convert(converter = AesCryptoConverter.class)
     @Column(name = "user_agent", columnDefinition = "TEXT")
     private String userAgent;
 
+    @Convert(converter = AesCryptoConverter.class)
     @Column(name = "ip_address", length = 45)
     private String ipAddress;
 

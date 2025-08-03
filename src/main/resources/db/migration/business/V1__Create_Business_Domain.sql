@@ -3,6 +3,8 @@
 CREATE SCHEMA IF NOT EXISTS business;
 SET search_path TO business;
 
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 -- Создаем кастомные типы ENUM, специфичные для этого домена
 CREATE TYPE business.role_type_enum AS ENUM (
     'ROLE_CLIENT',
