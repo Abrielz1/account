@@ -2,6 +2,7 @@ package ru.example.account.security.entity;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -18,6 +19,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.dialect.PostgreSQLEnumJdbcType;
+import ru.example.account.shared.util.AesCryptoConverter;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
@@ -40,6 +42,7 @@ public class BannedEntity {
     @Column(name = "entity_type", nullable = false)
     private BlockedEntityType entityType; // Новый ENUM: 'IP_ADDRESS', 'USER_ID', 'FINGERPRINT'
 
+    @Convert(converter = AesCryptoConverter.class)
     @Column(name = "entity_value", nullable = false, columnDefinition = "TEXT")
     private String entityValue; // Здесь будет лежать сам IP (1.2.3.4), или User ID (123), или хэш
 
@@ -52,6 +55,7 @@ public class BannedEntity {
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
 
+    @Convert(converter = AesCryptoConverter.class)
     @Enumerated(EnumType.STRING)
     @Column(name = "block_reason")
     @JdbcType(PostgreSQLEnumJdbcType.class)

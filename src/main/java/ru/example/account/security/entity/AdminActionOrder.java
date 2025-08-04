@@ -1,4 +1,4 @@
-package ru.example.account.security.model;
+package ru.example.account.security.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -8,9 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.dialect.PostgreSQLEnumJdbcType;
-import ru.example.account.security.entity.AdminActionOrderBasis;
-import ru.example.account.security.entity.AdminActionOrderType;
-
+import ru.example.account.shared.util.AesCryptoConverter;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -36,6 +34,7 @@ public class AdminActionOrder {
     @JdbcType(PostgreSQLEnumJdbcType.class)
     private AdminActionOrderBasis basisType;
 
+    @Convert(converter = AesCryptoConverter.class)
     private String basisDocumentRef;
 
     private Long targetUserId;
@@ -55,6 +54,7 @@ public class AdminActionOrder {
 
     private Instant executedAt;
 
+    @Convert(converter = AesCryptoConverter.class)
     private String notes;
 
 }

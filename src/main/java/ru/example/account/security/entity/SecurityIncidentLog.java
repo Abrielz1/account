@@ -16,6 +16,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.dialect.PostgreSQLEnumJdbcType;
+import org.hibernate.proxy.HibernateProxy;
 import java.time.ZonedDateTime;
 import java.util.HashSet;
 import java.util.Map;
@@ -63,21 +64,23 @@ public class SecurityIncidentLog {
     @Builder.Default
     private String status = "DETECTED";
 
-    // --- "Слоновьи" equals/hashCode, основанные на PK ---
     @Override
-    public boolean equals(Object o) {
+    public final boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        SecurityIncidentLog that = (SecurityIncidentLog) o;
-        return Objects.equals(id, that.id);
+        if (o == null) return false;
+        Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
+        Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
+        if (thisEffectiveClass != oEffectiveClass) return false;
+        SecurityIncidentDetail that = (SecurityIncidentDetail) o;
+        return getId() != null && Objects.equals(getId(), that.getId());
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(id);
+    public final int hashCode() {
+        return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
     }
 
-    // --- ТВОЙ "ЧИСТЫЙ" МЕТОД-ХЕЛПЕР ---
+    // --- "ЧИСТЫЙ" МЕТОД-ХЕЛПЕР ---
     public void addDetail(String key, String value) {
         SecurityIncidentDetail detail = new SecurityIncidentDetail();
         // "Родитель" САМ устанавливает связь

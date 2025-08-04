@@ -13,12 +13,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 import org.hibernate.proxy.HibernateProxy;
 import ru.example.account.shared.util.AesCryptoConverter;
-
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
@@ -56,9 +54,11 @@ public class AuthSession {
     @Column(name = "fingerprint", columnDefinition = "TEXT")
     private String fingerprint; // "Сырой" фингерпринт для аналитики
 
+    @Convert(converter = AesCryptoConverter.class)
     @Column(name = "ip_address", length = 45)
     private String ipAddress;
 
+    @Convert(converter = AesCryptoConverter.class)
     @Column(name = "user_agent", columnDefinition = "TEXT")
     private String userAgent;
 
@@ -76,7 +76,6 @@ public class AuthSession {
     @JdbcType(PostgreSQLEnumJdbcType.class)
     private RevocationReason revocationReason;
 
-    @Convert(converter = AesCryptoConverter.class)
     @Column(name = "fingerprint_hash", columnDefinition = "TEXT")
     private String fingerprintHash; // Хэш для Token Binding
 

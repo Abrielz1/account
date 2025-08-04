@@ -1,6 +1,7 @@
 package ru.example.account.security.entity;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -13,6 +14,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.proxy.HibernateProxy;
+import ru.example.account.shared.util.AesCryptoConverter;
 import java.util.Objects;
 
 @Entity
@@ -31,13 +33,14 @@ public class SecurityIncidentDetail {
     @JoinColumn(name = "incident_id", nullable = false)
     private SecurityIncidentLog incident;
 
+    @Convert(converter = AesCryptoConverter.class)
     @Column(name = "detail_key", nullable = false)
     private String detailKey;
 
+    @Convert(converter = AesCryptoConverter.class)
     @Column(name = "detail_value", columnDefinition = "TEXT")
     private String detailValue;
 
-    // --- "Слоновьи", Hibernate-безопасные equals/hashCode по ID ---
     @Override
     public final boolean equals(Object o) {
         if (this == o) return true;

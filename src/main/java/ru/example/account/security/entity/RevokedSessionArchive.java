@@ -17,7 +17,6 @@ import lombok.ToString;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 import ru.example.account.shared.util.AesCryptoConverter;
-
 import java.time.Instant;
 import java.util.UUID;
 
@@ -51,9 +50,11 @@ public class RevokedSessionArchive {
     @Column(name = "fingerprint", columnDefinition = "TEXT")
     private String fingerprint;
 
+    @Convert(converter = AesCryptoConverter.class)
     @Column(name = "ip_address", length = 45)
     private String ipAddress;
 
+    @Convert(converter = AesCryptoConverter.class)
     @Column(name = "user_agent", columnDefinition = "TEXT")
     private String userAgent;
 

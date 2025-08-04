@@ -18,7 +18,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.proxy.HibernateProxy;
 import ru.example.account.shared.util.AesCryptoConverter;
-
 import java.time.ZonedDateTime;
 import java.util.Objects;
 
@@ -43,6 +42,7 @@ public class TrustedFingerprint {
     @Column(name = "fingerprint", nullable = false, columnDefinition = "TEXT")
     private String fingerprint;
 
+    @Convert(converter = AesCryptoConverter.class)
     @Column(name = "device_name")
     private String deviceName;
 
