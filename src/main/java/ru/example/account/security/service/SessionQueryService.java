@@ -12,9 +12,9 @@ public interface SessionQueryService {
 
     Boolean checkExistenceOfFingerprint(String fingerprintHash);
 
-    AuthSession findByRefreshToken(String refreshToken);
+    Optional<AuthSession> findByRefreshTokenAndStatus(String refreshToken);
 
-    Optional<AuthSession> findActiveByRefreshToken(String token);
+    Optional<AuthSession> findActiveByAccessToken(String token);
 
     boolean isTokenArchived(String refreshToken);
 

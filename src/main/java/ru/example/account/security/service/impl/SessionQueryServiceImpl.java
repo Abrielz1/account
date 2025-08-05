@@ -38,17 +38,14 @@ public class SessionQueryServiceImpl implements SessionQueryService {
     }
 
     @Override
-    public AuthSession findByRefreshToken(String refreshToken) {
-        return this.authSessionRepository.findByRefreshTokenAndStatus(refreshToken, SessionStatus.STATUS_ACTIVE).orElseThrow(() -> {
-            log.error("Hacker ALERT!");
-            return new IllegalStateException("Our Dns fails");
-        });
+    public Optional<AuthSession> findByRefreshTokenAndStatus(String refreshToken) {
+        return this.authSessionRepository.findByRefreshTokenAndStatus(refreshToken, SessionStatus.STATUS_ACTIVE);
     }
 
     @Override
-    public Optional<AuthSession> findActiveByRefreshToken(String refreshToken) {
+    public Optional<AuthSession> findActiveByAccessToken(String accessToken) {
 
-        return authSessionRepository.findByRefreshTokenAndStatus(refreshToken, SessionStatus.STATUS_ACTIVE);
+        return authSessionRepository.findByAccessTokenAndStatus(accessToken, SessionStatus.STATUS_ACTIVE);
     }
 
     @Override

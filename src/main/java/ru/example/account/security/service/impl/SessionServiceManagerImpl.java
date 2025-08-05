@@ -79,7 +79,7 @@ public class SessionServiceManagerImpl implements SessionServiceManager {
                                                String userAgent,
                                                AppUserDetails currentUser) {
 
-        AuthSession sessionFromDb = this.sessionQueryService.findActiveByRefreshToken(refreshToken).orElseThrow(() -> {
+        AuthSession sessionFromDb = this.sessionQueryService.findByRefreshTokenAndStatus(refreshToken).orElseThrow(() -> {
             // Пытаются использовать несуществующий или уже отозванный refresh.
             // Возможно, это replay-атака.
             log.warn("SECURITY: Attempt to use a non-existent or revoked refresh token.");
@@ -140,7 +140,7 @@ public class SessionServiceManagerImpl implements SessionServiceManager {
 
             log.error("CRITICAL [SECURITY]: {}", reason);
 
-            // ... (протокол "Красная тревога": сдампить всю сессию,  отозвать все сессии, отправить алерт) ...
+            // ... (протокол "Красная тревога": сдампить всю сессию, отозвать все сессии, отправить алерт) ...
             this.sessionCommandService.archiveAllForUser(sessionFromDb.getUserId(), fingerprint, ipAddress, userAgent, RevocationReason.REASON_RED_ALERT);
 
             // шлём срочное уведомление об хакерской атаке

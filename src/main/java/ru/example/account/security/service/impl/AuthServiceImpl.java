@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -14,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import ru.example.account.security.entity.RevocationReason;
 import ru.example.account.security.entity.SessionStatus;
-import ru.example.account.security.jwt.JwtTokenFilter;
 import ru.example.account.security.jwt.JwtUtils;
 import ru.example.account.security.model.request.LoginRequest;
 import ru.example.account.security.model.request.RefreshTokenRequest;
@@ -29,9 +29,7 @@ import ru.example.account.security.service.TimezoneService;
 import ru.example.account.security.service.UserService;
 import ru.example.account.shared.exception.exceptions.BadRequestException;
 import ru.example.account.shared.exception.exceptions.SecurityBreachAttemptException;
-import ru.example.account.shared.exception.exceptions.UserNotVerifiedException;
 import ru.example.account.shared.util.SecurityContextValidator;
-
 import java.time.ZonedDateTime;
 
 @Slf4j
@@ -61,13 +59,12 @@ public class AuthServiceImpl implements AuthService {
 
     private final JwtUtils jwtUtils;
 
-    private final JwtTokenFilter jwtTokenFilter;
-
     @Override
     public AuthResponse login(LoginRequest request, HttpServletRequest httpRequest) {
 
         log.info("Authentication attempt for user: {}", request.email());
 
+        final String accessToken = httpRequest.getHeader(HttpHeaders.AUTHORIZATION).substring(7);
         Authentication authentication;
         try {
             authentication = authenticationManager
@@ -93,7 +90,7 @@ public class AuthServiceImpl implements AuthService {
         ZonedDateTime lastSeenAt = ZonedDateTime.now();
 
         // ВАЛИДИРУЕМ ВЕСЬ КОНТЕКСТ СРАЗУ!
-        this.contextValidator.validate(currentUser, fingerprint, ipAddress);
+        this.contextValidator.validate(currentUser, fingerprint, ipAddress, userAgent, accessToken);
         this.userService.updateLastLoginAsync(currentUser.getId(), this.timezoneService.getZoneIdFromRequest(httpRequest));
 
         return  this.sessionManager.createSession(
@@ -117,7 +114,7 @@ public class AuthServiceImpl implements AuthService {
         log.info("Token refresh process started.");
         AppUserDetails currentUser = (AppUserDetails) userDetailsService.loadUserByUsername(claimsFromToken.getIssuer());
 
-       String token = "";
+       String token;
 
        if (request.accessesToken().startsWith("Bearer")) {
           token = request.accessesToken().substring(7);
@@ -126,7 +123,7 @@ public class AuthServiceImpl implements AuthService {
        }
 
         Boolean refreshTokenIsExists = this.authSessionRepository.existsByRefreshToken(request.refreshToken());
-        Boolean accessTokenIsExists = this.jwtUtils.isTokenValid(token);
+        boolean accessTokenIsExists = this.jwtUtils.isTokenValid(token);
 
         if (Boolean.TRUE.equals(!refreshTokenIsExists) && Boolean.TRUE.equals(!accessTokenIsExists)) {
             log.trace("RED ALERT! A HACKER TRIES BREACH SYSTEM");

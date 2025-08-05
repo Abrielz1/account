@@ -16,6 +16,8 @@ import java.util.UUID;
 @Repository
 public interface AuthSessionRepository extends JpaRepository<AuthSession, UUID> {
 
+    Optional<AuthSession> findByAccessTokenAndStatus(String accessToken, SessionStatus status);
+
     Optional<AuthSession> findByRefreshTokenAndStatus(String refreshToken, SessionStatus status);
 
     @Query(value = """

@@ -26,7 +26,7 @@ public interface BannedEntityRepository extends JpaRepository<BannedEntity, Long
                        AND entity_value = :ipAddress 
                    )
                    """, nativeQuery = true)
-    boolean isIpBanned(@Param("ipAddress") String ipAddress);
+    boolean isIpBanned(@Param("IP_ADDRESS") BlockedEntityType IP_ADDRESS, @Param("ipAddress") String ipAddress);
 
 
     // --- МЕТОД №3: Проверка по FINGERPRINT ---
@@ -34,8 +34,8 @@ public interface BannedEntityRepository extends JpaRepository<BannedEntity, Long
                    SELECT EXISTS(
                        SELECT 1 FROM security.banned_entities
                        WHERE entity_type = 'FINGERPRINT'
-                       AND entity_value = :fingerprint 
+                       AND entity_value = :fingerprint
                    )
                    """, nativeQuery = true)
-    boolean isFingerprintBanned(@Param("fingerprint") String fingerprint);
+    boolean isFingerprintBanned(@Param("FINGERPRINT") BlockedEntityType FINGERPRINT, @Param("fingerprint") String fingerprint);
 }
