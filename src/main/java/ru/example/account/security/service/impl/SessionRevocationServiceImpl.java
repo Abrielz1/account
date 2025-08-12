@@ -13,7 +13,6 @@ import ru.example.account.security.repository.ActiveSessionCacheRepository;
 import ru.example.account.security.repository.AuthSessionRepository;
 import ru.example.account.security.repository.RevokedTokenArchiveRepository;
 import ru.example.account.security.repository.SessionAuditLogRepository;
-import ru.example.account.security.service.BlacklistService;
 import ru.example.account.security.service.SessionQueryService;
 import ru.example.account.security.service.SessionRevocationService;
 import java.time.Instant;
@@ -26,7 +25,7 @@ public class SessionRevocationServiceImpl implements SessionRevocationService {
 
     private final AuthSessionRepository authSessionRepository;
 
-    private final BlacklistService blacklistService;
+ //   private final BlacklistService blacklistService;
 
     private final RevokedTokenArchiveRepository revokedTokenArchiveRepository;
 
@@ -64,8 +63,8 @@ public class SessionRevocationServiceImpl implements SessionRevocationService {
         this.revokedTokenArchiveRepository.save(RevokedSessionArchive.from(sessionToRevoke, now, reason));
 
         // 4. БЛЭКЛИСТИНГ ACCESS TOKEN'А и REFRESH TOKEN'А В REDIS
-        this.blacklistService.blacklistAccessToken(sessionToRevoke.getAccessToken());
-        this.blacklistService.blacklistRefreshToken(sessionToRevoke.getRefreshToken());
+//        this.blacklistService.blacklistAccessToken(sessionToRevoke.getAccessToken());
+//        this.blacklistService.blacklistRefreshToken(sessionToRevoke.getRefreshToken());
 
         // 5. ЗАЧИСТКА "ГОРЯЧИХ" ХРАНИЛИЩ
         this.activeSessionCacheRepository.deleteById(sessionToRevoke.getRefreshToken());

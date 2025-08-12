@@ -20,7 +20,6 @@ import ru.example.account.security.entity.AuthSession;
 import ru.example.account.security.entity.RevocationReason;
 import ru.example.account.security.entity.SessionStatus;
 import ru.example.account.security.service.AuthService;
-import ru.example.account.security.service.BlacklistService;
 import ru.example.account.security.service.FingerprintService;
 import ru.example.account.security.service.SessionQueryService;
 import ru.example.account.security.service.SessionRevocationService;
@@ -39,7 +38,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
     private final JwtUtils jwtUtils;
 
-    private final BlacklistService blacklistService;
+  //  private final BlacklistService blacklistService;
 
   //  private final WhitelistService trustedDeviceService;
 
@@ -104,16 +103,16 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             }
 
             // 2a. Черный список
-            if (this.blacklistService.isAccessTokenBlacklisted(token)) {
-
-                // 1. УНИЧТОЖАЕМ ВСЕ СЕССИИ ЭТОГО ПОЛЬЗОВАТЕЛЯ
-                this.sessionRevocationService.revokeAllSessionsForUser(
-                        userId,
-                        SessionStatus.STATUS_COMPROMISED,
-                        RevocationReason.REASON_RED_ALERT
-                );
-                throw new SecurityException("Access denied for blacklisted token.");
-            }
+//            if (this.blacklistService.isAccessTokenBlacklisted(token)) {
+//
+//                // 1. УНИЧТОЖАЕМ ВСЕ СЕССИИ ЭТОГО ПОЛЬЗОВАТЕЛЯ
+//                this.sessionRevocationService.revokeAllSessionsForUser(
+//                        userId,
+//                        SessionStatus.STATUS_COMPROMISED,
+//                        RevocationReason.REASON_RED_ALERT
+//                );
+//                throw new SecurityException("Access denied for blacklisted token.");
+//            }
 
             // 2b. Белый список todo переделать логику вызова
 //            if (!this.trustedDeviceService.isDeviceTrusted(userId, token, currentFingerprint)) {

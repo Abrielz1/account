@@ -15,4 +15,13 @@ public class RedisKeyBuilderHelper {
     public String buildKey(final String fingerprintHash) {
         return redisKeys.getKeys().getWhitelist().getFingerprintKeyFormat().replace("{fingerprint}", fingerprintHash);
     }
+
+    // тупые собиралки ключа для Redis
+    public String buildAccessKey(String accessToken) {
+        return redisKeys.getKeys().getBlacklist().getAccessTokenPrefix() + accessToken;
+    }
+
+    public String buildRefreshKey(String refreshToken) {
+        return redisKeys.getKeys().getBlacklist().getRefreshTokenPrefix() + refreshToken;
+    }
 }
