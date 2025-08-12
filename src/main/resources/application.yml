@@ -41,8 +41,36 @@ app:
     refresh-token-expiration: "P7D"
     ttl: 300
 
+    keys:
+      # Имя ключа для TTL-а активной сессии
+      # Было: ttl: 300 в jwt-секции - это неправильно. TTL кеша - это свойство Redis
+      active-session-prefix: "session:active::"
+
+      blacklist:
+        access-token-prefix: "banned:access_token::"
+        # Для refresh-токенов TTL будет другим, так что префикс тоже нужен
+        refresh-token-prefix: "banned:refresh_token::"
+
+      whitelist:
+        fingerprint-key-format: "trusted_fp::{fingerprint}"
+
+      verification:
+        device-code-format: "device_verify:{userId}:{fingerprint}"
+
+      ttl:
+        # --- ДОБАВЛЯЕМ TTL ДЛЯ АКТИВНОЙ СЕССИИ! ---
+        # Это то самое "пропущенное" свойство.
+        # Теперь оно в правильном месте.
+        active-session: "30m"
+
+        banned-access-token: "16m"  # Чуть больше, чем живет сам токен
+        banned-refresh-token: "91d" # Чуть больше, чем живет refresh
+        trusted-fingerprint: "90d"  # TTL "доверия" = TTL "рефреша"
+        device-verification-code: "10m"
+
   redis:
     keys:
+      active-session-prefix: "session:active::"
       blacklist:
         access-token-prefix: "banned:access_token::"
         # Для refresh-токенов черный список теперь не нужен,

@@ -47,15 +47,17 @@ public class AccountBatchProcessorImpl implements AccountBatchProcessor {
     }
 
     private Account applyInterest(Account account) {
-        BigDecimal maxAllowed = account.getInitialBalance().multiply(MAX_PERCENT);
-        if (account.getBalance().compareTo(maxAllowed) >= 0) {
-            return account;
-        }
-        BigDecimal newBalance = account.getBalance()
-                .multiply(INCREASE_RATE)
-                .setScale(SCALE, ROUNDING_MODE);
-        account.setBalance(newBalance.min(maxAllowed));
-        return account;
+//        BigDecimal maxAllowed = account.getInitialBalance().multiply(MAX_PERCENT);
+//        if (account.getBalance().compareTo(maxAllowed) >= 0) {
+//            return account;
+//        }
+//        BigDecimal newBalance = account.getBalance()
+//                .multiply(INCREASE_RATE)
+//                .setScale(SCALE, ROUNDING_MODE);
+//        account.setBalance(newBalance.min(maxAllowed));
+//        return account;
+
+        return null;
     }
 
     @Recover

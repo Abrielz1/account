@@ -13,7 +13,6 @@ import org.springframework.retry.annotation.EnableRetry;
 @EnableScheduling
 @EnableAsync
 @EnableRetry
-
 @SpringBootApplication(
         // Тут ЯВНО "ВЫКЛЮЧАЕЮ" стандартную "магию" Spring Boot
         // для работы с базами данных.

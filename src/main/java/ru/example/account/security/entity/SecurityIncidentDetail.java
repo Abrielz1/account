@@ -10,6 +10,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -21,7 +23,9 @@ import java.util.Objects;
 @Table(name = "security_incident_details", schema = "security")
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 public class SecurityIncidentDetail {
 
     @Id
@@ -40,6 +44,9 @@ public class SecurityIncidentDetail {
     @Convert(converter = AesCryptoConverter.class)
     @Column(name = "detail_value", columnDefinition = "TEXT")
     private String detailValue;
+//
+//    @OneToMany
+//    private Set<>
 
     @Override
     public final boolean equals(Object o) {

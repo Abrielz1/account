@@ -32,9 +32,9 @@ public class SessionQueryServiceImpl implements SessionQueryService {
 
     @Override
     @Transactional(value = "securityTransactionManager")
-    public Boolean checkExistenceOfFingerprint(String fingerprint) {
+    public Boolean checkExistenceOfFingerprint(String fingerprintHash) {
         log.info("Cheking exsitense of fingerprintHash");
-        return fingerprintService.isFingerPrintAreKnown(fingerprint);
+        return this.fingerprintService.isFingerPrintAreKnown(fingerprintHash);
     }
 
     @Override
@@ -45,12 +45,12 @@ public class SessionQueryServiceImpl implements SessionQueryService {
     @Override
     public Optional<AuthSession> findActiveByAccessToken(String accessToken) {
 
-        return authSessionRepository.findByAccessTokenAndStatus(accessToken, SessionStatus.STATUS_ACTIVE);
+        return this.authSessionRepository.findByAccessTokenAndStatus(accessToken, SessionStatus.STATUS_ACTIVE);
     }
 
     @Override
     public boolean isTokenArchived(String refreshToken) {
-        return revokedTokenArchiveRepository.checkRefreshTokenInRevokedArchive(refreshToken);
+        return this.revokedTokenArchiveRepository.checkRefreshTokenInRevokedArchive(refreshToken);
     }
 
     @Override

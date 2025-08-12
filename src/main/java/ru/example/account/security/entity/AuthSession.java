@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.JdbcType;
+import org.hibernate.annotations.Where;
 import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 import org.hibernate.proxy.HibernateProxy;
 import ru.example.account.shared.util.AesCryptoConverter;
@@ -26,6 +27,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @Builder
+@Where(clause = "is_deleted = false")
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(of = {"id", "userId", "status"})
@@ -54,6 +56,10 @@ public class AuthSession {
     @Column(name = "fingerprint", columnDefinition = "TEXT")
     private String fingerprint; // "Сырой" фингерпринт для аналитики
 
+    // ХЭШ ФИНГЕРПРИНТА ДЛЯ TOKEN BINDING
+    @Column(name = "fingerprint_hash", columnDefinition = "TEXT", nullable = false)
+    private String fingerprintHash;
+
     @Convert(converter = AesCryptoConverter.class)
     @Column(name = "ip_address", length = 45)
     private String ipAddress;
@@ -76,8 +82,9 @@ public class AuthSession {
     @JdbcType(PostgreSQLEnumJdbcType.class)
     private RevocationReason revocationReason;
 
-    @Column(name = "fingerprint_hash", columnDefinition = "TEXT")
-    private String fingerprintHash; // Хэш для Token Binding
+    @Column(name = "is_deleted", nullable = false)
+    @Builder.Default
+    private boolean isDeleted = false;
 
     @Override
     public final boolean equals(Object o) {

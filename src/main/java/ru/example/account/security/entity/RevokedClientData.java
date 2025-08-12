@@ -1,6 +1,7 @@
 package ru.example.account.security.entity;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -15,6 +16,8 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.dialect.PostgreSQLEnumJdbcType;
+import ru.example.account.shared.util.AesCryptoConverter;
+
 import java.time.Instant;
 import java.util.UUID;
 
@@ -36,12 +39,15 @@ public class RevokedClientData {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
+    @Convert(converter = AesCryptoConverter.class)
     @Column(name = "fingerprint", columnDefinition = "TEXT")
     private String fingerprint;
 
+    @Convert(converter = AesCryptoConverter.class)
     @Column(name = "ip_address", length = 45)
     private String ipAddress;
 
+    @Convert(converter = AesCryptoConverter.class)
     @Column(name = "user_agent", columnDefinition = "TEXT")
     private String userAgent;
 

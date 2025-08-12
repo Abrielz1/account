@@ -15,4 +15,10 @@ public interface AuthService {
     void logout(AppUserDetails userDetails);
 
     void logoutAll(AppUserDetails userDetails);
+
+    void trustDevice(Long userId, String fingerprint, HttpServletRequest request);
+
+    String generateAndCacheVerificationCode(Long userId, String fingerprint);
+
+    boolean verifyCode(Long userId, String fingerprint, String code);
 }

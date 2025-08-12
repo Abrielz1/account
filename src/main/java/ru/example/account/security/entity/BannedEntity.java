@@ -21,7 +21,6 @@ import org.hibernate.annotations.JdbcType;
 import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 import ru.example.account.shared.util.AesCryptoConverter;
 import java.time.Instant;
-import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -31,7 +30,7 @@ import java.util.Set;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(of = {"ipAddress", "userAgent", "blockReason"})
+@ToString(of = {"blockReason"})
 public class BannedEntity {
 
     @Id
@@ -55,6 +54,10 @@ public class BannedEntity {
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
 
+    @Column(name = "ip_adresses")
+    @OneToMany(mappedBy = "BannedEntity")
+    private Set<BlackListedIpAddress> listOfBlockedIps;
+
     @Convert(converter = AesCryptoConverter.class)
     @Enumerated(EnumType.STRING)
     @Column(name = "block_reason")
@@ -73,7 +76,10 @@ public class BannedEntity {
     private Long bannedUserId; // Если банили конкретного юзера, сохраняем его ID.
 
     @OneToMany(mappedBy = "ban", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<BanContextDetail> contextDetails = new HashSet<>();
+    private Set<BanContextDetail> contextDetails;
+
+    @OneToMany(mappedBy = "blockedEntity")
+    private Set<BlackListedIpAddress> blackListedIpAddresses;
 
     // Хелпер, как ты любишь
     public void addDetail(String key, String value) {

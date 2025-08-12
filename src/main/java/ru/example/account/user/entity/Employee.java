@@ -24,7 +24,7 @@ import java.util.Set;
 @Getter
 @Setter
 @NoArgsConstructor
-@ToString(callSuper = true, exclude = {"mentor", "mentees"}) // callSuper=true, чтобы в toString
+@ToString() // callSuper=true, чтобы в toString
 public class Employee extends User {
 
     @Column(name = "employee_internal_id", unique = true)

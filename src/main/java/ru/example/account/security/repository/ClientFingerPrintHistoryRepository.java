@@ -10,7 +10,7 @@ import ru.example.account.security.entity.ClientFingerPrintHistory;
 public interface ClientFingerPrintHistoryRepository extends JpaRepository<ClientFingerPrintHistory, Long> {
 
     @Query(value = """
-    SELECT EXISTS(SELECT 1 FROM ClientFingerPrintHistory cfh WHERE cfh.fingerprint = :fingerPrintToCheck)
+    SELECT EXISTS(SELECT 1 FROM ClientFingerPrintHistory cfh WHERE cfh.fingerprintHash = :fingerPrintHashToCheck)
 """)
-    Boolean checkExistsClientFingerprint(@Param("fingerPrintToCheck") String fingerPrintToCheck);
+    Boolean checkExistsClientFingerprint(@Param("fingerPrintHashToCheck") String fingerPrintHashToCheck);
 }

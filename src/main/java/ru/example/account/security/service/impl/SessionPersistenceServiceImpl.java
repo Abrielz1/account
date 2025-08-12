@@ -56,7 +56,7 @@ public class SessionPersistenceServiceImpl implements SessionPersistenceService 
         // --- Шаг 1. Делегируем генерацию уникальных ID
         final UUID newSessionId = this.idGenerationService.generateSessionId();
         // --- Шаг 1: Генерация refreshToken ---
-        final String refreshToken = this.idGenerationService.generateRefreshToken();
+        final String refreshToken = this.idGenerationService.generateUniqueTokenId();
         // --- Шаг 2: Генерация accessToken ---
         final String accessToken = this.jwtUtils.generateAccessToken(currentUser, newSessionId, fingerprint);
 

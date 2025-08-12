@@ -6,5 +6,5 @@ public interface IdGenerationService {
 
     UUID generateSessionId();
 
-    String generateRefreshToken();
+    String generateUniqueTokenId();
 }

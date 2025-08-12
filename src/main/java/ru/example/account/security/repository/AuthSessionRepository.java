@@ -1,13 +1,10 @@
 package ru.example.account.security.repository;
 
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import ru.example.account.security.entity.AuthSession;
-import ru.example.account.security.entity.RevocationReason;
 import ru.example.account.security.entity.SessionStatus;
 import java.util.List;
 import java.util.Optional;
@@ -16,22 +13,27 @@ import java.util.UUID;
 @Repository
 public interface AuthSessionRepository extends JpaRepository<AuthSession, UUID> {
 
-    Optional<AuthSession> findByAccessTokenAndStatus(String accessToken, SessionStatus status);
+    Optional<AuthSession> findByAccessTokenAndStatus(String accessToken, SessionStatus status);  // todo nativeQuery
 
-    Optional<AuthSession> findByRefreshTokenAndStatus(String refreshToken, SessionStatus status);
+    Optional<AuthSession> findByRefreshTokenAndStatus(String refreshToken, SessionStatus status); // todo nativeQuery
 
     @Query(value = """
-                   FROM AuthSession au
-                   WHERE au.userId = :userId AND au.status = :sessionStatus
-                   """)
+                   SELECT *
+                   FROM security.auth_sessions AS au
+                   WHERE au.userId = :userId
+                    AND au.status = :sessionStatus
+                   """, nativeQuery = true)
     List<AuthSession> findAllByUserIdAndStatus(@Param("userId") Long userId, @Param("sessionStatus") SessionStatus sessionStatus);
 
-    @Query("""
-            SELECT EXISTS (SELECT 1 FROM AuthSession auth  WHERE auth.id = :sessionId)
-            """)
+    @Query(value = """
+            SELECT EXISTS (SELECT 1 FROM security.auth_sessions AS au WHERE au.id = :sessionId)
+            """, nativeQuery = true)
     boolean checkSessionIdAuditLog(@Param("sessionId") String sessionId);
 
-    Boolean existsByRefreshToken(String token);
+    @Query(value = """
+           SELECT EXISTS(SELECT 1 FROM security.auth_sessions AS au WHERE au.token = :token)
+           """, nativeQuery = true)
+    Boolean existsByRefreshToken(@Param("token") String token); // todo native querry
 
     /**
      * Получает HMAC-хэш фингерпринта из АКТИВНОЙ сессии по ее refresh-токену.
@@ -39,9 +41,12 @@ public interface AuthSessionRepository extends JpaRepository<AuthSession, UUID> 
      * @param refreshToken "Сырой" refresh-токен.
      * @return Optional, содержащий хэш, если сессия найдена.
      */
-    @Query(value = "SELECT fingerprint_hash FROM security.auth_sessions " +
-            "WHERE refresh_token = :token AND status = 'STATUS_ACTIVE'",
-            nativeQuery = true)
+    @Query(value = """
+            SELECT *
+             FROM security.auth_sessions AS au
+            WHERE au.refresh_token = :token
+             AND au.status = 'STATUS_ACTIVE'
+            """, nativeQuery = true)
     Optional<String> findFingerprintHashByActiveRefreshToken(@Param("token") String refreshToken);
 
     /**
@@ -54,4 +59,12 @@ public interface AuthSessionRepository extends JpaRepository<AuthSession, UUID> 
             "WHERE refresh_token = :token AND status = 'STATUS_ACTIVE'",
             nativeQuery = true)
     Optional<String> findOriginalFingerprintByActiveRefreshToken(@Param("token") String refreshToken);
+
+    @Query(value = """
+            SELECT *
+             FROM security.auth_sessions AS au
+            WHERE au.user_id = :userId
+             AND au.status = 'STATUS_ACTIVE'
+            """, nativeQuery = true)
+    Optional<AuthSession> findBySessionIdAndUserIdAndStatusActive(@Param("sessionId") UUID sessionId, @Param("userId") Long userId);
 }

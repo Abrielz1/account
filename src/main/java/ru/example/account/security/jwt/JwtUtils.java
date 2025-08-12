@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
+import ru.example.account.security.service.IdGenerationService;
 import ru.example.account.security.service.impl.AppUserDetails;
 import ru.example.account.shared.exception.exceptions.InvalidAlgorithmException;
 import ru.example.account.shared.exception.exceptions.InvalidJwtAuthenticationException;
@@ -45,7 +46,12 @@ public class JwtUtils {
     @Value("${app.jwt.token-expiration}")
     private Duration tokenExpiration;
 
+    @Value("${app.jwt.refresh-token-expiration}")
+    private Duration refreshTokenExpiration;
+
     private SecretKey secretKey;
+
+    private IdGenerationService idGenerationService;
 
     @PostConstruct
     public void init() {
@@ -76,6 +82,22 @@ public class JwtUtils {
                 .id(sessionId.toString())
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plus(tokenExpiration)))
+                .signWith(secretKey)
+                .compact();
+    }
+
+    public String generateRefreshToken(AppUserDetails userDetails, UUID sessionId, String fingerprint) {
+
+        Instant now = Instant.now();
+        String refreshTokenUniqueUUId = this.idGenerationService.generateUniqueTokenId();
+        return Jwts.builder()
+                .subject(String.valueOf(userDetails.getId()))
+                .issuer(userDetails.getUsername())
+                .id(refreshTokenUniqueUUId)
+                .claim("sessionId", sessionId.toString())
+                .claim(FINGERPRINT_HASH_CLAIM, this.createFingerprintHash(fingerprint))
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(now.plus(refreshTokenExpiration)))
                 .signWith(secretKey)
                 .compact();
     }

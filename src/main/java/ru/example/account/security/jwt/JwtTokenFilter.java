@@ -19,11 +19,13 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import ru.example.account.security.entity.AuthSession;
 import ru.example.account.security.entity.RevocationReason;
 import ru.example.account.security.entity.SessionStatus;
+import ru.example.account.security.service.AuthService;
 import ru.example.account.security.service.BlacklistService;
 import ru.example.account.security.service.FingerprintService;
 import ru.example.account.security.service.SessionQueryService;
 import ru.example.account.security.service.SessionRevocationService;
-import ru.example.account.security.service.TrustedDeviceService;
+import ru.example.account.security.service.WhitelistService;
+import ru.example.account.shared.exception.exceptions.DeviceNotVerifiedException;
 import ru.example.account.shared.exception.exceptions.InvalidJwtAuthenticationException;
 import ru.example.account.shared.exception.exceptions.SecurityBreachAttemptException;
 import java.io.IOException;
@@ -40,7 +42,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
     private final BlacklistService blacklistService;
 
-    private final TrustedDeviceService trustedDeviceService;
+    private final WhitelistService trustedDeviceService;
 
     private final SessionQueryService sessionQueryService;
 
@@ -50,14 +52,31 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
     private final SessionRevocationService sessionRevocationService; // <<<--- КЛЮЧЕВАЯ ЗАВИСИМОСТЬ ДЛЯ ФСБ и СБ
 
+    private final AuthService authService;
+
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws IOException {
 
+        boolean isHasToken = false; // тоены оба вообще есть в jwt?
+        boolean isTokenValid = false; //срок, подпись
+        boolean isDeviceKnown = false; //белый список
+        boolean isTokenBlacklisted = false; // в чёрном ли списке?
+        boolean isTokenBindingCorrect = false; // сверка хэшей
+
+        /**
+         * ЕСЛИ (!hasToken && !isDeviceKnown) -> Ответ: "Ты — "первопроходец". Иди регистрируйся/логинься". (Статус: Normal`)
+         *ЕСЛИ (!hasToken && isDeviceKnown) -> Ответ: "Я тебя помню, но сессия "протухла". Иди логинься". (Статус: Normal`)
+         * ЕСЛИ (hasToken && !isDeviceKnown) -> **Ответ: "ОПА-НА. У тебя ЕСТЬ наш "секретный пропуск",
+         * но ты стучишься из "непонятного подвала". Это—RED ALERT**. (Статус: **_SECURITY BREACH_**), фсб ТЕБЕ в хату.
+         */
+
+
         try {
             final String token = extractTokenFromRequest(request);
             if (token == null) {
+                log.trace("emty token wasgiven into doFilterInternal");
                 filterChain.doFilter(request, response);
                 return;
             }
@@ -72,9 +91,21 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             final Claims claims = jwtUtils.getAllClaimsFromToken(token);
             final Long userId = jwtUtils.getUserId(claims);
             final String currentFingerprint = fingerprintService.generateUsersFingerprint(request);
+            final String currentFingerprintHash = this.jwtUtils.createFingerprintHash(currentFingerprint);
+            final String givenFingerPrintHash = this.jwtUtils.getFingerprintHash(claims);
+
+            // --- ШАГ 2,5: "ГОРЯЧИЕ" Фингер принтов, на наличие и одинаковость ---
+            if (!StringUtils.hasText(currentFingerprint) && !StringUtils.hasText(givenFingerPrintHash) && !Objects.equals(currentFingerprintHash, givenFingerPrintHash)) {
+                this.sessionRevocationService.revokeAllSessionsForUser(
+                        userId,
+                        SessionStatus.STATUS_COMPROMISED,
+                        RevocationReason.REASON_RED_ALERT
+                );
+                throw new SecurityException("Access denied for blacklisted token.");
+            }
 
             // 2a. Черный список
-            if (blacklistService.isAccessTokenBlacklisted(token)) {
+            if (this.blacklistService.isAccessTokenBlacklisted(token)) {
 
                 // 1. УНИЧТОЖАЕМ ВСЕ СЕССИИ ЭТОГО ПОЛЬЗОВАТЕЛЯ
                 this.sessionRevocationService.revokeAllSessionsForUser(
@@ -86,7 +117,12 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             }
 
             // 2b. Белый список
-            if (!trustedDeviceService.isDeviceTrusted(userId, currentFingerprint)) {
+            if (!this.trustedDeviceService.isDeviceTrusted(userId, token, currentFingerprint)) {
+                this.sessionRevocationService.revokeAllSessionsForUser(
+                        userId,
+                        SessionStatus.STATUS_COMPROMISED,
+                        RevocationReason.REASON_RED_ALERT
+                );
                 throw new SecurityException("Access denied from an untrusted device.");
             }
 
@@ -97,9 +133,9 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 throw new SecurityException("No active session found for the provided access token.");
             }
 
-            AuthSession sessionFromDb = sessionOpt.get();
-            String hashFromDb = sessionFromDb.getFingerprintHash();
-            String hashFromRequest = jwtUtils.createFingerprintHash(currentFingerprint);
+            final AuthSession sessionFromDb = sessionOpt.get();
+            final String hashFromDb = sessionFromDb.getFingerprintHash();
+            final String hashFromRequest = jwtUtils.createFingerprintHash(currentFingerprint);
 
             if (!Objects.equals(hashFromDb, hashFromRequest)) {
                 // RED ALERT!
@@ -114,15 +150,28 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             // --- УСПЕХ! ---
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
                 // Мы можем взять email из claims, т.к. мы уже ПОЛНОСТЬЮ доверяем этому токену
-                UserDetails userDetails = userDetailsService.loadUserByUsername(jwtUtils.getEmail(claims));
-                setAuthentication(request, userDetails);
+                final UserDetails userDetails = userDetailsService.loadUserByUsername(jwtUtils.getEmail(claims));
+                this.setAuthentication(request, userDetails);
             }
 
             filterChain.doFilter(request, response);
 
-        } catch (Exception ex) {
+        } catch (DeviceNotVerifiedException e) {
+        // --- ВОТ ОН, НАШ "ИНТЕЛЛЕКТ"! ---
+        // "Ага, это НЕ атака. Это - наш юзер с нового устройства".
+        // Запускаем ПРОЦЕСС верификации.
+        this.authService.trustDevice(e.getUserId(), e.getFingerPrint(), request);
+
+        // И отдаем фронтенду ЧЕТКИЙ, ПОНЯТНЫЙ приказ.
+        response.sendError(
+                HttpServletResponse.SC_FORBIDDEN, // 403 Forbidden, но...
+                "DEVICE_NOT_VERIFIED" // ... с "кодом", который поймет фронтенд.
+        );
+        SecurityContextHolder.clearContext();
+
+    } catch (Exception ex) {
             SecurityContextHolder.clearContext();
-            handleAuthError(response, ex);
+            this.handleAuthError(response, ex);
         }
     }
 
@@ -141,10 +190,10 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     }
 
     private void handleAuthError(HttpServletResponse response, Exception e) throws IOException {
-        String errorId = "AUTH-ERR-" + System.currentTimeMillis();
+        final String errorId = "AUTH-ERR-" + System.currentTimeMillis();
         log.error("Authentication error [{}]: {}", errorId, e.getMessage(), e);
         response.setHeader("X-Error-ID", errorId);
-        int status = (e instanceof SecurityException || e instanceof SecurityBreachAttemptException)
+        final int status = (e instanceof SecurityException || e instanceof SecurityBreachAttemptException)
                 ? HttpServletResponse.SC_FORBIDDEN
                 : HttpServletResponse.SC_UNAUTHORIZED;
         response.sendError(status, "Authentication failed. Ref: " + errorId);

@@ -13,6 +13,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Where;
+import org.hibernate.proxy.HibernateProxy;
+
 import java.time.ZonedDateTime;
 import java.util.HashSet;
 import java.util.Objects;
@@ -23,6 +26,7 @@ import java.util.Set;
 @Getter
 @Setter
 @Builder
+@Where(clause = "is_deleted = false")
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserFingerprintProfile {
@@ -30,6 +34,7 @@ public class UserFingerprintProfile {
     @Column(name = "user_id")
     private Long userId;
 
+    // СВЯЗЬ: ОДИН профиль ВЛАДЕЕТ МНОЖЕСТВОМ "отпечатков"
     @OneToMany(
             mappedBy = "profile", // "Управляется" полем "profile" в классе TrustedFingerprint
             cascade = CascadeType.ALL,    // Если сохраняем/удаляем Профиль, то же самое делаем и с его Фингерпринтами
@@ -50,18 +55,27 @@ public class UserFingerprintProfile {
     @Builder.Default
     private Long version = 0L;
 
-    // --- "Слоновьи", Hibernate-безопасные equals/hashCode, основанные на PK ---
+    @Column(name = "is_deleted", nullable = false)
+    @Builder.Default
+    private boolean isDeleted = false;
+
     @Override
-    public boolean equals(Object o) {
+    public final boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (o == null) return false;
+        Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
+        Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
+        if (thisEffectiveClass != oEffectiveClass) return false;
         UserFingerprintProfile that = (UserFingerprintProfile) o;
-        return Objects.equals(userId, that.userId);
+        // Используем userId, ТАК КАК ЭТО PK, но с защитой от null!
+        return getUserId() != null && Objects.equals(getUserId(), that.getUserId());
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(userId);
+    public final int hashCode() {
+        return this instanceof HibernateProxy
+                ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode()
+                : getClass().hashCode();
     }
 
     public void addFingerprint(TrustedFingerprint fingerprint) {

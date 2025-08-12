@@ -113,14 +113,4 @@ public class SessionRevocationServiceImpl implements SessionRevocationService {
                 status == SessionStatus.STATUS_POTENTIAL_COMPROMISED ||
                 status == SessionStatus.STATUS_RED_ALERT;
     }
-
-    private void addAccessTokenToBlacklist(AuthSession session, Instant revocationTime) {
-//        try {
-//            Claims claims = jwtUtils.getAllClaimsFromToken(session.getAccessToken());
-//            this.blacklistService.addToBlacklist(claims, revocationTime, Duration.between(revocationTime, claims.getExpiration().toInstant()));
-//        } catch (Exception e) {
-//            log.warn("Could not add access token for session {} to blacklist: {}",
-//                    session.getId(), e.getMessage());
-//        }
-    }
 }

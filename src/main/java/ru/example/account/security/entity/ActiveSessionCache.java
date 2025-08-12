@@ -1,58 +1,33 @@
 package ru.example.account.security.entity;
 
-import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.redis.core.RedisHash;
-import org.springframework.data.redis.core.TimeToLive;
-import org.springframework.data.redis.core.index.Indexed;
+import lombok.Setter;
 import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
-import java.io.Serial;
-import java.util.concurrent.TimeUnit;
 
 @Getter
-@RedisHash("refresh_tokens")
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@Setter
+@NoArgsConstructor
 public class ActiveSessionCache implements Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
-    // --- КЛЮЧ: HMAC-ХЭШ ФИНГЕРПРИНТА! ---
     private String fingerprintHash;
-    /**
 
-     ID сессии (из AuthSession).
-
-     Это НЕ ключ в Redis, ключ - refresh-токен.
-
-     Но по нему можно будет искать.
-     */
-    @Indexed
     private UUID sessionId;
 
-    @Indexed // Чтобы можно было найти все токены юзера
     private Long userId;
 
-    @Indexed
     private Instant expiresAt;
 
-    @TimeToLive(unit = TimeUnit.SECONDS)
-    private Long timeToLive; // в секундах
+    private Long ttl; // в секундах
 
-    @Indexed
     private String accessToken;
 
-    @Indexed
     private String refreshToken;
 
-    @Indexed
-    private String fingerprint;
-
-    @Indexed
     private String roles;
 
     @Builder
@@ -62,7 +37,8 @@ public class ActiveSessionCache implements Serializable {
             UUID sessionId,
             String accessToken,
             String refreshToken,
-            String roles, // Добавляем в конструктор
+            String roles,
+            Instant expiresAt,
             Duration ttl
     ) {
         this.fingerprintHash = fingerprintHash;
@@ -71,6 +47,7 @@ public class ActiveSessionCache implements Serializable {
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
         this.roles = roles;
-        this.timeToLive = ttl.toSeconds();
+        this.expiresAt = expiresAt;
+        this.ttl = ttl.toSeconds();
     }
 }

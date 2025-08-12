@@ -35,7 +35,7 @@ import java.util.Set;
 @Getter
 @Setter
 @NoArgsConstructor
-@ToString(of = {"id", "accountName", "status"})
+@ToString()
 public class Account {
 
     @Id

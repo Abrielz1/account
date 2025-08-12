@@ -6,7 +6,6 @@ import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 import ru.example.account.security.repository.AuthSessionRepository;
-import ru.example.account.security.repository.RefreshTokenRepository;
 import ru.example.account.security.repository.RevokedTokenArchiveRepository;
 import ru.example.account.security.repository.SessionAuditLogRepository;
 import ru.example.account.security.service.IdGenerationService;
@@ -19,16 +18,12 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class IdGenerationServiceImpl implements IdGenerationService {
 
-    // Репозитории для 3х баз
-    private final RefreshTokenRepository refreshTokenRedisRepo; // Для Redis
 
     private final AuthSessionRepository authSessionPostgresRepo; // Для Postgres
 
     private final RevokedTokenArchiveRepository revokedTokenArchiveRepository;
 
     private final SessionAuditLogRepository sessionAuditLogRepository; // Для Postgres
-
-    //  private final RevokedTokenArchiveRepository archivePostgresRepo; // для Postgres
 
     private final RedissonClient redissonClient;
 
@@ -85,7 +80,7 @@ public class IdGenerationServiceImpl implements IdGenerationService {
     }
 
     @Override
-    public String generateRefreshToken() {
+    public String generateUniqueTokenId() {
         final RLock lock = redissonClient.getLock("lock:gen:refresh-token");
         try {
             if (!lock.tryLock(5, TimeUnit.SECONDS)) {
@@ -100,7 +95,8 @@ public class IdGenerationServiceImpl implements IdGenerationService {
             int currentAttempt = 0;
             while (currentAttempt < MAX_ATTEMPTS) {
                 // Простая, явная проверка в ОБЕИХ таблицах
-                if (!authSessionPostgresRepo.existsByRefreshToken(token) && !revokedTokenArchiveRepository.existsById(token)) {
+                if (Boolean.TRUE.equals(!authSessionPostgresRepo.existsByRefreshToken(token))
+                        && Boolean.TRUE.equals(!revokedTokenArchiveRepository.existsById(token))) {
                     return token;
                 }
 

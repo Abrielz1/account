@@ -37,7 +37,7 @@ public class Client extends User {
     @Column(name = "loyalty_status")
     @JdbcType(PostgreSQLEnumJdbcType.class) // Для кастомного ENUM в PG
     @ToString.Include
-    private LoyaltyStatus loyaltyStatus = LoyaltyStatus.BRONZE;
+    private LoyaltyStatus loyaltyStatus;
 
     @Column(name = "registration_source")
     @ToString.Include
@@ -45,7 +45,7 @@ public class Client extends User {
 
     @Column(name = "is_banned", nullable = false)
     @ToString.Include
-    private Boolean isBanned = false;
+    private Boolean isBanned;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "invited_by_id")

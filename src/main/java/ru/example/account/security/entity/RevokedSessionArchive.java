@@ -15,6 +15,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.JdbcType;
+import org.hibernate.annotations.Where;
 import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 import ru.example.account.shared.util.AesCryptoConverter;
 import java.time.Instant;
@@ -25,6 +26,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @Builder
+@Where(clause = "is_deleted = false")
 @EqualsAndHashCode(of = "sessionId")
 @ToString()
 @NoArgsConstructor
@@ -45,6 +47,10 @@ public class RevokedSessionArchive {
 
     @Column(name = "user_id", nullable = false)
     private Long userId;
+
+    // ХЭШ ФИНГЕРПРИНТА ДЛЯ TOKEN BINDING
+    @Column(name = "fingerprint_hash", columnDefinition = "TEXT", nullable = false)
+    private String fingerprintHash;
 
     @Convert(converter = AesCryptoConverter.class)
     @Column(name = "fingerprint", columnDefinition = "TEXT")
@@ -72,6 +78,10 @@ public class RevokedSessionArchive {
     @JdbcType(PostgreSQLEnumJdbcType.class)
     private RevocationReason reason;
 
+    @Column(name = "is_deleted", nullable = false)
+    @Builder.Default
+    private boolean isDeleted = false;
+
     public static RevokedSessionArchive from(AuthSession sessionToRevoke,
                                              Instant now,
                                              RevocationReason revocationReason) {
@@ -84,7 +94,7 @@ public class RevokedSessionArchive {
         return RevokedSessionArchive.builder().sessionId(sessionToRevoke.getId())
                 .userId(sessionToRevoke.getUserId())
                 .refreshToken(sessionToRevoke.getRefreshToken())
-                .accessToken(sessionToRevoke.getAccessToken())
+                .accessToken(sessionToRevoke.getAccessToken()) // todo докинуть фингерпринт хеш
                 .fingerprint(sessionToRevoke.getFingerprint())
                 .ipAddress(sessionToRevoke.getIpAddress())
                 .userAgent(sessionToRevoke.getUserAgent())

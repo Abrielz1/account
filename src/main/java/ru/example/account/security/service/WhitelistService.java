@@ -6,10 +6,11 @@ import jakarta.servlet.http.HttpServletRequest;
  * Сервис для управления "Белым Списком" доверенных устройств (фингерпринтов).
  * Отвечает за проверку, добавление и верификацию устройств.
  */
-public interface TrustedDeviceService {
+public interface WhitelistService {
 
-    boolean isDeviceTrusted(Long userId, String fingerprint);
-    void trustDevice(Long userId, String fingerprint, HttpServletRequest request);
-    String generateAndCacheVerificationCode(Long userId, String fingerprint);
-    boolean verifyCode(Long userId, String fingerprint, String code);
+    boolean isDeviceTrusted(final Long userId, final String accessToken, final String fingerprint);
+
+    boolean trustDevice(final Long userId, final HttpServletRequest request, final String accessesToken);
+
+    boolean unTrustDevice(String fingerprint);
 }

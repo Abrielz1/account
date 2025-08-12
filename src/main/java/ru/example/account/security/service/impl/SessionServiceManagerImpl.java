@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.example.account.security.entity.AuthSession;
 import ru.example.account.security.entity.RevocationReason;
 import ru.example.account.security.entity.SessionStatus;
+import ru.example.account.security.jwt.JwtUtils;
 import ru.example.account.security.model.response.AuthResponse;
 import ru.example.account.security.service.MailSendService;
 import ru.example.account.security.service.SessionCommandService;
@@ -36,6 +37,8 @@ public class SessionServiceManagerImpl implements SessionServiceManager {
 
     private final MailSendService mailSendService;
 
+    private final JwtUtils jwtUtils;
+
     @Override
     @Transactional(value = "securityTransactionManager", propagation = Propagation.REQUIRES_NEW)
     public AuthResponse createSession(AppUserDetails currentUser,
@@ -46,9 +49,7 @@ public class SessionServiceManagerImpl implements SessionServiceManager {
 
         log.info("Creating new session for user ID: {}", currentUser.getId());
 
-        boolean isFingerprintAreKnown = this.sessionQueryService.checkExistenceOfFingerprint(fingerprint);
-
-        if (!isFingerprintAreKnown) {
+        if (!this.sessionQueryService.checkExistenceOfFingerprint(this.jwtUtils.createFingerprintHash(fingerprint))) {
             log.trace("someone with unknown fingerprint attempt to login! ip: {}, fingerprint: {}, useragent: {}, userId: {}, email: {}",
                     ipAddress, fingerprint, userAgent, currentUser.getId(), currentUser.getEmail());
 
@@ -99,9 +100,9 @@ public class SessionServiceManagerImpl implements SessionServiceManager {
 
         if (sessionFromDb.getExpiresAt().isBefore(Instant.now())) {
             // ... (архивируем с причиной EXPIRED и кидаем исключение)
-            log.trace("");
+            log.trace("Token is outdated!");
             this.sessionRevocationService.revokeAndArchive(sessionFromDb, SessionStatus.STATUS_COMPROMISED, RevocationReason.REASON_EXPIRED);
-            throw new SessionExpiredException("");
+            throw new SessionExpiredException("Token is outdated!");
         }
 
         boolean isTokenBindingValid = Objects.equals(sessionFromDb.getAccessToken(), accessesToken);
@@ -196,8 +197,3 @@ public class SessionServiceManagerImpl implements SessionServiceManager {
                 RevocationReason.REASON_REVOKED_BY_USER_ON_ALL_DEVICES_SECURITY_ATTENTION);
     }
 }
-
-
-
-
-

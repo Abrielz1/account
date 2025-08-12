@@ -16,6 +16,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Where;
 import org.hibernate.proxy.HibernateProxy;
 import ru.example.account.shared.util.AesCryptoConverter;
 import java.time.ZonedDateTime;
@@ -26,6 +27,7 @@ import java.util.Objects;
 @Getter
 @Setter
 @Builder
+@Where(clause = "is_deleted = false")
 @NoArgsConstructor
 @AllArgsConstructor
 public class TrustedFingerprint {
@@ -39,6 +41,12 @@ public class TrustedFingerprint {
     @JoinColumn(name = "profile_user_id", nullable = false)
     private UserFingerprintProfile profile;
 
+    // Хэш для БЫСТРОГО, поиска
+    @Column(name = "fingerprint_hash", nullable = false, unique = true)
+    private String fingerprintHash;
+
+    // САМ, "сырой" отпечаток - ШИФРУЕМ
+    @Convert(converter = AesCryptoConverter.class)
     @Column(name = "fingerprint", nullable = false, columnDefinition = "TEXT")
     private String fingerprint;
 
@@ -63,6 +71,10 @@ public class TrustedFingerprint {
     @Column(name = "is_trusted", nullable = false)
     @Builder.Default
     private boolean isTrusted = true;
+
+    @Column(name = "is_deleted", nullable = false)
+    @Builder.Default
+    private boolean isDeleted = false;
 
     @Version
     @Column(name = "version", nullable = false)

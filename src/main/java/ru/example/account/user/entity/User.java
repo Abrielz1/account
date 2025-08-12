@@ -56,7 +56,7 @@ import ru.example.account.business.entity.AccountMembership;
 @Getter
 @Setter
 @NoArgsConstructor
-@ToString(of = {"id", "username"})
+@ToString()
 public abstract class User {
 
     @Id
