@@ -8,7 +8,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import ru.example.account.security.entity.BlockedEntityType;
 import ru.example.account.security.repository.BannedEntityRepository;
-import ru.example.account.security.service.WhitelistService;
 import ru.example.account.security.service.impl.AppUserDetails;
 import ru.example.account.shared.exception.exceptions.AccessDeniedException;
 import ru.example.account.shared.exception.exceptions.DeviceNotVerifiedException;
@@ -25,7 +24,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class SecurityContextValidator {
 
-    private final WhitelistService trustedDeviceService;
+ //   private final WhitelistService trustedDeviceService;
 
     private final BannedEntityRepository bannedEntityRepository;
 
@@ -93,10 +92,10 @@ public class SecurityContextValidator {
 
         // --- ПРОВЕРКА №3: "БЕЛЫЙ СПИСОК" (Опциональная, но "слоновья") ---
         // Эта проверка НЕ требует токенов
-        if (!this.trustedDeviceService.isDeviceTrusted(user.getId(), accessToken, fingerprint)) {
-            // Бросаем наше "умное" исключение, которое в будущем "запустит" верификацию.
-            throw new DeviceNotVerifiedException(user.getId(), fingerprint);
-        }
+//        if (!this.trustedDeviceService.isDeviceTrusted(user.getId(), accessToken, fingerprint)) {
+//            // Бросаем наше "умное" исключение, которое в будущем "запустит" верификацию.
+//            throw new DeviceNotVerifiedException(user.getId(), fingerprint);
+//        }
     }
 
     public void validateNewSessionContext(AppUserDetails user, String fingerprint, String ipAddress) {

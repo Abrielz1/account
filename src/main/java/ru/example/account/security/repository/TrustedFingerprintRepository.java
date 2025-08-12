@@ -5,11 +5,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import ru.example.account.security.entity.TrustedFingerprint;
-
 import java.util.Optional;
 
 @Repository
-public interface TrustedFingerprintRepository extends JpaRepository<TrustedFingerprintRepository, Long> {
+public interface TrustedFingerprintRepository extends JpaRepository<TrustedFingerprint, Long> {
 
     @Query(value = """
             SELECT EXISTS(SELECT 1 FROM security.trusted_fingerprints AS tf

@@ -24,7 +24,6 @@ import ru.example.account.security.service.BlacklistService;
 import ru.example.account.security.service.FingerprintService;
 import ru.example.account.security.service.SessionQueryService;
 import ru.example.account.security.service.SessionRevocationService;
-import ru.example.account.security.service.WhitelistService;
 import ru.example.account.shared.exception.exceptions.DeviceNotVerifiedException;
 import ru.example.account.shared.exception.exceptions.InvalidJwtAuthenticationException;
 import ru.example.account.shared.exception.exceptions.SecurityBreachAttemptException;
@@ -42,7 +41,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
     private final BlacklistService blacklistService;
 
-    private final WhitelistService trustedDeviceService;
+  //  private final WhitelistService trustedDeviceService;
 
     private final SessionQueryService sessionQueryService;
 
@@ -116,15 +115,15 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 throw new SecurityException("Access denied for blacklisted token.");
             }
 
-            // 2b. Белый список
-            if (!this.trustedDeviceService.isDeviceTrusted(userId, token, currentFingerprint)) {
-                this.sessionRevocationService.revokeAllSessionsForUser(
-                        userId,
-                        SessionStatus.STATUS_COMPROMISED,
-                        RevocationReason.REASON_RED_ALERT
-                );
-                throw new SecurityException("Access denied from an untrusted device.");
-            }
+            // 2b. Белый список todo переделать логику вызова
+//            if (!this.trustedDeviceService.isDeviceTrusted(userId, token, currentFingerprint)) {
+//                this.sessionRevocationService.revokeAllSessionsForUser(
+//                        userId,
+//                        SessionStatus.STATUS_COMPROMISED,
+//                        RevocationReason.REASON_RED_ALERT
+//                );
+//                throw new SecurityException("Access denied from an untrusted device.");
+//            }
 
             // --- ШАГ 3 "ПОДНЯТЬ СЕССИЮ И СВЕРИТЬ ВСЁ С НЕЙ" (холодная проверка) ---
             Optional<AuthSession> sessionOpt = sessionQueryService.findActiveByAccessToken(token);
