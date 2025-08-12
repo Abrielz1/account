@@ -227,7 +227,34 @@ CREATE TABLE IF NOT EXISTS security.admin_action_orders (
 );
 COMMENT ON TABLE security.admin_action_orders IS 'Журнал административных приказов для выполнения СБ.';
 
+-- =================================================================================
+--      ТАБЛИЦА-СПИСОК "ПРИГОВОРОВ": Blocked Targets
+-- =================================================================================
 
+CREATE TABLE IF NOT EXISTS security.blocked_targets (
+                                                        id                      BIGSERIAL PRIMARY KEY,
+                                                        -- ТИП того, ЧТО, мы баним (IP, USER_ID, etc)
+                                                        target_type             security.banned_entity_type_enum NOT NULL,
+                                                        --ЗНАЧЕНИЕ того, ЧТО, мы баним (сам "1.2.3.4")
+                                                        target_value            TEXT NOT NULL,
+                                                        expires_at              TIMESTAMPTZ, -- null = бан навсегда\
+                                                        -- "Replay Attack", "Manual Ban by Admin"
+                                                        reason                  TEXT,
+                                                        --ID "уголовного дела", которое спровоцировало этот бан. СЛАБАЯ, СВЯЗЬ.
+                                                        triggering_incident_id  UUID, -- Слабая, сука, связь
+                                                        --КАКОЙ, ЮЗЕР был "целью" этой атаки? (может быть null)
+                                                        affected_user_id        BIGINT,
+                                                        blocked_by_user_id      BIGINT, -- Кто из админов (если вручную)
+                                                        --КАКАЯ, СЕССИЯ была "целью"? (может быть null)
+                                                        affected_session_id     UUID,-- null = навсегда
+                                                        is_deleted              BOOLEAN DEFAULT FALSE NOT NULL,
+
+    -- ГЛАВНЫЙ, СУКА, КОНСТРЕЙНТ:
+    -- НЕЛЬЗЯ, бл***, иметь ДВА АКТИВНЫХ бана на ОДНУ И ТУ ЖЕ ЦЕЛЬ
+                                                        UNIQUE (target_type, target_value)
+);
+
+COMMENT ON TABLE security.blocked_targets IS 'Централизованная, сука, "Книга Приговоров". Главная таблица банов.';
 -- =================================================================================
 --      РАЗДЕЛ 3: СОЗДАЕМ ВСЕ ИНДЕКСЫ В КОНЦЕ
 --      (Для лучшей читаемости и управления)
@@ -276,3 +303,4 @@ CREATE INDEX IF NOT EXISTS idx_banned_entities_banned_user
 --    Позволяет эффективно фильтровать СРАЗУ по типу, причине и статусу.
 CREATE INDEX IF NOT EXISTS idx_banned_entities_type_reason_status
     ON security.banned_entities(entity_type, ban_reason, is_active);
+CREATE INDEX IF NOT EXISTS idx_blocked_targets_type_value ON security.blocked_targets(target_type, target_value);

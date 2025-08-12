@@ -15,7 +15,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.Where;
-
 import java.time.ZonedDateTime;
 import java.util.UUID;
 
@@ -38,12 +37,21 @@ public class BlockedTarget {
     @Column(name = "target_type", nullable = false)
     private BlockedEntityType targetType; // ENUM: IP_ADDRESS, FINGERPRINT, USER_ID...
 
-    @Column(name = "target_value", nullable = false, unique = true)
+    @Column(name = "target_value", nullable = false)
     private String targetValue;
+
+    @Column(name = "affected_user_id")
+    private Long affectedUserId;
+
+    @Column(name = "blocked_by_user_id")
+    private Long blockedByUserId;
 
     // null = навсегда. Дата = "серый список".
     @Column(name = "expires_at") // null = навсегда. Дата = временно.
     private ZonedDateTime expiresAt;
+
+    @Column(name = "affected_session_id   ")
+    private UUID affectedSessionId;
 
     @Column(name = "reason", columnDefinition = "TEXT")
     private String reason;
