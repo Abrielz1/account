@@ -1,20 +1,11 @@
 package ru.example.account.business.api.controller;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import ru.example.account.security.service.impl.AppUserDetails;
 import ru.example.account.business.service.MoneyTransferService;
-import ru.example.account.business.model.request.CreateMoneyTransferRequest;
-import ru.example.account.business.model.response.CreateMoneyTransferResponse;
 
 @Slf4j
 @Tag(name = "Account Operations", description = "Handles money transfers")

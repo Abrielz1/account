@@ -16,7 +16,7 @@ import ru.example.account.security.model.request.LoginRequest;
 import ru.example.account.security.model.request.RefreshTokenRequest;
 import ru.example.account.security.model.response.AuthResponse;
 import ru.example.account.security.service.AuthService;
-import ru.example.account.security.service.impl.AppUserDetails;
+import ru.example.account.security.principal.AppUserDetails;
 
 @Slf4j
 @Tag(name = "Authentication", description = "User authentication and token management")

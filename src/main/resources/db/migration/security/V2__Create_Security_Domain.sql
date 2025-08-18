@@ -62,7 +62,8 @@ CREATE TABLE IF NOT EXISTS security.auth_sessions (
                                                       created_at              TIMESTAMPTZ NOT NULL,
                                                       expires_at              TIMESTAMPTZ NOT NULL,
                                                       revoked_at              TIMESTAMPTZ,
-                                                      revocation_reason       security.revocation_reason_enum
+                                                      revocation_reason       security.revocation_reason_enum,
+                                                      is_deleted              BOOLEAN DEFAULT FALSE NOT NULL
 );
 COMMENT ON TABLE security.auth_sessions IS 'Горячее хранилище активных сессий. Потенциальный кандидат на партиционирование.';
 
@@ -94,10 +95,8 @@ CREATE TABLE IF NOT EXISTS security.session_audit_log (
 );
 COMMENT ON TABLE security.session_audit_log IS 'Журнал ключевых событий и статусов для каждой сессии.';
 
--- =================================================================================
---      ТАБЛИЦА-ПРОФИЛЬ 4: "ВЛАДЕЛЕЦ" ФИНГЕРПРИНТОВ
---      (Архитектура Abriel: 1 Юзер -> 1 Профиль)
--- =================================================================================
+--ТАБЛИЦА-ПРОФИЛЬ 4: "ВЛАДЕЛЕЦ" ФИНГЕРПРИНТОВ
+--      (Архитектура 1 Юзер -> 1 Профиль)
 CREATE TABLE IF NOT EXISTS security.user_fingerprint_profiles (
     -- ID пользователя - это и есть ПЕРВИЧНЫЙ КЛЮЧ.
                                                                   user_id                 BIGINT PRIMARY KEY,
@@ -109,10 +108,7 @@ CREATE TABLE IF NOT EXISTS security.user_fingerprint_profiles (
 );
 COMMENT ON TABLE security.user_fingerprint_profiles IS 'Родительская сущность-профиль для группировки доверенных устройств пользователя.';
 
--- =================================================================================
---      ТАБЛИЦА-СПРАВОЧНИК 5: "ДОВЕРЕННЫЕ УСТРОЙСТВА"
---      (МОЕ ПРЕДЛОЖЕНИЕ ПОЛЕЙ, на основе наших обсуждений)
--- =================================================================================
+--ТАБЛИЦА-СПРАВОЧНИК 5: "ДОВЕРЕННЫЕ УСТРОЙСТВА"
 CREATE TABLE IF NOT EXISTS security.trusted_fingerprints (
     -- Суррогатный первичный ключ. Проще для JPA.
                                                              id                      BIGSERIAL PRIMARY KEY,
@@ -154,7 +150,22 @@ CREATE TABLE IF NOT EXISTS security.trusted_fingerprints (
 );
 COMMENT ON TABLE security.trusted_fingerprints IS 'Справочник доверенных устройств (фингерпринтов) для каждого пользователя.';
 
--- Таблица 6: "Таблица Хакера" - Журнал Инцидентов
+-- Таблица 6: "Таблица Хакера" - Таблица Инцидентов
+CREATE TABLE IF NOT EXISTS security.security_incidents (
+                                                           id                      BIGSERIAL PRIMARY KEY,
+                                                           type                    security.incident_type_enum NOT NULL,
+                                                           timestamp               TIMESTAMPTZ NOT NULL,
+                                                           summary                 TEXT,
+                                                           involved_user_id        BIGINT,
+                                                           source_session_id       UUID,
+                                                           source_ip_address       VARCHAR(45),
+                                                           source_fingerprint_hash TEXT,
+                                                           status                  VARCHAR(50) DEFAULT 'DETECTED' NOT NULL,
+                                                           is_deleted              BOOLEAN DEFAULT FALSE NOT NULL
+);
+COMMENT ON TABLE security.security_incidents IS 'Журнал заведенных "Уголовных Дел"';
+
+-- Таблица 7: "Таблица Хакера" - Журнал Инцидентов
 CREATE TABLE IF NOT EXISTS security.security_incidents_log (
     -- ... (все поля, как и были: id, incident_type, user_id...)
                                                                id                      UUID PRIMARY KEY,
@@ -165,7 +176,7 @@ CREATE TABLE IF NOT EXISTS security.security_incidents_log (
 );
 COMMENT ON TABLE security.security_incidents_log IS 'Журнал зафиксированных атак и аномалий.';
 
--- Таблица 7: "Улик" (Деталей Инцидента)
+-- Таблица 8: "Улик" (Деталей Инцидента)
 CREATE TABLE IF NOT EXISTS security.security_incident_details (
                                                                   id                      BIGSERIAL PRIMARY KEY,
 
@@ -180,9 +191,9 @@ CREATE TABLE IF NOT EXISTS security.security_incident_details (
 
                                                                   UNIQUE (incident_id, detail_key)
 );
-COMMENT ON TABLE security.security_incident_details IS ':Журнал чобственно улик, те деталей инцидента';
+COMMENT ON TABLE security.security_incident_details IS ':Журнал собственно улик, те деталей инцидента';
 
--- Таблица 8: "Таблица Банов"
+-- Таблица 9: "Таблица Банов"
 CREATE TABLE IF NOT EXISTS security.banned_entities (
                                                         id                      BIGSERIAL PRIMARY KEY,
                                                         entity_type             security.banned_entity_type_enum NOT NULL,
@@ -198,6 +209,7 @@ CREATE TABLE IF NOT EXISTS security.banned_entities (
 );
 COMMENT ON TABLE security.banned_entities IS 'Централизованная таблица блокировок (банхаммер).';
 
+-- Таблица 10: "Таблица Деталей Банов"
 CREATE TABLE IF NOT EXISTS security.ban_context_details (
                                                             id                      BIGSERIAL PRIMARY KEY,
 
@@ -212,7 +224,7 @@ CREATE TABLE IF NOT EXISTS security.ban_context_details (
 );
 COMMENT ON TABLE  security.ban_context_details IS 'Контекст Бана';
 
--- Таблица 9: Админские "Ордера" (из твоего примера)
+-- Таблица 11: Админские "Ордера"
 CREATE TABLE IF NOT EXISTS security.admin_action_orders (
                                                             id                      UUID PRIMARY KEY,
                                                             order_type              security.order_type_enum NOT NULL,
@@ -227,10 +239,15 @@ CREATE TABLE IF NOT EXISTS security.admin_action_orders (
 );
 COMMENT ON TABLE security.admin_action_orders IS 'Журнал административных приказов для выполнения СБ.';
 
--- =================================================================================
---      ТАБЛИЦА-СПИСОК "ПРИГОВОРОВ": Blocked Targets
--- =================================================================================
+-- ТАБЛИЦА 12:СВЯЗЬ!
+CREATE TABLE IF NOT EXISTS security.incident_to_block_links (
+                                                                incident_id         BIGINT NOT NULL REFERENCES security.security_incidents(id) ON DELETE CASCADE,
+                                                                blocked_target_id   BIGINT NOT NULL REFERENCES security.blocked_targets(id) ON DELETE CASCADE,
+                                                                PRIMARY KEY (incident_id, blocked_target_id)
+);
+COMMENT ON TABLE security.incident_to_block_links IS 'СВЯЗУЮЩИЙ, "МОСТ" между "Делами" и "Приговорами"';
 
+-- ТАБЛИЦА-СПИСОК 13: "ПРИГОВОРОВ": Blocked Targets
 CREATE TABLE IF NOT EXISTS security.blocked_targets (
                                                         id                      BIGSERIAL PRIMARY KEY,
                                                         -- ТИП того, ЧТО, мы баним (IP, USER_ID, etc)
@@ -241,7 +258,7 @@ CREATE TABLE IF NOT EXISTS security.blocked_targets (
                                                         -- "Replay Attack", "Manual Ban by Admin"
                                                         reason                  TEXT,
                                                         --ID "уголовного дела", которое спровоцировало этот бан. СЛАБАЯ, СВЯЗЬ.
-                                                        triggering_incident_id  UUID, -- Слабая, сука, связь
+                                                        triggering_incident_id  UUID, -- Слабая, связь
                                                         --КАКОЙ, ЮЗЕР был "целью" этой атаки? (может быть null)
                                                         affected_user_id        BIGINT,
                                                         blocked_by_user_id      BIGINT, -- Кто из админов (если вручную)
@@ -249,12 +266,66 @@ CREATE TABLE IF NOT EXISTS security.blocked_targets (
                                                         affected_session_id     UUID,-- null = навсегда
                                                         is_deleted              BOOLEAN DEFAULT FALSE NOT NULL,
 
-    -- ГЛАВНЫЙ, СУКА, КОНСТРЕЙНТ:
-    -- НЕЛЬЗЯ, бл***, иметь ДВА АКТИВНЫХ бана на ОДНУ И ТУ ЖЕ ЦЕЛЬ
+    -- НЕЛЬЗЯ иметь ДВА АКТИВНЫХ бана на ОДНУ И ТУ ЖЕ ЦЕЛЬ
                                                         UNIQUE (target_type, target_value)
 );
+COMMENT ON TABLE security.incident_to_block_links IS 'СВЯЗУЮЩИЙ, "МОСТ" между "Делами" и "Приговорами"';
 
-COMMENT ON TABLE security.blocked_targets IS 'Централизованная, сука, "Книга Приговоров". Главная таблица банов.';
+-- ТАБЛИЦА 14: "ВЕЩДОКОВ" (Чистая, и со ссылкой ТОЛЬКО на Инцидент)
+CREATE TABLE IF NOT EXISTS security.incident_evidences (
+                                                           id                      BIGSERIAL PRIMARY KEY,
+                                                           incident_id             BIGINT NOT NULL REFERENCES security.security_incidents(id) ON DELETE CASCADE,
+                                                           evidence_key            VARCHAR(255) NOT NULL,
+                                                           evidence_value          TEXT,
+                                                           is_deleted              BOOLEAN DEFAULT FALSE NOT NULL,
+                                                           UNIQUE (incident_id, evidence_key)
+);
+COMMENT ON TABLE security.incident_evidences IS 'Конкретные "улики", приложенные к "Делу"';
+
+-- =================================================================================
+--      ТАБЛИЦА-СПРАВОЧНИК 15: "Холодный" Черный Список для ACCESS-токенов
+-- =================================================================================
+CREATE TABLE IF NOT EXISTS security.black_list_access_tokens (
+                                                                 token                   TEXT PRIMARY KEY,
+                                                                 user_id                 BIGINT NOT NULL,
+                                                                 session_id              UUID NOT NULL,
+                                                                 created_at              TIMESTAMPTZ NOT NULL,
+                                                                 original_expiry_date    TIMESTAMPTZ NOT NULL,
+                                                                 revoked_at              TIMESTAMPTZ NOT NULL,
+                                                                 reason                  security.revocation_reason_enum NOT NULL
+);
+COMMENT ON TABLE security.black_list_access_tokens IS 'Персистентный, "холодный" черный список Access-токенов для быстрой проверки и аудита.';
+
+-- =================================================================================
+--      ТАБЛИЦА-СПРАВОЧНИК 16: "Холодный" Черный Список для REFRESH-токенов
+-- =================================================================================
+CREATE TABLE IF NOT EXISTS security.black_list_refresh_tokens (
+    -- Сам токен - это и есть первичный ключ. Мгновенный, сука, поиск.
+                                                                  token                   TEXT PRIMARY KEY,
+
+    -- ID пользователя. Критически важно для расследований СБ.
+                                                                  user_id                 BIGINT NOT NULL,
+
+    -- ID сессии. Позволяет связать бан с конкретной сессией.
+                                                                  session_id              UUID NOT NULL,
+
+    -- Время, когда этот токен был СОЗДАН (не отозван!)
+                                                                  created_at              TIMESTAMPTZ NOT NULL,
+
+    -- Время, когда этот токен ДОЛЖЕН БЫЛ ИСТЕЧЬ. Полезно для аналитики.
+                                                                  original_expiry_date    TIMESTAMPTZ NOT NULL,
+
+    -- Точное, бл***, время, когда токен попал в этот список.
+                                                                  revoked_at              TIMESTAMPTZ NOT NULL,
+
+    -- Причина, сука, отзыва. Чтобы отличать штатный выход от "Красной Тревоги".
+                                                                  reason                  security.revocation_reason_enum NOT NULL
+);
+
+COMMENT ON TABLE security.black_list_refresh_tokens IS 'Персистентный, "холодный" черный список Refresh-токенов. Служит "источником правды" для быстрой проверки и аудита скомпрометированных токенов.';
+
+
+COMMENT ON TABLE security.blocked_targets IS 'Централизованная,  "Книга Приговоров". Главная таблица банов.';
 -- =================================================================================
 --      РАЗДЕЛ 3: СОЗДАЕМ ВСЕ ИНДЕКСЫ В КОНЦЕ
 --      (Для лучшей читаемости и управления)
@@ -303,4 +374,20 @@ CREATE INDEX IF NOT EXISTS idx_banned_entities_banned_user
 --    Позволяет эффективно фильтровать СРАЗУ по типу, причине и статусу.
 CREATE INDEX IF NOT EXISTS idx_banned_entities_type_reason_status
     ON security.banned_entities(entity_type, ban_reason, is_active);
+-- 5. индекс по типу и значению блокировки
 CREATE INDEX IF NOT EXISTS idx_blocked_targets_type_value ON security.blocked_targets(target_type, target_value);
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_active_blocked_target
+    ON security.blocked_targets(target_type, target_value)
+    WHERE (is_deleted = false);
+
+-- Индекс для возможного поиска по пользователю (для аналитики СБ)
+CREATE INDEX IF NOT EXISTS idx_blacklist_access_user_id ON security.black_list_access_tokens(user_id);
+
+-- Главный индекс (PK) у нас уже есть по самому токену.
+
+-- Дополнительный индекс для аналитики СБ: "Покажи все токены, отозванные для этого юзера".
+CREATE INDEX IF NOT EXISTS idx_blacklist_refresh_user_id ON security.black_list_refresh_tokens(user_id);
+
+-- Индекс по сессии, на всякий случай.
+CREATE INDEX IF NOT EXISTS idx_blacklist_refresh_session_id ON security.black_list_refresh_tokens(session_id);

@@ -2,7 +2,7 @@ package ru.example.account.security.service;
 
 import ru.example.account.security.entity.AuthSession;
 import ru.example.account.security.entity.ActiveSessionCache;
-import ru.example.account.security.service.impl.AppUserDetails;
+import ru.example.account.security.principal.AppUserDetails;
 import java.time.ZonedDateTime;
 
 public interface SessionPersistenceService {

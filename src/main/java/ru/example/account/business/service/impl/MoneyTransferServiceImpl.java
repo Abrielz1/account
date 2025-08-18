@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.example.account.business.entity.Account;
 import ru.example.account.business.repository.AccountRepository;
 import ru.example.account.business.service.MoneyTransferService;
-import ru.example.account.security.service.impl.AppUserDetails;
+import ru.example.account.security.principal.AppUserDetails;
 import ru.example.account.shared.exception.exceptions.AccountNotFoundException;
 import ru.example.account.business.model.request.CreateMoneyTransferRequest;
 import ru.example.account.business.model.response.CreateMoneyTransferResponse;

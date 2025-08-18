@@ -8,7 +8,7 @@ import ru.example.account.security.entity.AuthSession;
 import ru.example.account.security.entity.SessionStatus;
 import ru.example.account.security.repository.AuthSessionRepository;
 import ru.example.account.security.repository.RevokedTokenArchiveRepository;
-import ru.example.account.security.service.FingerprintService;
+import ru.example.account.security.service.worker.FingerprintService;
 import ru.example.account.security.service.SessionQueryService;
 import java.util.List;
 import java.util.Optional;

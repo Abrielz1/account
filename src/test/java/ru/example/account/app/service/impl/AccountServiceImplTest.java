@@ -11,7 +11,7 @@
 //import ru.example.account.business.repository.AccountRepository;
 //import ru.example.account.user.repository.UserRepository;
 //import ru.example.account.security.jwt.JwtUtils;
-//import ru.example.account.security.service.impl.AppUserDetails;
+//import ru.example.account.security.principal.AppUserDetails;
 //import ru.example.account.business.model.request.CreateMoneyTransferRequest;
 //import ru.example.account.business.model.response.CreateMoneyTransferResponse;
 //import java.math.BigDecimal;

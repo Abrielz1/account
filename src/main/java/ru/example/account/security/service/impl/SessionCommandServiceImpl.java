@@ -9,9 +9,9 @@ import ru.example.account.security.entity.RevocationReason;
 import ru.example.account.security.entity.RevokedClientData;
 import ru.example.account.security.entity.SessionStatus;
 import ru.example.account.security.repository.RevokedDataRepository;
-import ru.example.account.security.service.IdGenerationService;
+import ru.example.account.security.service.worker.IdGenerationService;
 import ru.example.account.security.service.SessionCommandService;
-import ru.example.account.security.service.SessionRevocationService;
+import ru.example.account.security.service.facade.SessionRevocationService;
 import java.time.Instant;
 
 @Slf4j

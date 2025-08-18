@@ -4,7 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import ru.example.account.security.model.request.LoginRequest;
 import ru.example.account.security.model.request.RefreshTokenRequest;
 import ru.example.account.security.model.response.AuthResponse;
-import ru.example.account.security.service.impl.AppUserDetails;
+import ru.example.account.security.principal.AppUserDetails;
 
 public interface AuthService {
 

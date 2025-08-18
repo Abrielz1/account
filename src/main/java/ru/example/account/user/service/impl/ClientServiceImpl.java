@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import ru.example.account.security.model.request.UserRegisterRequestDto;
-import ru.example.account.security.service.MailSendService;
+import ru.example.account.security.service.facade.MailSendService;
 import ru.example.account.security.service.TimezoneService;
 import ru.example.account.shared.util.LinkGenerator;
 import ru.example.account.user.entity.Client;

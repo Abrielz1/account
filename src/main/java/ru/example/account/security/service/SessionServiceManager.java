@@ -1,9 +1,8 @@
 package ru.example.account.security.service;
 
 import ru.example.account.security.model.response.AuthResponse;
-import ru.example.account.security.service.impl.AppUserDetails;
+import ru.example.account.security.principal.AppUserDetails;
 import java.time.ZonedDateTime;
-import java.util.UUID;
 
 public interface SessionServiceManager {
 

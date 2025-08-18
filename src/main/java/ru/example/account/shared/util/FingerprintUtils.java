@@ -3,7 +3,7 @@ package ru.example.account.shared.util;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import ru.example.account.security.service.HttpUtilsService;
+import ru.example.account.security.service.worker.HttpUtilsService;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;

@@ -19,7 +19,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import ru.example.account.security.jwt.JwtAuthenticationEntryPoint;
 import ru.example.account.security.jwt.JwtTokenFilter;
-import ru.example.account.security.service.impl.AccessDeniedHandlerImpl;
+import ru.example.account.security.handler.AccessDeniedHandlerImpl;
 import java.util.Arrays;
 import java.util.List;
 import ru.example.account.user.entity.RoleType;

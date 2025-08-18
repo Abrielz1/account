@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import ru.example.account.security.service.impl.AppUserDetails;
+import ru.example.account.security.principal.AppUserDetails;
 import ru.example.account.user.model.request.ManageUserEmailRequestDto;
 import ru.example.account.user.model.request.ManageUserPhoneRequestDto;
 import ru.example.account.user.model.request.UserSearchResponseDto;

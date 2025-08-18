@@ -79,9 +79,8 @@ public class BannedEntity {
     private Set<BanContextDetail> contextDetails;
 
     @OneToMany(mappedBy = "blockedEntity")
-    private Set<BlackListedIpAddress> blackListedIpAddresses;
+    private Set<BlackListedIpAddress> blackListedIpAddresses; // проверь!
 
-    // Хелпер, как ты любишь
     public void addDetail(String key, String value) {
 
         // 1. Создаем "пустого" ребенка
