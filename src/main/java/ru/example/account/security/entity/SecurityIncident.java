@@ -23,13 +23,13 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-@Table(name = "security_incident", schema = "security")
+@Table(name = "security_incidents", schema = "security")
 @Entity
 @Getter
 @Setter
 @Builder
 @EqualsAndHashCode
-@Where(clause = "is_deleted = false") // todo исправить проёб
+@Where(clause = "is_deleted = false") // todo исправить
 @NoArgsConstructor
 @AllArgsConstructor
 public class SecurityIncident {

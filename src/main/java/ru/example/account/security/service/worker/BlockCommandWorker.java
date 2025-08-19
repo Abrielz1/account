@@ -27,26 +27,26 @@ public interface BlockCommandWorker {
      * </ul>
      *
      *                                  The type of the target to be blocked (e.g., IP_ADDRESS).
-     * @param ipAddress                The actual value of the target (e.g., "192.168.1.100").
+     * @param targetValue                The actual value of the target (e.g., "192.168.1.100", or fingerprint).
      * @param duration             The duration for which the target should be blocked.
      *                             A null value implies a permanent block.
      * @param reason               A concise, machine-readable string describing the reason for the block in form of enum.
-     * @param blockType
+     * @param blockType            Valid reason to set block on attacker
      * @param triggeringIncidentId The optional UUID of the {@link ru.example.account.security.entity.SecurityIncident}
      *                             that triggered this blocking action, used for auditing purposes.
      * @param affectedUserid is id which under attack.
-     * @param expiresAt time when ban is lifted, if == null ban is set permanent
+     * @param expiresAt time when ban is lifted, if == null ban is set permanent, default duration of blocking is 7 days
      * @return An {@link Optional} containing the persisted {@code BlockedTarget} entity if the
      *         operation was successful. Returns an empty Optional if the input parameters
      *         (e.g., type or value) were invalid.
      */
-    Optional<BlockedTarget> blockIpAddress(
-            String ipAddress,
+    Optional<BlockedTarget> blockTarget(
+            String targetValue,
             Duration duration,
             BlockReason reason,
             BlockedEntityType blockType,
             Long affectedUserid,
-            UUID triggeringIncidentId,
+            Long triggeringIncidentId,
             ZonedDateTime expiresAt
     );
 }

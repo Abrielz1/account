@@ -46,21 +46,15 @@ public class BlockedTarget {
     @Column(name = "affected_user_id")
     private Long affectedUserId;
 
-    @Column(name = "blocked_by_user_id")
-    private Long blockedByUserId;
-
     // null = навсегда. Дата = "серый список", те временно
     @Column(name = "expires_at")
     private ZonedDateTime expiresAt;
 
-    @Column(name = "affected_session_id   ")
+    @Column(name = "affected_session_id")
     private UUID affectedSessionId;
 
     @Column(name = "reason", columnDefinition = "TEXT")
     private String reason;
-
-    @Column(name = "triggering_incident_id")
-    private UUID triggeringIncidentId; // Здесь UUID, потому что Incidents его могут использовать в будущем
 
     @Column(name = "is_deleted", nullable = false)
     @Builder.Default

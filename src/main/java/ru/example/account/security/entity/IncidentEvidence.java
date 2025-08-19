@@ -21,7 +21,7 @@ import lombok.Setter;
 import org.hibernate.annotations.Where;
 import ru.example.account.shared.util.AesCryptoConverter;
 
-@Table(name = "incident_evidence", schema = "security")
+@Table(name = "security_incident_details", schema = "security")
 @Entity
 @Getter
 @Setter

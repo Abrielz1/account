@@ -168,7 +168,7 @@ COMMENT ON TABLE security.security_incidents IS 'Журнал заведенны
 -- Таблица 7: "Таблица Хакера" - Журнал Инцидентов
 CREATE TABLE IF NOT EXISTS security.security_incidents_log (
     -- ... (все поля, как и были: id, incident_type, user_id...)
-                                                               id                      UUID PRIMARY KEY,
+                                                               id                      BIGSERIAL PRIMARY KEY,
                                                                incident_type           security.incident_type_enum NOT NULL,
                                                                user_id                 BIGINT,
                                                                incident_timestamp      TIMESTAMPTZ NOT NULL,
@@ -181,7 +181,7 @@ CREATE TABLE IF NOT EXISTS security.security_incident_details (
                                                                   id                      BIGSERIAL PRIMARY KEY,
 
     -- Связь Many-to-One: МНОГО "улик" -> ОДИН "инцидент"
-                                                                  incident_id             UUID NOT NULL REFERENCES security.security_incidents_log(id) ON DELETE CASCADE,
+                                                                  incident_id             BIGSERIAL NOT NULL REFERENCES security.security_incidents_log(id) ON DELETE CASCADE,
 
     -- "Ключ" улики ("attack_token", "request_fingerprint"...)
                                                                   detail_key              VARCHAR(255) NOT NULL,
@@ -245,7 +245,7 @@ CREATE TABLE IF NOT EXISTS security.incident_to_block_links (
                                                                 blocked_target_id   BIGINT NOT NULL REFERENCES security.blocked_targets(id) ON DELETE CASCADE,
                                                                 PRIMARY KEY (incident_id, blocked_target_id)
 );
-COMMENT ON TABLE security.incident_to_block_links IS 'СВЯЗУЮЩИЙ, "МОСТ" между "Делами" и "Приговорами"';
+COMMENT ON TABLE security.incident_to_block_links IS 'СВЯЗУЮЩИЙ, "МОСТ" между "Делами" и "Приговорами. Главная таблица банов."';
 
 -- ТАБЛИЦА-СПИСОК 13: "ПРИГОВОРОВ": Blocked Targets
 CREATE TABLE IF NOT EXISTS security.blocked_targets (
@@ -254,20 +254,15 @@ CREATE TABLE IF NOT EXISTS security.blocked_targets (
                                                         target_type             security.banned_entity_type_enum NOT NULL,
                                                         --ЗНАЧЕНИЕ того, ЧТО, мы баним (сам "1.2.3.4")
                                                         target_value            TEXT NOT NULL,
-                                                        expires_at              TIMESTAMPTZ, -- null = бан навсегда\
-                                                        -- "Replay Attack", "Manual Ban by Admin"
-                                                        reason                  TEXT,
+                                                        expires_at              TIMESTAMPTZ, -- null = бан навсегда
+                                                        reason                  TEXT, -- "Replay Attack", "Manual Ban by Admin"
                                                         --ID "уголовного дела", которое спровоцировало этот бан. СЛАБАЯ, СВЯЗЬ.
-                                                        triggering_incident_id  UUID, -- Слабая, связь
-                                                        --КАКОЙ, ЮЗЕР был "целью" этой атаки? (может быть null)
-                                                        affected_user_id        BIGINT,
-                                                        blocked_by_user_id      BIGINT, -- Кто из админов (если вручную)
-                                                        --КАКАЯ, СЕССИЯ была "целью"? (может быть null)
+                                                        triggering_incident_id  BIGINT REFERENCES security.security_incidents(id), -- Слабая, связь
+                                                       affected_user_id        BIGINT, --КАКОЙ, ЮЗЕР был "целью" этой атаки? (может быть null)
                                                         affected_session_id     UUID,-- null = навсегда
-                                                        is_deleted              BOOLEAN DEFAULT FALSE NOT NULL,
+                                                        is_deleted              BOOLEAN DEFAULT FALSE NOT NULL, -- софт удаление
 
-    -- НЕЛЬЗЯ иметь ДВА АКТИВНЫХ бана на ОДНУ И ТУ ЖЕ ЦЕЛЬ
-                                                        UNIQUE (target_type, target_value)
+                                                        UNIQUE (target_type, target_value) WHERE (is_deleted = false)   -- НЕЛЬЗЯ иметь ДВА АКТИВНЫХ бана на ОДНУ И ТУ ЖЕ ЦЕЛЬ
 );
 COMMENT ON TABLE security.incident_to_block_links IS 'СВЯЗУЮЩИЙ, "МОСТ" между "Делами" и "Приговорами"';
 
