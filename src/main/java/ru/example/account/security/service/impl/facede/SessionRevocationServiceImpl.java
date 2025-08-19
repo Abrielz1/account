@@ -14,14 +14,14 @@ import ru.example.account.security.repository.AuthSessionRepository;
 import ru.example.account.security.repository.RevokedTokenArchiveRepository;
 import ru.example.account.security.repository.SessionAuditLogRepository;
 import ru.example.account.security.service.SessionQueryService;
-import ru.example.account.security.service.facade.SessionRevocationService;
+import ru.example.account.security.service.facade.SessionRevocationServiceFacade;
 import java.time.Instant;
 import java.util.List;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class SessionRevocationServiceImpl implements SessionRevocationService {
+public class SessionRevocationServiceImpl implements SessionRevocationServiceFacade {
 
     private final AuthSessionRepository authSessionRepository;
 
@@ -77,7 +77,6 @@ public class SessionRevocationServiceImpl implements SessionRevocationService {
 
     /**
      * Выполняет экстренный отзыв ВСЕХ активных сессий пользователя.
-     * Реализует ТВОЙ подход с циклом.
      */
     @Override
     @Transactional(value = "securityTransactionManager")

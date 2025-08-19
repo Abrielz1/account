@@ -11,7 +11,7 @@ import ru.example.account.security.entity.SessionStatus;
 import ru.example.account.security.repository.RevokedDataRepository;
 import ru.example.account.security.service.worker.IdGenerationService;
 import ru.example.account.security.service.SessionCommandService;
-import ru.example.account.security.service.facade.SessionRevocationService;
+import ru.example.account.security.service.facade.SessionRevocationServiceFacade;
 import java.time.Instant;
 
 @Slf4j
@@ -23,7 +23,7 @@ public class SessionCommandServiceImpl implements SessionCommandService {
 
     private final IdGenerationService idGenerationService;
 
-    private final SessionRevocationService sessionRevocationService;
+    private final SessionRevocationServiceFacade sessionRevocationService;
 
     @Override
     @Transactional(value = "securityTransactionManager", propagation = Propagation.REQUIRES_NEW)

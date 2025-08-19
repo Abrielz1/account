@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import ru.example.account.security.repository.BlacklistedAccessTokenRepository;
+import ru.example.account.security.repository.BlacklistedRefreshTokenRepository;
 import ru.example.account.security.repository.RedisRepository;
 import ru.example.account.security.repository.RevokedTokenArchiveRepository;
 import ru.example.account.security.service.worker.BlacklistCommandWorker;
@@ -28,6 +30,10 @@ public class BlacklistQueryWorkerImpl implements BlacklistQueryWorker {
 
     private final BlacklistCommandWorker blacklistCommandWorker;
 
+    private final BlacklistedRefreshTokenRepository blacklistedRefreshTokenRepository;
+
+    private final BlacklistedAccessTokenRepository blacklistedAccessTokenRepository;
+
     @Override
     public boolean isAccessTokenBlacklisted(String accessToken) {
 
@@ -43,7 +49,15 @@ public class BlacklistQueryWorkerImpl implements BlacklistQueryWorker {
         } catch (RedisConnectionFailureException e) {
             log.error(REDIS_DOWN_MESSAGE + "Blacklist check for refresh token will rely on Postgres.", e);
         }
+
         // --- ЭШЕЛОН 2: POSTGRES ("Холодный" архив) ---
+        log.warn("Blacklist cache miss for access token. Checking Postgres access tokens archive.");
+        if (revokedTokenArchiveRepository.existsByAccessToken(accessToken)) {
+            // "Ленивый прогрев"
+            this.blacklistCommandWorker.blacklistAccessToken(accessToken);
+            return true;
+        }
+
         log.warn("Blacklist cache miss for access token. Checking Postgres archive.");
         if (revokedTokenArchiveRepository.existsByAccessToken(accessToken)) {
             // "Ленивый прогрев"
@@ -73,8 +87,17 @@ public class BlacklistQueryWorkerImpl implements BlacklistQueryWorker {
         }
 
         // --- ЭШЕЛОН 2: POSTGRES (Архив) ---
+
+        log.warn("Blacklist cache miss for refresh token. Checking Postgres refresh tokens archive.");
+        if (this.blacklistedRefreshTokenRepository.existsByRefreshToken(refreshToken)) {
+            // "Ленивый прогрев"
+            log.info("Warming up refresh token blacklist cache after Postgres lookup.");
+            this.blacklistCommandWorker.blacklistRefreshToken(refreshToken);
+            return true;
+        }
+
         log.warn("Blacklist cache miss for refresh token. Checking Postgres archive.");
-        if (revokedTokenArchiveRepository.existsByRefreshToken(refreshToken)) {
+        if (this.revokedTokenArchiveRepository.existsByRefreshToken(refreshToken)) {
             // "Ленивый прогрев"
             log.info("Warming up refresh token blacklist cache after Postgres lookup.");
             this.blacklistCommandWorker.blacklistRefreshToken(refreshToken);

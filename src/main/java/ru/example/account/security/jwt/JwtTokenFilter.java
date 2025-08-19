@@ -22,7 +22,7 @@ import ru.example.account.security.entity.SessionStatus;
 import ru.example.account.security.service.AuthService;
 import ru.example.account.security.service.worker.FingerprintService;
 import ru.example.account.security.service.SessionQueryService;
-import ru.example.account.security.service.facade.SessionRevocationService;
+import ru.example.account.security.service.facade.SessionRevocationServiceFacade;
 import ru.example.account.shared.exception.exceptions.DeviceNotVerifiedException;
 import ru.example.account.shared.exception.exceptions.InvalidJwtAuthenticationException;
 import ru.example.account.shared.exception.exceptions.SecurityBreachAttemptException;
@@ -48,7 +48,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
     private final FingerprintService fingerprintService;   // --- ДОБАВЛЯЕМ "ТЯЖЕЛУЮ АРТИЛЛЕРИЮ"! ---
 
-    private final SessionRevocationService sessionRevocationService; // <<<--- КЛЮЧЕВАЯ ЗАВИСИМОСТЬ ДЛЯ ФСБ и СБ
+    private final SessionRevocationServiceFacade sessionRevocationService; // <<<--- КЛЮЧЕВАЯ ЗАВИСИМОСТЬ ДЛЯ ФСБ и СБ
 
     private final AuthService authService;
 

@@ -30,7 +30,7 @@ import ru.example.account.security.service.AuthService;
 import ru.example.account.security.principal.AppUserDetails;
 import ru.example.account.security.service.worker.FingerprintService;
 import ru.example.account.security.service.worker.HttpUtilsService;
-import ru.example.account.security.service.facade.SessionRevocationService;
+import ru.example.account.security.service.facade.SessionRevocationServiceFacade;
 import ru.example.account.security.service.SessionServiceManager;
 import ru.example.account.security.service.TimezoneService;
 import ru.example.account.security.service.facade.UserService;
@@ -63,7 +63,7 @@ public class AuthServiceImpl implements AuthService {
 
     private final AuthSessionRepository authSessionRepository;
 
-    private final SessionRevocationService sessionRevocationService;
+    private final SessionRevocationServiceFacade sessionRevocationService;
 
     private final JwtUtils jwtUtils;
 

@@ -10,7 +10,7 @@ import ru.example.account.security.entity.SessionStatus;
  * Its sole responsibility is to hide the internal system complexity by delegating
  * all calls to a dedicated orchestration layer. It contains NO business logic.
  */
-public interface SessionRevocationService {
+public interface SessionRevocationServiceFacade {
 
    /**
     * Initiates the standard, graceful revocation of a SINGLE session.
