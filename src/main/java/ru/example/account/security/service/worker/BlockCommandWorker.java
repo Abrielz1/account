@@ -1,6 +1,7 @@
 package ru.example.account.security.service.worker;
 
 import ru.example.account.security.entity.BlockReason;
+import ru.example.account.security.entity.BlockedEntityType;
 import ru.example.account.security.entity.BlockedTarget;
 import java.time.Duration;
 import java.time.ZonedDateTime;
@@ -30,10 +31,10 @@ public interface BlockCommandWorker {
      * @param duration             The duration for which the target should be blocked.
      *                             A null value implies a permanent block.
      * @param reason               A concise, machine-readable string describing the reason for the block in form of enum.
+     * @param blockType
      * @param triggeringIncidentId The optional UUID of the {@link ru.example.account.security.entity.SecurityIncident}
      *                             that triggered this blocking action, used for auditing purposes.
      * @param affectedUserid is id which under attack.
-     * @param employeeWhatSetBanId is id of employee what set manually set ban to given ip.
      * @param expiresAt time when ban is lifted, if == null ban is set permanent
      * @return An {@link Optional} containing the persisted {@code BlockedTarget} entity if the
      *         operation was successful. Returns an empty Optional if the input parameters
@@ -43,9 +44,9 @@ public interface BlockCommandWorker {
             String ipAddress,
             Duration duration,
             BlockReason reason,
+            BlockedEntityType blockType,
             Long affectedUserid,
             UUID triggeringIncidentId,
-            Long employeeWhatSetBanId,
             ZonedDateTime expiresAt
     );
 }

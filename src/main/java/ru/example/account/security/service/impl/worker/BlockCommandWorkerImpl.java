@@ -24,18 +24,18 @@ public class BlockCommandWorkerImpl implements BlockCommandWorker {
     public Optional<BlockedTarget> blockIpAddress(String ipAddress,
                                                   Duration duration,
                                                   BlockReason reason,
+                                                  BlockedEntityType blockType,
                                                   Long affectedUserid,
                                                   UUID triggeringIncidentId,
-                                                  Long userWhatSetBanId,
                                                   ZonedDateTime expiresAt) {
         BlockedTarget toBanAttackerByIp = BlockedTarget
                 .builder()
-                .blockedByUserId(userWhatSetBanId != null ? userWhatSetBanId : null)
-                .targetValue(BlockedEntityType.IP_ADDRESS.name())
-                .affectedUserId(affectedUserid != null ? affectedUserid : null)
+                .targetType(blockType)
+                .targetValue(ipAddress)
+                .affectedUserId(affectedUserid)
                 .reason(reason.name())
                 .triggeringIncidentId(triggeringIncidentId)
-                .expiresAt(expiresAt != null ? expiresAt : null)
+                .expiresAt(expiresAt)
                 .build();
 
         return Optional.of(blockedTargetRepository.save(toBanAttackerByIp));

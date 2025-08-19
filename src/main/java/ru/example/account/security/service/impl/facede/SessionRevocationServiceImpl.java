@@ -51,7 +51,7 @@ public class SessionRevocationServiceImpl implements SessionRevocationService {
 
         Instant now = Instant.now();
 
-        // 2. ОБНОВЛЕНИЕ АУДИТА (ТВОЯ ЛОГИКА)
+        // 2. ОБНОВЛЕНИЕ АУДИТА
         this.auditLogRepository.findBySessionId(sessionToRevoke.getId()).ifPresent(auditLog -> {
             // Если причина или переданный статус - тревожные, помечаем аудит
             if (reason.equals(RevocationReason.REASON_ADMIN_ACTION) || this.isStatusSecurityAlert(status)) {

@@ -49,8 +49,8 @@ public class BlockedTarget {
     @Column(name = "blocked_by_user_id")
     private Long blockedByUserId;
 
-    // null = навсегда. Дата = "серый список".
-    @Column(name = "expires_at") // null = навсегда. Дата = временно.
+    // null = навсегда. Дата = "серый список", те временно
+    @Column(name = "expires_at")
     private ZonedDateTime expiresAt;
 
     @Column(name = "affected_session_id   ")
