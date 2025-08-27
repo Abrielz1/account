@@ -6,7 +6,7 @@ import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 import ru.example.account.security.repository.AuthSessionRepository;
-import ru.example.account.security.repository.RevokedTokenArchiveRepository;
+import ru.example.account.security.repository.RevokedSessionArchiveRepository;
 import ru.example.account.security.repository.SessionAuditLogRepository;
 import ru.example.account.security.service.worker.IdGenerationService;
 import java.security.SecureRandom;
@@ -21,7 +21,7 @@ public class IdGenerationServiceImpl implements IdGenerationService {
 
     private final AuthSessionRepository authSessionPostgresRepo; // Для Postgres
 
-    private final RevokedTokenArchiveRepository revokedTokenArchiveRepository;
+    private final RevokedSessionArchiveRepository revokedTokenArchiveRepository;
 
     private final SessionAuditLogRepository sessionAuditLogRepository; // Для Postgres
 

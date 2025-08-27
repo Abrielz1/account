@@ -3,29 +3,30 @@ package ru.example.account.security.service.impl.facede;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 import ru.example.account.security.entity.AuthSession;
+import ru.example.account.security.entity.BlackLictedRefreshToken;
+import ru.example.account.security.entity.BlacklistedAccessToken;
 import ru.example.account.security.entity.RevocationReason;
 import ru.example.account.security.entity.RevokedSessionArchive;
 import ru.example.account.security.entity.SessionStatus;
 import ru.example.account.security.repository.ActiveSessionCacheRepository;
 import ru.example.account.security.repository.AuthSessionRepository;
+import ru.example.account.security.repository.BlacklistedAccessTokenRepository;
+import ru.example.account.security.repository.BlacklistedRefreshTokenRepository;
 import ru.example.account.security.repository.RevokedSessionArchiveRepository;
 import ru.example.account.security.repository.SessionAuditLogRepository;
 import ru.example.account.security.service.SessionQueryService;
 import ru.example.account.security.service.facade.SessionRevocationServiceFacade;
+import ru.example.account.security.service.worker.BlacklistCommandWorker;
 import java.time.Instant;
 import java.util.List;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class SessionRevocationServiceImpl implements SessionRevocationServiceFacade { // todo на вынос
+public class SessionRevocationServiceImplV2 implements SessionRevocationServiceFacade {
 
     private final AuthSessionRepository authSessionRepository;
-
- //   private final BlacklistService blacklistService;
 
     private final RevokedSessionArchiveRepository revokedSessionArchiveRepository;
 
@@ -35,36 +36,41 @@ public class SessionRevocationServiceImpl implements SessionRevocationServiceFac
 
     private final ActiveSessionCacheRepository activeSessionCacheRepository;
 
-    /**
-     * Выполняет штатный, атомарный процесс отзыва и архивации ОДНОЙ сессии.
-     * Реализует ТВОЮ гибкую логику с передачей статуса.
-     */
+    private final BlacklistedAccessTokenRepository blacklistedAccessTokenRepository;
+
+    private final BlacklistedRefreshTokenRepository blacklistedRefreshTokenRepository;
+
+    private final BlacklistCommandWorker blacklistCommandWorker;
+
     @Override
-    @Transactional(value = "securityTransactionManager", propagation = Propagation.REQUIRES_NEW)
     public boolean revokeAndArchive(AuthSession sessionToRevoke, SessionStatus status, RevocationReason reason) {
 
-        // 1. ПРОВЕРКИ ("СТРАЖНИК")
-        if (sessionToRevoke == null) {
-            log.warn("Attempt to revoke a null session.");
-            return false;
-        }
+    // 1. ПРОВЕРКИ ("СТРАЖНИК")
+    if (sessionToRevoke == null) { // NB if session is Null, so no session to revoke its bug!
+        log.warn("Attempt to revoke a null session.");
+        return false;
+    }
 
-        Instant now = Instant.now();
+        Instant now = Instant.now(); // NB We make a ONE per revoke time stamp. throughout whole method
 
-        // 2. ОБНОВЛЕНИЕ АУДИТА
-        this.auditLogRepository.findBySessionId(sessionToRevoke.getId()).ifPresent(auditLog -> {
+        this.auditLogRepository.findBySessionId(sessionToRevoke.getId()).ifPresent(auditLog -> { // NB its stub for admin revocation or our future pro active session analyzer
             // Если причина или переданный статус - тревожные, помечаем аудит
+
             if (reason.equals(RevocationReason.REASON_ADMIN_ACTION) || this.isStatusSecurityAlert(status)) {
+                log.info("Session with sessionId: {} was setted as compromides!", sessionToRevoke.getId());
                 auditLog.setCompromised(true);
+                // todo создать в перспективе уведомление ля проверки подозрительного поведения!
             }
         });
 
-        // 3. АРХИВАЦИЯ В POSTGRES
+        // 3. АРХИВАЦИЯ СЕССИИ и ОБОИХ ТОКЕНОВ В POSTGRES
         this.revokedSessionArchiveRepository.save(RevokedSessionArchive.from(sessionToRevoke, now, reason));
+        this.blacklistedRefreshTokenRepository.save(BlackLictedRefreshToken.from(sessionToRevoke, now, reason));
+        this.blacklistedAccessTokenRepository.save(BlacklistedAccessToken.from(sessionToRevoke, now, reason));
 
         // 4. БЛЭКЛИСТИНГ ACCESS TOKEN'А и REFRESH TOKEN'А В REDIS
-//        this.blacklistService.blacklistAccessToken(sessionToRevoke.getAccessToken());
-//        this.blacklistService.blacklistRefreshToken(sessionToRevoke.getRefreshToken());
+        this.blacklistCommandWorker.blacklistRefreshToken(sessionToRevoke.getRefreshToken());
+        this.blacklistCommandWorker.blacklistAccessToken(sessionToRevoke.getAccessToken());
 
         // 5. ЗАЧИСТКА "ГОРЯЧИХ" ХРАНИЛИЩ
         this.activeSessionCacheRepository.deleteById(sessionToRevoke.getRefreshToken());
@@ -75,13 +81,8 @@ public class SessionRevocationServiceImpl implements SessionRevocationServiceFac
         return true;
     }
 
-    /**
-     * Выполняет экстренный отзыв ВСЕХ активных сессий пользователя.
-     */
     @Override
-    @Transactional(value = "securityTransactionManager")
     public boolean revokeAllSessionsForUser(Long userId, SessionStatus status, RevocationReason reason) {
-
         // Находим сессии по ПРАВИЛЬНОМУ статусу - ACTIVE.
         // Переданный `status` будем использовать для ЛОГИКИ, а не для поиска.
         List<AuthSession> activeSessions = sessionQueryService.getAllActiveSession(userId, SessionStatus.STATUS_ACTIVE);

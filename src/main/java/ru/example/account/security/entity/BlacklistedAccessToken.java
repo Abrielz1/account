@@ -12,8 +12,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.validator.constraints.UUID;
+
 import java.time.Instant;
+import java.util.UUID;
 
 /**
  * Персистентный, "холодный" черный список ACCESS-токенов.
@@ -34,26 +35,27 @@ public class BlacklistedAccessToken {
      * Сам Access-токен. Является первичным ключом для мгновенного поиска.
      */
     @Id
+    @Column(name = "token")
     private String token;
 
     /**
      * ID пользователя, которому принадлежал этот токен.
      * Критически важно для расследований инцидентов.
      */
-    @Column(nullable = false)
+    @Column(name = "user_id", nullable = false)
     private Long userId;
 
     /**
      * ID сессии, в рамках которой был выпущен этот токен.
      * Позволяет связать скомпрометированный токен с конкретной сессией.
      */
-    @Column(nullable = false)
+    @Column(name = "session_id", nullable = false)
     private UUID sessionId;
 
     /**
      * Время, когда этот токен был СОЗДАН.
      */
-    @Column(nullable = false)
+    @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
     /**
@@ -75,4 +77,17 @@ public class BlacklistedAccessToken {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private RevocationReason reason;
+
+    public static BlacklistedAccessToken from(AuthSession session, Instant revokedAt, RevocationReason reason) {
+
+        return BlacklistedAccessToken.builder()
+                .token(session.getAccessToken())
+                .userId(session.getUserId())
+                .sessionId(session.getId())
+                .createdAt(session.getCreatedAt())
+                .originalExpiryDate(session.getExpiresAt())
+                .revokedAt(revokedAt)
+                .reason(reason)
+                .build();
+    }
 }

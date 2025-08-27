@@ -52,4 +52,16 @@ public class BlackLictedRefreshToken {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private RevocationReason reason;
+
+    public static BlackLictedRefreshToken from(AuthSession sessionToRevoke, Instant revokedAt, RevocationReason reason) {
+        return BlackLictedRefreshToken.builder()
+                .token(sessionToRevoke.getAccessToken())
+                .userId(sessionToRevoke.getUserId())
+                .sessionId(sessionToRevoke.getId())
+                .createdAt(sessionToRevoke.getCreatedAt())
+                .originalExpiryDate(sessionToRevoke.getExpiresAt())
+                .revokedAt(revokedAt)
+                .reason(reason)
+                .build();
+    }
 }

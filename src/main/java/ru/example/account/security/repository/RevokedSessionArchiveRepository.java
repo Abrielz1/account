@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 import ru.example.account.security.entity.RevokedSessionArchive;
 
 @Repository
-public interface RevokedTokenArchiveRepository extends JpaRepository<RevokedSessionArchive, String> {
+public interface RevokedSessionArchiveRepository extends JpaRepository<RevokedSessionArchive, String> {
 
     @Query(value = """
            SELECT EXISTS (SELECT 1 FROM RevokedSessionArchive rsa WHERE rsa.refreshToken = :refreshToken)

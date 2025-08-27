@@ -8,7 +8,7 @@ import org.springframework.util.StringUtils;
 import ru.example.account.security.repository.BlacklistedAccessTokenRepository;
 import ru.example.account.security.repository.BlacklistedRefreshTokenRepository;
 import ru.example.account.security.repository.RedisRepository;
-import ru.example.account.security.repository.RevokedTokenArchiveRepository;
+import ru.example.account.security.repository.RevokedSessionArchiveRepository;
 import ru.example.account.security.service.worker.BlacklistCommandWorker;
 import ru.example.account.security.service.worker.BlacklistQueryWorker;
 import ru.example.account.shared.util.RedisKeyBuilderHelper;
@@ -22,7 +22,7 @@ public class BlacklistQueryWorkerImpl implements BlacklistQueryWorker {
 
     private static final String REDIS_DOWN_MESSAGE = "REDIS IS DOWN! Could not ";
 
-    private final RevokedTokenArchiveRepository revokedTokenArchiveRepository;
+    private final RevokedSessionArchiveRepository revokedTokenArchiveRepository;
 
     private final RedisRepository<String, String> redisRepository;
 
