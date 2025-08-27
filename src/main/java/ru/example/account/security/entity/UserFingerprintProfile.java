@@ -15,7 +15,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.Where;
 import org.hibernate.proxy.HibernateProxy;
-
 import java.time.ZonedDateTime;
 import java.util.HashSet;
 import java.util.Objects;

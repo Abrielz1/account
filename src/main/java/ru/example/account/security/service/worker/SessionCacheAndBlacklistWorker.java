@@ -1,6 +1,5 @@
 package ru.example.account.security.service.worker;
 
-
 import ru.example.account.security.entity.AuthSession;
 
 /**

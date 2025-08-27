@@ -37,6 +37,26 @@ services:
       test: ["CMD-SHELL", "pg_isready -U ${BUSINESS_DB_USER}"]
       interval: 10s
 
+  security_bd:
+    image: postgres:15-alpine
+    container_name: security-db # Называем его security тк цже :)
+    ports:
+      - "${SECURITY_DB_PORT:-5432}:5432"
+    volumes:
+      - security_db_data:/var/lib/postgresql/data
+    environment:
+      # Все креды для базы должны приходить из env_file
+      POSTGRES_DB: ${SECURITY_DB_NAME}
+      POSTGRES_USER: ${SECURITY_DB_USER}
+      POSTGRES_PASSWORD: ${SECURITY_DB_PASSWORD}
+    networks:
+      - fintech-network
+    restart: on-failure
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${SECURITY_DB_USER}" ]
+      interval: 10s
+
+
   # --- Моё Приложение собственно ---
   account_service:
     build: . # Собирает Dockerfile из текущей папки, на, что указывает .

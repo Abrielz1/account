@@ -52,14 +52,14 @@ public class BlacklistQueryWorkerImpl implements BlacklistQueryWorker {
 
         // --- ЭШЕЛОН 2: POSTGRES ("Холодный" архив) ---
         log.warn("Blacklist cache miss for access token. Checking Postgres access tokens archive.");
-        if (revokedTokenArchiveRepository.existsByAccessToken(accessToken)) {
+        if (this.blacklistedAccessTokenRepository.existsByAccessToken(accessToken)) {
             // "Ленивый прогрев"
             this.blacklistCommandWorker.blacklistAccessToken(accessToken);
             return true;
         }
 
         log.warn("Blacklist cache miss for access token. Checking Postgres archive.");
-        if (revokedTokenArchiveRepository.existsByAccessToken(accessToken)) {
+        if (this.revokedTokenArchiveRepository.existsByAccessToken(accessToken)) {
             // "Ленивый прогрев"
             this.blacklistCommandWorker.blacklistAccessToken(accessToken);
             return true;
