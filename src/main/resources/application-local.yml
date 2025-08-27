@@ -1,90 +1,40 @@
-# ===================================================================
-#      ПРОФИЛЬ ДЛЯ ЛОКАЛЬНОЙ РАЗРАБОТКИ (spring.profiles.active=local)
-# ===================================================================
+# ===================================================================================
+#      ПРОФИЛЬ ДЛЯ ЛОКАЛЬНОЙ РАЗРАБОТКИ
+# ===================================================================================
 
-# Указываем, чтобы Spring Boot сначала загрузил основной application.yml,
-# а потом переопределил его значениями из этого файла.
 spring:
+  # Эта строка ОБЯЗАТЕЛЬНА. Она говорит, что данный документ - это профиль 'local'
   config:
     activate:
-      on-profile: local # Этот файл активируется только с профилем 'local'
+      on-profile: local
 
-  # --- НАСТРОЙКИ ДЛЯ БАЗЫ ДАННЫХ "BUSINESS" ---
-  # Используем плейсхолдеры `${...}` для чтения из .env
+  # --- ЛОКАЛЬНЫЕ НАСТРОЙКИ ДЛЯ БАЗ ДАННЫХ ---
+  # Хардкодим значения для простоты и изоляции. НЕ ИСПОЛЬЗУЕМ .env
+
   datasource-business:
-    url: jdbc:postgresql://${BUSINESS_DB_HOST}:${BUSINESS_DB_PORT}/${BUSINESS_DB_NAME}
-    username: ${BUSINESS_DB_USER}
-    password: ${BUSINESS_DB_PASSWORD}
-    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:${BUSINESS_DB_PORT:5432}/business_app
+    username: business_user
+    password: business_password
 
-  # --- НАСТРОЙКИ ДЛЯ БАЗЫ ДАННЫХ "SECURITY" ---
   datasource-security:
-    url: jdbc:postgresql://${SECURITY_DB_HOST}:${SECURITY_DB_PORT}/${SECURITY_DB_NAME}
-    username: ${SECURITY_DB_USER}
-    password: ${SECURITY_DB_PASSWORD}
-    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:${SECURITY_DB_PORT:5433}/security_app
+    username: security_user
+    password: security_password
 
-  # --- НАСТРОЙКИ JPA ---
-  jpa:
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
-
-  # --- НАСТРОЙКИ REDIS ---
+  # --- ЛОКАЛЬНЫЕ НАСТРОЙКИ REDIS ---
   data:
     redis:
-      host: localhost # Для Docker Compose можно использовать имя сервиса: redis
-      port: ${REDIS_PORT}
+      host: localhost
+      port: ${REDIS_PORT:6379}
 
-# --- Кастомные настройки приложения ---
-app:
-  jwt:
-    secret: "${APP_SECRET}" # Кавычки важны, если секрет содержит спец. символы
+  # Включаем показ SQL для удобства отладки
+  jpa:
+    show-sql: true
 
-# --- Имена схем для Flyway и JPA ---
-db:
-  schema:
-    business: ${DB_SCHEMA_BUSINESS}
-    security: ${DB_SCHEMA_SECURITY}
-
-# --- Локальные настройки DataSource ---
-# Мы не используем переменные окружения, а хардкодим значения для простоты
-datasource-business:
-  url: jdbc:postgresql://localhost:5432/business_db
-  username: user_business
-  password: password_business
-datasource-security:
-  url: jdbc:postgresql://localhost:5433/security_db
-  username: user_security
-  password: password_security
-
-# --- Локальные настройки JPA ---
-jpa:
-  # Включаем показ SQL и форматирование только для локальной разработки
-  show-sql: true
-  business:
-    properties:
-      hibernate: { format_sql: true }
-  security:
-    properties:
-      hibernate: { format_sql: true }
-
-# --- Локальные настройки REDIS ---
-data:
-  redis:
-    host: localhost
-    port: 6379
-
-# --- Кастомные настройки для локальной разработки ---
-app:
-  jwt:
-    # Для локального запуска удобно иметь простой, известный секрет
-    secret: "dGVzdC1zZWNyZXQtZm9yLWxvY2FsLWRldmVsb3BtZW50Cg=="
-
-# Включаем логирование SQL на уровне DEBUG для удобства отладки
+# --- ЛОКАЛЬНЫЕ НАСТРОЙКИ ЛОГГИРОВАНИЯ ---
 logging:
   level:
+    # Включаем подробное логирование SQL и Spring Security
     org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql: TRACE # Показывает параметры, вставляемые в SQL
+    org.hibernate.type.descriptor.sql: TRACE
+    org.springframework.security: DEBUG

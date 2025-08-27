@@ -1,47 +1,48 @@
-# ===================================================================
-#      ПРОФИЛЬ ДЛЯ PROD / DOCKER (spring.profiles.active=prod)
-# ===================================================================
+# ===================================================================================
+#      ПРОФИЛЬ ДЛЯ PROD / DOCKER
+# ===================================================================================
 
 spring:
   config:
     activate:
       on-profile: prod
 
-# --- Prod настройки DataSource ---
-# Здесь мы ОБЯЗАТЕЛЬНО используем переменные окружения, никаких хардкода
-datasource-business:
-  url: jdbc:postgresql://${BUSINESS_DB_HOST}/${BUSINESS_DB_NAME}
-  username: ${BUSINESS_DB_USER}
-  password: ${BUSINESS_DB_PASSWORD}
-datasource-security:
-  url: jdbc:postgresql://${SECURITY_DB_HOST}/${SECURITY_DB_NAME}
-  username: ${SECURITY_DB_USER}
-  password: ${SECURITY_DB_PASSWORD}
+  # --- PROD НАСТРОЙКИ ДЛЯ БАЗ ДАННЫХ ---
+  # Здесь мы ОБЯЗАТЕЛЬНО используем переменные из .env
 
-# --- Prod настройки JPA ---
-# В проде мы отключаем показ SQL для производительности и безопасности
-jpa:
-  show-sql: false
+  datasource-business:
+    url: jdbc:postgresql://${BUSINESS_DB_HOST}:${BUSINESS_DB_PORT}/${BUSINESS_DB_NAME}
+    username: ${BUSINESS_DB_USER}
+    password: ${BUSINESS_DB_PASSWORD}
 
-# --- Prod настройки REDIS ---
-data:
-  redis:
-    host: ${REDIS_HOST}
-    port: ${REDIS_PORT}
-    # password: ${REDIS_PASSWORD} # В проде, скорее всего, будет пароль
+  datasource-security:
+    url: jdbc:postgresql://${SECURITY_DB_HOST}:${SECURITY_DB_PORT}/${SECURITY_DB_NAME}
+    username: ${SECURITY_DB_USER}
+    password: ${SECURITY_DB_PASSWORD}
 
-# --- Prod кастомные настройки ---
-app:
-  jwt:
-    # Секрет ОБЯЗАН приходить из переменной окружения
-    secret: "${APP_SECRET}"
+  # --- PROD НАСТРОЙКИ REDIS ---
+  data:
+    redis:
+      # Имя хоста - это имя сервиса из docker-compose.yml
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      # В проде, скорее всего, будет пароль:
+      # password: ${REDIS_PASSWORD}
 
-# В проде нам не нужно дебаг-логирование SQL
+  # --- PROD НАСТРОЙКИ JPA ---
+  # В проде отключаем показ SQL для производительности и безопасности
+  jpa:
+    show-sql: false
+
+# --- PROD НАСТРОЙКИ ЛОГГИРОВАНИЯ ---
+# В проде логируем только INFO и выше, чтобы не забивать диски
 logging:
   level:
-    org.hibernate.SQL: INFO
+    root: INFO
+    org.hibernate.SQL: WARN
+    ru.example.account: DEBUG # <-- Логи твоего приложения можно оставить на DEBUG
 
-# В проде можно отключить Swagger UI для безопасности
+# В проде можно отключить Swagger UI для дополнительной безопасности
 springdoc:
   swagger-ui:
     enabled: false

@@ -1,8 +1,10 @@
-# ===================================================================
+# ===================================================================================
 #      БАЗОВАЯ КОНФИГУРАЦИЯ (общая для всех профилей)
-# ===================================================================
+# ===================================================================================
+
 server:
-  # Порт будет определяться профилем или переменной окружения
+  # Порт по умолчанию. Может быть переопределен.
+  port: ${APP_PORT:8080}
   servlet:
     encoding:
       charset: UTF-8
@@ -13,106 +15,65 @@ spring:
   application:
     name: account-service
 
+  # Определяем "шаблоны" для наших двух баз данных.
+  # Конкретные URL, юзеры и пароли будут заданы в профилях.
+  datasource-business:
+    driver-class-name: org.postgresql.Driver
+  datasource-security:
+    driver-class-name: org.postgresql.Driver
+
   jpa:
+    # Общие настройки Hibernate для обоих Persistence Unit
     properties:
-      # "Прокидываем" наш секрет внутрь сессии Hibernate
-      hibernate.properties.session_preload: "SELECT set_config('app.encryption.db-secret-key', '${app.encryption.db-secret-key}', false)"
-  # Вся конфигурация DataSource и JPA теперь будет специфичной для профиля
-  # Поэтому этот блок мы отсюда убираем
+      hibernate:
+        format_sql: true # Форматирование можно оставить, оно не сильно влияет на прод
 
-  # Общие настройки кэширования
-  cache:
-    type: redis
-    cache-names: users, accounts # Имена кэшей общие
-    redis:
-      cache-null-values: false
-      key-prefix: account-service-cache::
-
-  # Общие настройки Flyway
+  # ВАЖНО: Отключаем автоконфигурацию Flyway, так как мы управляем ей вручную
+  # для двух баз данных в Java-конфигах. ЭТО ПРАВИЛЬНО.
   flyway:
-    # Важно: отключаем автоконфигурацию, так как управляем ей вручную в Java-конфигах
     enabled: false
 
-# --- Кастомные настройки приложения ---
-app:
-  jwt:
-    # Время жизни токенов - общее правило, но может быть переопределено в профиле
-    token-expiration: 15m
-    refresh-token-expiration: "P7D"
-    ttl: 300
+  cache:
+    type: redis
+    cache-names:
+      - users
+      - accounts
+    redis:
+      key-prefix: "fintech::cache::" # Уникальный префикс, чтобы не пересекаться с другими
+      cache-null-values: false
 
-    keys:
-      # Имя ключа для TTL-а активной сессии
-      # Было: ttl: 300 в jwt-секции - это неправильно. TTL кеша - это свойство Redis
-      active-session-prefix: "session:active::"
+  # Указываем, чтобы Spring Boot импортировал переменные из .env файла.
+  # Этот файл НЕ должен быть в Git.
+  config:
+    import: "optional:file:.env"
 
-      blacklist:
-        access-token-prefix: "banned:access_token::"
-        # Для refresh-токенов TTL будет другим, так что префикс тоже нужен
-        refresh-token-prefix: "banned:refresh_token::"
-
-      whitelist:
-        fingerprint-key-format: "trusted_fp::{fingerprint}"
-
-      verification:
-        device-code-format: "device_verify:{userId}:{fingerprint}"
-
-      ttl:
-        # --- ДОБАВЛЯЕМ TTL ДЛЯ АКТИВНОЙ СЕССИИ! ---
-        # Это то самое "пропущенное" свойство.
-        # Теперь оно в правильном месте.
-        active-session: "30m"
-
-        banned-access-token: "16m"  # Чуть больше, чем живет сам токен
-        banned-refresh-token: "91d" # Чуть больше, чем живет refresh
-        trusted-fingerprint: "90d"  # TTL "доверия" = TTL "рефреша"
-        device-verification-code: "10m"
-
-  redis:
-    keys:
-      active-session-prefix: "session:active::"
-      blacklist:
-        access-token-prefix: "banned:access_token::"
-        # Для refresh-токенов черный список теперь не нужен,
-        # т.к. мы их просто удаляем и архивируем. Но можем оставить.
-        refresh-token-prefix: "banned:refresh_token::"
-
-      whitelist:
-        # ТВОЙ, "простой" формат: ключ - сам фингерпринт
-        fingerprint-key-format: "trusted_fp::{fingerprint}"
-
-      verification:
-        # Ключ для хранения временного кода верификации
-        device-code-format: "device_verify:{userId}:{fingerprint}"
-
-    ttl:
-      banned-access-token: "15m" # Твой "горячий кеш"
-
-      # TTL Доверия = TTL Рефреш-токена (90 дней, как ты и сказал!)
-      trusted-fingerprint: "90d"
-
-      # Код верификации живет 10 минут
-      device-verification-code: "10m"
 # --- Настройки внешних инструментов ---
 management:
   endpoints:
     web:
       exposure:
-        # В проде мы, возможно, захотим скрыть prometheus, так что это тоже может быть в профиле
         include: "health,prometheus"
+
 springdoc:
   api-docs:
     path: /api-docs
   swagger-ui:
     path: /swagger-ui.html
 
-EMAIL_USERNAME:  ${EMAIL_USERNAME}
-EMAIL_FROM: ${EMAIL_FROM}
-EMAIL_PASSWORD: ${EMAIL_PASSWORD}
-EMAIL_HOST: ${EMAIL_HOST}
-EMAIL_PORT: ${EMAIL_PORT}
+# --- Кастомные настройки приложения (общие) ---
+app:
+  # Настройки JWT (берем из .env)
+  jwt:
+    secret: "${APP_SECRET}"
+    token-expiration: 15m
+    refresh-token-expiration: "P7D" # 7 дней
 
-jasypt:
-  encryptor:
-    password: ${CRYPTO_PASSWORD}
-    algorithm: "PBEWITHHMACSHA512ANDAES_256"
+  # Настройки шифрования (берем из .env)
+  encryption:
+    db-secret-key: "${CRYPTO_PASSWORD}"
+
+  # Имена схем (берем из .env)
+  db:
+    schema:
+      business: ${DB_SCHEMA_BUSINESS:business}
+      security: ${DB_SCHEMA_SECURITY:security}

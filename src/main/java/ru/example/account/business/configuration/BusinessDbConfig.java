@@ -45,7 +45,7 @@ public class BusinessDbConfig {
 
         return builder
                 .dataSource(dataSource)
-                .packages("ru.example.account.business.model", "ru.example.account.user.model")
+                .packages("ru.example.account.business.entity", "ru.example.account.user.entity")
                 .persistenceUnit("business")
                 .build();
     }

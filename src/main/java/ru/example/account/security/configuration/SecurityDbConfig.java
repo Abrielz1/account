@@ -42,8 +42,6 @@ public class SecurityDbConfig {
     }
 
     // --- ШАГ 3: "РУЧНОЕ" СОЗДАНИЕ EntityManagerFactoryBuilder ---
-    // А вот теперь, когда у нас есть все компоненты, мы можем СОЗДАТЬ билдер САМИ,
-    // передав ему все нужные "запчасти".
     @Bean
     public EntityManagerFactoryBuilder securityEntityManagerFactoryBuilder(
             JpaProperties jpaProperties,
@@ -60,9 +58,7 @@ public class SecurityDbConfig {
         );
     }
 
-    // --- ШАГ 4: ТВОЙ, УЖЕ ИДЕАЛЬНЫЙ, БИН ФАБРИКИ ---
-    // Теперь этот метод СРАБОТАЕТ, потому что бин "securityEntityManagerFactoryBuilder"
-    // будет создан на предыдущем шаге.
+    // --- ШАГ 4: БИН ФАБРИКИ ---
     @Bean(name = "securityEntityManagerFactory")
     public LocalContainerEntityManagerFactoryBean securityEntityManagerFactory(
             // Он найдет бин, созданный выше!
@@ -71,7 +67,7 @@ public class SecurityDbConfig {
     ) {
         return builder
                 .dataSource(dataSource)
-                .packages("ru.example.account.security.entity") // Я все еще помню про этот косяк
+                .packages("ru.example.account.security.entity")
                 .persistenceUnit("security")
                 .build();
     }
@@ -86,18 +82,6 @@ public class SecurityDbConfig {
     public DataSource securityDataSource() {
         return securityDataSourceProperties().initializeDataSourceBuilder().build();
     }
-
-//    @Bean(name = "securityEntityManagerFactory")
-//    public LocalContainerEntityManagerFactoryBean securityEntityManagerFactory(
-//            EntityManagerFactoryBuilder builder,
-//            @Qualifier("securityDataSource") DataSource dataSource) {
-//
-//        return builder
-//                .dataSource(dataSource)
-//                .packages("ru.example.account.security.entity")
-//                .persistenceUnit("security")
-//                .build();
-//    }
 
     @Bean(name = "securityTransactionManager")
     public PlatformTransactionManager securityTransactionManager(

@@ -4,29 +4,28 @@ services:
   # --- Инфраструктура ---
   redis:
     image: redis:7.2-alpine
-    container_name: fintech-redis # Даем более уникальное имя
+    container_name: fintech-redis # Даем уникальное имя -- SIC это крайне важно, если редис не один в нашей экосистеме!
     ports:
-      - "${REDIS_PORT:-6379}:6379" # Добавляем значение по умолчанию
+      - "${REDIS_PORT:-6379}:6379" # Добавляем значение по умолчанию -- SIC тут стоит защита от не найденного значения, так оно, хоть запустится!
     volumes:
-      - redis_data:/data
+      - redis_data:/data # SIC не допускайте удалени этого файла, там вся скинутая на "диск" горячая информация, если, только редис и дальше тупой кеш и вы не будете использовать персистивный куосов для key set панинации!
     networks:
-      - fintech-network # Используем уникальное имя сети
-    restart: on-failure # Более щадящий рестарт
+      - fintech-network # Используем уникальное имя сети SIC то же, что и с уникальными именами служб, мы защищаемся от коллизии имён!
+    restart: on-failure # Более щадящий рестарт SIC вы можете сменить на боле жестки перезапуски
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "ping"] # SIC это наш пинг жизни, по нему мы поймем, сдох ли под!
       interval: 10s
       timeout: 5s
       retries: 5
 
-  account_db:
+  business_db:
     image: postgres:15-alpine
-    container_name: business-db # Называем его 'business', т.к. скоро будет и 'security'
+    container_name: business-db
     ports:
-      - "${BUSINESS_DB_PORT:-5432}:5432"
+      - "${BUSINESS_DB_PORT}:5432" # SIC это самая важная часть проекта тут лежат счета и учётки клиентов и учётки и счета сотрудников, те ТВОЯ зарплата и ТВОЙ стаж!!!!!
     volumes:
       - business_db_data:/var/lib/postgresql/data
     environment:
-      # Все креды для базы должны приходить из env_file
       POSTGRES_DB: ${BUSINESS_DB_NAME}
       POSTGRES_USER: ${BUSINESS_DB_USER}
       POSTGRES_PASSWORD: ${BUSINESS_DB_PASSWORD}
@@ -34,35 +33,33 @@ services:
       - fintech-network
     restart: on-failure
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${BUSINESS_DB_USER}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${BUSINESS_DB_USER}" ]
       interval: 10s
 
-  security_bd:
-    image: postgres:15-alpine
-    container_name: security-db # Называем его security тк цже :)
-    ports:
-      - "${SECURITY_DB_PORT:-5432}:5432"
-    volumes:
-      - security_db_data:/var/lib/postgresql/data
-    environment:
-      # Все креды для базы должны приходить из env_file
-      POSTGRES_DB: ${SECURITY_DB_NAME}
-      POSTGRES_USER: ${SECURITY_DB_USER}
-      POSTGRES_PASSWORD: ${SECURITY_DB_PASSWORD}
-    networks:
-      - fintech-network
-    restart: on-failure
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${SECURITY_DB_USER}" ]
-      interval: 10s
+  security_db:
+      image: postgres:15-alpine
+      container_name: security-db
+      ports:
+        - "${SECURITY_DB_PORT}:5432" # SIC 2я по важности часть проекта, тут мы кладём наши слепки сессиц, оборудования и адреса атакующих, токены и их холодный архив.
+      volumes:
+        - security_db_data:/var/lib/postgresql/data
+      environment:
+        POSTGRES_DB: ${SECURITY_DB_NAME}
+        POSTGRES_USER: ${SECURITY_DB_USER}
+        POSTGRES_PASSWORD: ${SECURITY_DB_PASSWORD}
+      networks:
+        - fintech-network
+      restart: on-failure
+      healthcheck:
+        test: [ "CMD-SHELL", "pg_isready -U ${SECURITY_DB_USER}" ]
+        interval: 10s
 
-
-  # --- Моё Приложение собственно ---
+  # --- Приложение собственно ---
   account_service:
-    build: . # Собирает Dockerfile из текущей папки, на, что указывает .
+    build: . # Собирает Dockerfile из текущей папки, на, что указывает . <-- это важный параметр, если мы ставим . то указываем сборщику отсюда и до обеда собирай проект, корень ТУТ
     container_name: account-service
     ports:
-      - "${APP_PORT:-8080}:8080"
+      - "${APP_PORT:-8080}:8080" # SIC аналогично защищаемся, от не прогрузки значения переменной!
     networks:
       - fintech-network
     restart: on-failure
@@ -70,26 +67,23 @@ services:
     # Это директива верхнего уровня для сервиса, такая же как ports, build, environment. Она не является частью environment
     env_file:
       - .env
-
-    # В environment мы можем оставить ТОЛЬКО активацию профиля, что и сделано
-    # так как все остальное придет из .env файла. Это делает секцию чище.
     environment:
       - SPRING_PROFILES_ACTIVE=prod
-
+      - REDIS_HOST=${REDIS_HOST}
+      - BUSINESS_DB_HOST=${BUSINESS_DB_HOST}
+      - SECURITY_DB_HOST=${SECURITY_DB_HOST}
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    
-    # Используй правильную нотацию для depends_on с healthcheck!
+        test: [ "CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1" ]
+        interval: 30s
     depends_on:
-      account_db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+        business_db:
+          condition: service_healthy
+        security_db:
+          condition: service_healthy
+        redis:
+          condition: service_healthy
 
-# --- Volumes & Networks (именуем уникально!) ---
+# --- Volumes & Networks (именуем уникально!) --- SIC накосячишь с именами, успешного ДЕБАГА!
 volumes:
   redis_data: {}
   business_db_data: {}
