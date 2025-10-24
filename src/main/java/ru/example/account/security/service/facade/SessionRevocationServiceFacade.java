@@ -4,6 +4,8 @@ import ru.example.account.security.entity.AuthSession;
 import ru.example.account.security.entity.RevocationReason;
 import ru.example.account.security.entity.SessionStatus;
 
+import java.util.concurrent.CompletableFuture;
+
 /**
  * High-level FACADE for all session revocation scenarios.
  * This is the single, clean entry point for external callers (Controllers, Filters, etc.).
@@ -33,5 +35,5 @@ public interface SessionRevocationServiceFacade {
     * @param reason The explicit reason for this mass revocation (e.g., REASON_RED_ALERT).
     * @return boolean - **true if the entire mass revocation process was successful.
     */
-   boolean revokeAllSessionsForUser(Long userId, SessionStatus status, RevocationReason reason);
+   CompletableFuture<Boolean> revokeAllSessionsForUser(Long userId, SessionStatus status, RevocationReason reason);
 }

@@ -145,7 +145,7 @@ public class AuthServiceImpl implements AuthService {
 
         if (Boolean.TRUE.equals(!refreshTokenIsExists) && Boolean.TRUE.equals(!accessTokenIsExists)) {
             log.trace(RED_ALERT_MESSAGE);
-            ///Revoke all session
+            //Revoke all session
             this.sessionRevocationService.revokeAllSessionsForUser(currentUser.getId(),
                     SessionStatus.STATUS_COMPROMISED,
                     RevocationReason.REASON_RED_ALERT);

@@ -28,8 +28,8 @@ public class WhitelistQueryWorkerImpl implements WhitelistQueryWorker {
     private final RedisKeyBuilderHelper redisKeyBuilderHelper;
 
     private final WhitelistCacheWarmer whitelistCacheWarmer;
-    // Проверяем в обоих базах по хешу в токенах, наличие устройства в белом списке
 
+    // Проверяем в обоих базах по хешу в токенах, наличие устройства в белом списке
     @Override
     @Transactional(value = "businessTransactionManager", readOnly = true)
     public boolean isDeviceTrusted(Long userId, String accessToken, String fingerprint) {

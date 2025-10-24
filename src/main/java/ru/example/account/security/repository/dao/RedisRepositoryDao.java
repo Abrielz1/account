@@ -67,7 +67,6 @@ public class RedisRepositoryDao<K, V> implements RedisRepository<K, V> {
             throw new SerializationException("Failed to process key for lookup", e);
         }
 
-
         // Это если в Redis есть наш объект по ключу и он распарсен в корректный Json
         String jsonValue = redisTemplate.opsForValue().get(stringKey);
 
@@ -87,8 +86,8 @@ public class RedisRepositoryDao<K, V> implements RedisRepository<K, V> {
                     stringKey, valueType.getSimpleName(), e);
             // На случай не корректных данных в редис, мы их того...
             // Удаляем "битые" данные из Redis и проводим...
-            // --- "САМО-ИЗЛЕЧЕНИЕ" С "СЫРЫМ" КЛЮЧОМ! ---
-            // Мы УВЕРЕНЫ, что "битые" данные лежат именно по этому ключу.
+            // "само-излечение"
+            // Мы уверены, что "битые" данные лежат именно по этому ключу.
             try {
                 redisTemplate.delete(stringKey);
                 log.error("object was deleted with RAW string key: {}", stringKey);

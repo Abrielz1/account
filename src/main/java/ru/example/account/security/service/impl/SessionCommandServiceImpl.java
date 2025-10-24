@@ -27,10 +27,14 @@ public class SessionCommandServiceImpl implements SessionCommandService {
 
     @Override
     @Transactional(value = "securityTransactionManager", propagation = Propagation.REQUIRES_NEW)
-    public void archiveAllForUser(Long userId, String fingerprint, String ipAddress, String userAgent, RevocationReason revocationReason) {
+    public void archiveAllForUser(Long userId,
+                                  String fingerprint,
+                                  String ipAddress,
+                                  String userAgent,
+                                  RevocationReason revocationReason) {
 
         RevokedClientData data = RevokedClientData.builder()
-                .id(this.idGenerationService.generateSessionId()) // Уникальный ID инцидента
+                .id(this.idGenerationService.generateSessionId()) // Уникальный Id инцидента
                 .userId(userId)
                 .fingerprint(fingerprint)
                 .ipAddress(ipAddress)

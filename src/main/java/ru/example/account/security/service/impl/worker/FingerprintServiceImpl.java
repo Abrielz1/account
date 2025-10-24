@@ -41,13 +41,13 @@ public class FingerprintServiceImpl implements FingerprintService {
         ZonedDateTime now = ZonedDateTime.now();
         ClientFingerPrintHistory newHistory = ClientFingerPrintHistory.builder()
                 .userId(userId)
-                .fingerprintHash(this.jwtUtils.createFingerprintHash(fingerprint))  // <<<--- КЛАДЕМ ХЭШ для поиска
-                .fingerprint(fingerprint)       // <<<--- КЛАДЕМ "СЫРЫЕ" данные (будут зашифрованы)
-                .ipAddress(ipAddress)              // <<<--- (будет зашифрован)
-                .userAgent(userAgent)              // <<<--- (будет зашифрован)
+                .fingerprintHash(this.jwtUtils.createFingerprintHash(fingerprint))
+                .fingerprint(fingerprint)
+                .ipAddress(ipAddress)
+                .userAgent(userAgent)
                 .firstSeenAt(now)
                 .lastSeenAt(now)
-                .isTrusted(false) // По умолчанию - не доверенный, пока не пройдет верификацию
+                .isTrusted(false)
                 .build();
 
         clientFingerPrintHistoryRepository.save(newHistory);

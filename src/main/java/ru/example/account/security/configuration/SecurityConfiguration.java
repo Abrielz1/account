@@ -91,7 +91,6 @@ public class SecurityConfiguration {
                                 RoleType.ROLE_SECURITY_TOP_SUPERVISOR.name(),
                                 RoleType.ROLE_ADMIN.name()
                         )
-                        // ... и так далее
 
                         // --- Зона Бизнес-Менеджмента ---
                         // Этот супервайзер "впаривает карты", а не ищет хакеров.

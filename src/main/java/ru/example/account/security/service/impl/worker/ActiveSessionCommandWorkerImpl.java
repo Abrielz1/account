@@ -17,8 +17,6 @@ import java.util.UUID;
 public class ActiveSessionCommandWorkerImpl implements ActiveSessionCacheCommandWorker {
     private static final String CACHE_ERROR = "REDIS IS DOWN! ";
 
-
-    // специальный параметризованный репозитория для Redis
     private final RedisRepository<String, ActiveSessionCache> redisRepository;
 
     private final ActiveSessionCacheWarmer activeSessionCacheWarmer;

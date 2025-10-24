@@ -2,6 +2,7 @@ package ru.example.account.security.service.impl.facede;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,9 +18,11 @@ import ru.example.account.security.service.SessionQueryService;
 import ru.example.account.security.service.facade.SessionRevocationServiceFacade;
 import java.time.Instant;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Service
+@Primary
 @RequiredArgsConstructor
 public class SessionRevocationServiceImpl implements SessionRevocationServiceFacade { // todo на вынос
 
@@ -80,20 +83,20 @@ public class SessionRevocationServiceImpl implements SessionRevocationServiceFac
      */
     @Override
     @Transactional(value = "securityTransactionManager")
-    public boolean revokeAllSessionsForUser(Long userId, SessionStatus status, RevocationReason reason) {
+    public CompletableFuture<Boolean> revokeAllSessionsForUser(Long userId, SessionStatus status, RevocationReason reason) {
 
         // Находим сессии по ПРАВИЛЬНОМУ статусу - ACTIVE.
         // Переданный `status` будем использовать для ЛОГИКИ, а не для поиска.
         List<AuthSession> activeSessions = sessionQueryService.getAllActiveSession(userId, SessionStatus.STATUS_ACTIVE);
 
         if (activeSessions.isEmpty()) {
-            return false;
+            return CompletableFuture.completedFuture(false);
         }
 
         log.warn("Revoking all ({}) sessions for user {} with reason: {}",
                 activeSessions.size(), userId, reason);
 
-        // В цикле вызываем наш основной "работяга"-метод
+        // В цикле вызываем основной метод
         activeSessions.forEach(session -> {
             try {
                 // Передаем и новый статус, и новую причину
@@ -105,7 +108,7 @@ public class SessionRevocationServiceImpl implements SessionRevocationServiceFac
         });
 
         log.info("Finished mass revocation process for user {}", userId);
-        return true;
+        return CompletableFuture.completedFuture(true);
     }
 
     private boolean isStatusSecurityAlert(SessionStatus status) {

@@ -1,8 +1,10 @@
-package ru.example.account.security.service.orcastrator;
+package ru.example.account.security.service.orcestrator;
 
 import ru.example.account.security.entity.AuthSession;
 import ru.example.account.security.entity.RevocationReason;
 import ru.example.account.security.entity.SessionStatus;
+
+import java.util.concurrent.CompletableFuture;
 
 /**
  * ORCHESTRATOR. The brain of the session lifecycle management process.
@@ -22,7 +24,8 @@ public interface SessionRevocationOrchestrator {
      * Orchestrates the complex process of finding all active sessions for a user
      * and then revoking each one individually, while potentially triggering
      * blocking and notification workers.
+     *
      * @return boolean - true if the mass revocation process (finding sessions + calling workers) was successful.
      */
-    boolean orchestrateMassRevocation(Long userId, SessionStatus status, RevocationReason reason);
+    CompletableFuture<Boolean> orchestrateMassRevocation(Long userId, SessionStatus status, RevocationReason reason);
 }

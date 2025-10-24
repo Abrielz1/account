@@ -23,7 +23,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ActiveSessionCacheQueryWorkerImpl implements ActiveSessionCacheQueryWorker {
 
-    // специальный параметризованный репозитория для Redis
     private final RedisRepository<String, ActiveSessionCache> redisRepository;
 
     private final ActiveSessionCacheWarmer activeSessionCacheWarmer;
@@ -52,7 +51,7 @@ public class ActiveSessionCacheQueryWorkerImpl implements ActiveSessionCacheQuer
             return new SessionVerificationResult(VerificationStatus.SESSION_NOT_FOUND, Optional.empty());
         }
         Optional<ActiveSessionCache> activeSessionCacheFromRedis = Optional.empty();
-        // --- ЭШЕЛОН 1: REDIS ("Горячий" кеш) ---
+
         try {
 
             if (sessionId != null) {
@@ -75,7 +74,6 @@ public class ActiveSessionCacheQueryWorkerImpl implements ActiveSessionCacheQuer
         } catch (RedisConnectionFailureException e) {
             log.error("REDIS IS DOWN!", e);
         }
-        // --- ЭШЕЛОН 2: POSTGRES + "САМО-ИЗЛЕЧЕНИЕ" ---
         log.warn("Cache miss for session {}. Checking Postgres.", sessionId);
 
 
