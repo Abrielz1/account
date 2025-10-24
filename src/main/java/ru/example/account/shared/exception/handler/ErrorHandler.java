@@ -13,7 +13,10 @@ import ru.example.account.shared.exception.exceptions.AccountNotFoundException;
 import ru.example.account.shared.exception.exceptions.AlreadyExistsException;
 import ru.example.account.shared.exception.exceptions.BadRequestException;
 import ru.example.account.shared.exception.exceptions.ProcessingInterruptedException;
+import ru.example.account.shared.exception.exceptions.SessionNotFoundException;
 import ru.example.account.shared.exception.exceptions.UserNotFoundException;
+
+import java.util.Objects;
 
 @Slf4j
 @RestControllerAdvice
@@ -33,12 +36,19 @@ public class ErrorHandler {
         return new ErrorResponse("No such entity as requested account", exception.getMessage());
     }
 
+    @ExceptionHandler(SessionNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleAccountNotFoundException(SessionNotFoundException exception) {
+        log.error("No such entity as requested account");
+        return new ErrorResponse("No such entity as requested account", exception.getMessage());
+    }
+
     @ExceptionHandler(DataIntegrityViolationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleDataIntegrityViolation(DataIntegrityViolationException ex) {
         log.error("Database constraint violation: {}", ex.getMessage());
 
-        return new ErrorResponse("Data integrity violation", ex.getRootCause().getMessage());
+        return new ErrorResponse("Data integrity violation", Objects.requireNonNull(ex.getRootCause()).getMessage());
     }
 
     @ExceptionHandler(PessimisticLockException.class)

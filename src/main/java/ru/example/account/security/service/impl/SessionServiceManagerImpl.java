@@ -12,7 +12,7 @@ import ru.example.account.security.jwt.JwtUtils;
 import ru.example.account.security.model.response.AuthResponse;
 import ru.example.account.security.principal.AppUserDetails;
 import ru.example.account.security.service.facade.MailSendService;
-import ru.example.account.security.service.SessionCommandService;
+import ru.example.account.security.service.RevocationStrategy;
 import ru.example.account.security.service.SessionPersistenceService;
 import ru.example.account.security.service.SessionQueryService;
 import ru.example.account.security.service.SessionServiceManager;
@@ -33,7 +33,7 @@ public class SessionServiceManagerImpl implements SessionServiceManager {
 
     private final SessionQueryService sessionQueryService;
 
-    private final SessionCommandService sessionCommandService;
+    private final RevocationStrategy sessionCommandService;
 
     private final SessionRevocationServiceImpl sessionRevocationService;
 

@@ -13,9 +13,14 @@ import java.util.UUID;
 @Repository
 public interface AuthSessionRepository extends JpaRepository<AuthSession, UUID> {
 
-    Optional<AuthSession> findByAccessTokenAndStatus(String accessToken, SessionStatus status);  // todo nativeQuery
+    Optional<AuthSession> findByAccessTokenAndStatus(String accessToken, SessionStatus status);
 
-    Optional<AuthSession> findByRefreshTokenAndStatus(String refreshToken, SessionStatus status); // todo nativeQuery
+    @Query(value = """
+                SELECT *
+                FROM security.auth_sessions AS au
+                WHERE au.user_id = :userId AND au.fingerprint = :fingerPrint
+                   """, nativeQuery = true)
+    Optional<AuthSession> findByUserIdAndFAndFingerprint(@Param("userId") Long userId, @Param("fingerprint") String fingerprint);
 
     @Query(value = """
                    SELECT *

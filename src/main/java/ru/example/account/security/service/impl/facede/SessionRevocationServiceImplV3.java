@@ -29,6 +29,9 @@ public class SessionRevocationServiceImplV3 implements SessionRevocationServiceF
 
     @Override
     public CompletableFuture<Boolean> revokeAllSessionsForUser(Long userId, SessionStatus status, RevocationReason reason) {
+
+
+
         log.warn("[INFO]: Received command to revoke ALL sessions for user {}", userId);
         return this.sessionRevocationOrchestrator.orchestrateMassRevocation(userId, status, reason);
     }

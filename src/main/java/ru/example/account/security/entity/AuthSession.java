@@ -11,7 +11,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.annotations.Where;
@@ -25,7 +24,6 @@ import java.util.UUID;
 @Entity
 @Table(name = "auth_sessions", schema = "security")
 @Getter
-@Setter
 @Builder
 @Where(clause = "is_deleted = false")
 @NoArgsConstructor
@@ -100,5 +98,37 @@ public class AuthSession {
     @Override
     public final int hashCode() {
         return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
+    }
+
+    private void setExpiresAt(Instant expiresAt) {
+        this.expiresAt = expiresAt;
+    }
+
+    private void setRevokedAt(Instant revokedAt) {
+        this.revokedAt = revokedAt;
+    }
+
+    private void setRevocationReason(RevocationReason revocationReason) {
+        this.revocationReason = revocationReason;
+    }
+
+    private void setDeleted(boolean deleted) {
+        isDeleted = deleted;
+    }
+
+    private void setStatus(SessionStatus status) {
+        this.status = status;
+    }
+
+    public void revoke(RevocationReason reason, SessionStatus status) {
+
+        if (this.status != SessionStatus.STATUS_ACTIVE) {
+            throw new IllegalStateException("Cannot revoke an already inactive session: " + this.id);
+        }
+
+        this.setStatus(status);
+        this.setExpiresAt(Instant.now());
+        this.setRevocationReason(revocationReason);
+        this.setDeleted(true);
     }
 }
