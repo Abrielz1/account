@@ -80,7 +80,8 @@ CREATE TABLE IF NOT EXISTS security.revoked_sessions_archive (
                                                                  created_at             TIMESTAMPTZ NOT NULL,
                                                                  expires_at             TIMESTAMPTZ NOT NULL,
                                                                  revoked_at             TIMESTAMPTZ NOT NULL,
-                                                                 reason                 security.revocation_reason_enum NOT NULL
+                                                                 reason                 security.revocation_reason_enum NOT NULL,
+                                                                 status                 security.session_status_enum NOT NULL
 );
 COMMENT ON TABLE security.revoked_sessions_archive IS 'Холодный, долгосрочный архив всех завершенных сессий для аудита.';
 

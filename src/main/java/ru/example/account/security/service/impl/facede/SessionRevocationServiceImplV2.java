@@ -25,7 +25,7 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class SessionRevocationServiceImplV2 implements SessionRevocationServiceFacade {
+public class SessionRevocationServiceImplV2 implements SessionRevocationServiceFacade { // todo снести
 
     private final AuthSessionRepository authSessionRepository;
 
@@ -68,7 +68,11 @@ public class SessionRevocationServiceImplV2 implements SessionRevocationServiceF
         BlackLictedRefreshToken blackLictedRefreshToken = new BlackLictedRefreshToken();
 
         // 3. АРХИВАЦИЯ СЕССИИ и ОБОИХ ТОКЕНОВ В POSTGRES
-        this.revokedSessionArchiveRepository.save(RevokedSessionArchive.from(sessionToRevoke, now, reason, status));
+
+        RevokedSessionArchive revokedSessionArchive = new RevokedSessionArchive();
+        revokedSessionArchive.setUp(sessionToRevoke, reason, status);
+
+        this.revokedSessionArchiveRepository.save(revokedSessionArchive);
         this.blacklistedRefreshTokenRepository.save(blackLictedRefreshToken.setUp(sessionToRevoke, now, reason));
         this.blacklistedAccessTokenRepository.save(blacklistedAccessToken.setUp(sessionToRevoke, now, reason));
 

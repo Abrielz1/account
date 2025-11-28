@@ -87,32 +87,6 @@ public class RevokedSessionArchive {
     @Builder.Default
     private boolean isDeleted = false;
 
-    public static RevokedSessionArchive from(AuthSession sessionToRevoke, // todo под снос
-                                             Instant now,
-                                             RevocationReason revocationReason,
-                                             SessionStatus sessionStatus) {
-
-        if (sessionToRevoke == null) {
-            // Чтобы избежать NullPointerException
-            throw new IllegalArgumentException("Source AuthSession cannot be null");
-        }
-
-        return RevokedSessionArchive.builder().sessionId(sessionToRevoke.getId())
-                .userId(sessionToRevoke.getUserId())
-                .refreshToken(sessionToRevoke.getRefreshToken())
-                .accessToken(sessionToRevoke.getAccessToken())
-                .fingerprint(sessionToRevoke.getFingerprint())
-                .fingerprintHash(sessionToRevoke.getFingerprintHash())
-                .ipAddress(sessionToRevoke.getIpAddress())
-                .userAgent(sessionToRevoke.getUserAgent())
-                .createdAt(sessionToRevoke.getCreatedAt())
-                .expiresAt(sessionToRevoke.getExpiresAt())
-                .revokedAt(now)
-                .reason(revocationReason)
-                .sessionStatus(sessionStatus)
-                .build();
-    }
-
     @Override
     public final boolean equals(Object o) {
         if (this == o) return true;
@@ -146,7 +120,7 @@ public class RevokedSessionArchive {
         this.userAgent = currentSessionToRevoke.getUserAgent();
         this.createdAt = currentSessionToRevoke.getCreatedAt();
         this.expiresAt = currentSessionToRevoke.getExpiresAt();
-        this.revokedAt = currentSessionToRevoke.getRevokedAt();
+        this.revokedAt = Instant.now();
         this.reason = revocationReason;
         this.sessionStatus = sessionStatus;
         this.isDeleted = true;
