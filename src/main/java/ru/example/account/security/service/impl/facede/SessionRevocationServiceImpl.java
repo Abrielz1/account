@@ -63,7 +63,7 @@ public class SessionRevocationServiceImpl implements SessionRevocationServiceFac
         });
 
         // 3. АРХИВАЦИЯ В POSTGRES
-        this.revokedSessionArchiveRepository.save(RevokedSessionArchive.from(sessionToRevoke, now, reason));
+        this.revokedSessionArchiveRepository.save(RevokedSessionArchive.from(sessionToRevoke, now, reason, status));
 
         // 4. БЛЭКЛИСТИНГ ACCESS TOKEN'А и REFRESH TOKEN'А В REDIS
 //        this.blacklistService.blacklistAccessToken(sessionToRevoke.getAccessToken());

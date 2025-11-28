@@ -62,12 +62,9 @@ public class RedisRepositoryDao<K, V> implements RedisRepository<K, V> {
 
         } catch (JsonProcessingException e) {
             log.error("Failed to serialize key for Redis lookup. Key: {}", key, e);
-            // Если мы даже ключ не можем собрать - дальше идти бессмысленно.
-            // Это НЕ ошибка кеша. Это ОШИБКА ВХОДНЫХ ДАННЫХ.
             throw new SerializationException("Failed to process key for lookup", e);
         }
 
-        // Это если в Redis есть наш объект по ключу и он распарсен в корректный Json
         String jsonValue = redisTemplate.opsForValue().get(stringKey);
 
         if (jsonValue == null) {
@@ -84,10 +81,7 @@ public class RedisRepositoryDao<K, V> implements RedisRepository<K, V> {
                                Corrupted data will be deleted. Key: {}, Target type: {}
                             """,
                     stringKey, valueType.getSimpleName(), e);
-            // На случай не корректных данных в редис, мы их того...
-            // Удаляем "битые" данные из Redis и проводим...
-            // "само-излечение"
-            // Мы уверены, что "битые" данные лежат именно по этому ключу.
+
             try {
                 redisTemplate.delete(stringKey);
                 log.error("object was deleted with RAW string key: {}", stringKey);
@@ -106,7 +100,7 @@ public class RedisRepositoryDao<K, V> implements RedisRepository<K, V> {
             log.trace(MESSAGE);
             throw new IllegalArgumentException(MESSAGE);
         }
-        //если есть ключ и он не null удаляем по нему объект из Redis
+
         try {
             this.redisTemplate.delete(this.serializeKey(key));
 
@@ -123,9 +117,9 @@ public class RedisRepositoryDao<K, V> implements RedisRepository<K, V> {
             log.trace(MESSAGE);
             throw new IllegalArgumentException(MESSAGE);
         }
-        //если есть ключ и он не null проверяем по нему объект из Redis
+
         try {
-            // объект по ключу есть
+
             return Boolean.TRUE.equals(redisTemplate.hasKey(this.serializeKey(key)));
         } catch (JsonProcessingException e) {
             log.error("Failed to serialize key for Redis exists check. Key: {}", key, e);
@@ -143,8 +137,7 @@ public class RedisRepositoryDao<K, V> implements RedisRepository<K, V> {
             log.trace(MESSAGE);
             throw new IllegalArgumentException(MESSAGE);
         }
-        // Для простых типов (String, UUID) это сработает "как есть".
-        // SIC! Для сложных ключей-объектов может понадобиться кастомный сериализатор. Помни об этом! ВАЖНО!
+
         return objectMapper.writeValueAsString(key);
     }
 
@@ -153,7 +146,7 @@ public class RedisRepositoryDao<K, V> implements RedisRepository<K, V> {
             log.trace(MESSAGE);
             throw new IllegalArgumentException(MESSAGE);
         }
-        // просто парсим значение в json как строку
+
         return objectMapper.writeValueAsString(value);
     }
 
@@ -163,7 +156,7 @@ public class RedisRepositoryDao<K, V> implements RedisRepository<K, V> {
             log.trace(MESSAGE);
             throw new IllegalArgumentException(MESSAGE);
         }
-        // а тут наоборот их строки собираем (парсим) объект Json
+
         return objectMapper.readValue(jsonValue, valueType);
     }
 }

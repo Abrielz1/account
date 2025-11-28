@@ -63,7 +63,8 @@ CREATE TABLE IF NOT EXISTS security.auth_sessions (
                                                       expires_at              TIMESTAMPTZ NOT NULL,
                                                       revoked_at              TIMESTAMPTZ,
                                                       revocation_reason       security.revocation_reason_enum,
-                                                      is_deleted              BOOLEAN DEFAULT FALSE NOT NULL
+                                                      is_deleted              BOOLEAN DEFAULT FALSE NOT NULL,
+                                                      version                 BIGINT
 );
 COMMENT ON TABLE security.auth_sessions IS 'Горячее хранилище активных сессий. Потенциальный кандидат на партиционирование.';
 

@@ -78,7 +78,7 @@ public class BlacklistedAccessToken {
     @Column(nullable = false)
     private RevocationReason reason;
 
-    public static BlacklistedAccessToken from(AuthSession session, Instant revokedAt, RevocationReason reason) {
+    public BlacklistedAccessToken setUp(AuthSession session, Instant revokedAt, RevocationReason reason) {
 
         return BlacklistedAccessToken.builder()
                 .token(session.getAccessToken())

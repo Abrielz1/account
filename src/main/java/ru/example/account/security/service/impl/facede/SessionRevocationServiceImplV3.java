@@ -12,7 +12,7 @@ import ru.example.account.security.service.orcestrator.SessionRevocationOrchestr
 import java.util.concurrent.CompletableFuture;
 // todo написать норм документацию!
 /**
- * Это фасад, он самый главный в манипуляции сессиями, сам ничего не делае, но скидывает работу ниже
+ * Это фасад, он самый главный в манипуляции сессиями, сам ничего не делает, но скидывает работу ниже
  */
 @Slf4j
 @Service

@@ -27,7 +27,7 @@ import java.util.Objects;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class SessionServiceManagerImpl implements SessionServiceManager {
+public class SessionServiceManagerImpl implements SessionServiceManager { // todo пересмотреть класс или снести
 
     private final SessionPersistenceService sessionPersistenceService;
 

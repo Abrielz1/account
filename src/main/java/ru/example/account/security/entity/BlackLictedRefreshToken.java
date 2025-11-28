@@ -53,7 +53,7 @@ public class BlackLictedRefreshToken {
     @Column(nullable = false)
     private RevocationReason reason;
 
-    public static BlackLictedRefreshToken from(AuthSession sessionToRevoke, Instant revokedAt, RevocationReason reason) {
+    public BlackLictedRefreshToken setUp(AuthSession sessionToRevoke, Instant revokedAt, RevocationReason reason) {
         return BlackLictedRefreshToken.builder()
                 .token(sessionToRevoke.getAccessToken())
                 .userId(sessionToRevoke.getUserId())

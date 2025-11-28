@@ -1,0 +1,45 @@
+package ru.example.account.security.service.impl.worker;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import ru.example.account.security.entity.AuthSession;
+import ru.example.account.security.entity.BlackLictedRefreshToken;
+import ru.example.account.security.entity.BlacklistedAccessToken;
+import ru.example.account.security.entity.RevocationReason;
+import ru.example.account.security.repository.BlacklistedAccessTokenRepository;
+import ru.example.account.security.repository.BlacklistedRefreshTokenRepository;
+import ru.example.account.security.service.worker.BlacklistCommandWorker;
+import ru.example.account.security.service.worker.SessionCacheCleanupWorker;
+import java.time.Instant;
+
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class SessionCacheCleanupWorkerImpl implements SessionCacheCleanupWorker {
+
+    private final BlacklistedRefreshTokenRepository blacklistedRefreshTokenRepository;
+
+    private final BlacklistedAccessTokenRepository blacklistedAccessTokenRepository;
+
+    private final BlacklistCommandWorker blacklistCommandWorker;
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED)
+    public void cleanup(AuthSession sessionToRevoke, RevocationReason revocationReason) {
+
+        this.blacklistCommandWorker.blacklistRefreshToken(sessionToRevoke.getRefreshToken());
+        this.blacklistCommandWorker.blacklistAccessToken(sessionToRevoke.getAccessToken());
+
+        BlacklistedAccessToken blacklistedAccessToken = new BlacklistedAccessToken();
+        BlackLictedRefreshToken blackLictedRefreshToken = new BlackLictedRefreshToken();
+
+        blacklistedAccessToken.setUp(sessionToRevoke, Instant.now(), revocationReason);
+        blackLictedRefreshToken.setUp(sessionToRevoke, Instant.now(), revocationReason);
+
+        this.blacklistedAccessTokenRepository.save(blacklistedAccessToken);
+        this.blacklistedRefreshTokenRepository.save(blackLictedRefreshToken);
+    }
+}

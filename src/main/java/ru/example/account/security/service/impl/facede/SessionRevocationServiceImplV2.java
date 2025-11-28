@@ -64,10 +64,13 @@ public class SessionRevocationServiceImplV2 implements SessionRevocationServiceF
             }
         });
 
+        BlacklistedAccessToken blacklistedAccessToken = new BlacklistedAccessToken();
+        BlackLictedRefreshToken blackLictedRefreshToken = new BlackLictedRefreshToken();
+
         // 3. АРХИВАЦИЯ СЕССИИ и ОБОИХ ТОКЕНОВ В POSTGRES
-        this.revokedSessionArchiveRepository.save(RevokedSessionArchive.from(sessionToRevoke, now, reason));
-        this.blacklistedRefreshTokenRepository.save(BlackLictedRefreshToken.from(sessionToRevoke, now, reason));
-        this.blacklistedAccessTokenRepository.save(BlacklistedAccessToken.from(sessionToRevoke, now, reason));
+        this.revokedSessionArchiveRepository.save(RevokedSessionArchive.from(sessionToRevoke, now, reason, status));
+        this.blacklistedRefreshTokenRepository.save(blackLictedRefreshToken.setUp(sessionToRevoke, now, reason));
+        this.blacklistedAccessTokenRepository.save(blacklistedAccessToken.setUp(sessionToRevoke, now, reason));
 
         // 4. БЛЭКЛИСТИНГ ACCESS TOKEN'А и REFRESH TOKEN'А В REDIS
         this.blacklistCommandWorker.blacklistRefreshToken(sessionToRevoke.getRefreshToken());

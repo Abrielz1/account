@@ -100,17 +100,15 @@ public abstract class User {
     @ToString.Exclude
     private Set<PhoneData> userPhones = new HashSet<>();
 
-    // --- СВЯЗЬ №1: Персональные счета (простая One-to-Many) ---
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
     @ToString.Exclude
     private Set<Account> personalAccounts = new HashSet<>();
 
-    // --- СВЯЗЬ №2: Участие в общих счетах (сложная Many-to-Many) ---
     @OneToMany(mappedBy = "user")
     @ToString.Exclude
     private Set<AccountMembership> sharedAccountMemberships = new HashSet<>();
 
-    @Transient // <-- Говорим Hibernate игнорировать это поле
+    @Transient
     public Set<Account> getAccounts() {
 
         if (sharedAccountMemberships == null) {
