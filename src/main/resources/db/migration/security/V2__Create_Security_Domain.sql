@@ -282,7 +282,7 @@ COMMENT ON TABLE security.incident_evidences IS 'Конкретные "улик�
 -- =================================================================================
 --      ТАБЛИЦА-СПРАВОЧНИК 15: "Холодный" Черный Список для ACCESS-токенов
 -- =================================================================================
-CREATE TABLE IF NOT EXISTS security.black_list_access_tokens (
+CREATE TABLE IF NOT EXISTS security.black_listed_access_tokens (
                                                                  token                   TEXT PRIMARY KEY,
                                                                  user_id                 BIGINT NOT NULL,
                                                                  session_id              UUID NOT NULL,
@@ -291,12 +291,12 @@ CREATE TABLE IF NOT EXISTS security.black_list_access_tokens (
                                                                  revoked_at              TIMESTAMPTZ NOT NULL,
                                                                  reason                  security.revocation_reason_enum NOT NULL
 );
-COMMENT ON TABLE security.black_list_access_tokens IS 'Персистентный, "холодный" черный список Access-токенов для быстрой проверки и аудита.';
+COMMENT ON TABLE security.black_listed_access_tokens IS 'Персистентный, "холодный" черный список Access-токенов для быстрой проверки и аудита.';
 
 -- =================================================================================
 --      ТАБЛИЦА-СПРАВОЧНИК 16: "Холодный" Черный Список для REFRESH-токенов
 -- =================================================================================
-CREATE TABLE IF NOT EXISTS security.black_list_refresh_tokens (
+CREATE TABLE IF NOT EXISTS security.black_listed_refresh_tokens (
     -- Сам токен - это и есть первичный ключ. Мгновенный, сука, поиск.
                                                                   token                   TEXT PRIMARY KEY,
 
@@ -319,8 +319,13 @@ CREATE TABLE IF NOT EXISTS security.black_list_refresh_tokens (
                                                                   reason                  security.revocation_reason_enum NOT NULL
 );
 
-COMMENT ON TABLE security.black_list_refresh_tokens IS 'Персистентный, "холодный" черный список Refresh-токенов. Служит "источником правды" для быстрой проверки и аудита скомпрометированных токенов.';
+COMMENT ON TABLE security.black_listed_refresh_tokens IS 'Персистентный, "холодный" черный список Refresh-токенов. Служит "источником правды" для быстрой проверки и аудита скомпрометированных токенов.';
 
+CREATE TABLE IF NOT EXISTS white_listed_access_tokens();
+COMMENT ON TABLE security.white_listed_access_tokens IS '';
+
+CREATE TABLE IF NOT EXISTS white_listed_refresh_tokens();
+COMMENT ON TABLE security.white_listed_refresh_tokens IS '';
 
 COMMENT ON TABLE security.blocked_targets IS 'Централизованная,  "Книга Приговоров". Главная таблица банов.';
 -- =================================================================================
@@ -379,12 +384,41 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_active_blocked_target
     WHERE (is_deleted = false);
 
 -- Индекс для возможного поиска по пользователю (для аналитики СБ)
-CREATE INDEX IF NOT EXISTS idx_blacklist_access_user_id ON security.black_list_access_tokens(user_id);
+CREATE INDEX IF NOT EXISTS idx_blacklisted_access_token_user_id ON security.black_listed_access_tokens(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_blacklisted_access_token_token ON security.black_listed_access_tokens(token);
+
+CREATE INDEX IF NOT EXISTS idx_blacklisted_access_token_fingerprints_hash ON security.black_listed_access_tokens(fingerprint_hash);
 
 -- Главный индекс (PK) у нас уже есть по самому токену.
 
 -- Дополнительный индекс для аналитики СБ: "Покажи все токены, отозванные для этого юзера".
-CREATE INDEX IF NOT EXISTS idx_blacklist_refresh_user_id ON security.black_list_refresh_tokens(user_id);
+CREATE INDEX IF NOT EXISTS idx_blacklisted_refresh_token_user_id ON security.black_listed_refresh_tokens(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_blacklisted_refresh_token_token ON security.black_listed_access_tokens(token);
+
+CREATE INDEX IF NOT EXISTS idx_blacklisted_refresh_token_fingerprints_hash ON security.black_listed_access_tokens(fingerprint_hash);
+
 
 -- Индекс по сессии, на всякий случай.
-CREATE INDEX IF NOT EXISTS idx_blacklist_refresh_session_id ON security.black_list_refresh_tokens(session_id);
+CREATE INDEX IF NOT EXISTS idx_blacklist_refresh_token_session_id ON security.black_listed_refresh_tokens(session_id);
+
+CREATE INDEX IF NOT EXISTS idx_blacklist_access_token_session_id ON security.black_listed_access_tokens(session_id);
+
+
+CREATE INDEX IF NOT EXISTS idx_whiteliste_access_token_user_id ON security.white_listed_access_tokens(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_whiteliste_access_token_session_id ON security.white_listed_access_tokens(session_id);
+
+CREATE INDEX IF NOT EXISTS idx_whitelisted_access_token_is_active ON  security.white_listed_access_tokens(is_active);
+
+CREATE INDEX IF NOT EXISTS idx_whitelisted_access_token_session_id ON security.white_listed_access_tokens(session_id);
+
+
+CREATE INDEX IF NOT EXISTS idx_whiteliste_refresh_token_user_id ON security.white_listed_refresh_tokens(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_whiteliste_refresh_token_session_id ON security.white_listed_refresh_tokens(session_id);
+
+CREATE INDEX IF NOT EXISTS idx_whitelisted_refresh_token_is_active ON  security.white_listed_refresh_tokens(is_active);
+
+CREATE INDEX IF NOT EXISTS idx_whitelisted_refresh_token_session_id ON security.white_listed_refresh_tokens(session_id);

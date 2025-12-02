@@ -15,7 +15,7 @@ import lombok.ToString;
 import java.time.Instant;
 import java.util.UUID;
 
-@Table(name = "black_list_refresh_tokens", schema = "security")
+@Table(name = "black_listed_refresh_tokens", schema = "security")
 @Entity
 @Getter
 @Setter
@@ -23,7 +23,7 @@ import java.util.UUID;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class BlackLictedRefreshToken {
+public class BlackListedRefreshToken {
 
     // Сам токен - это и есть первичный ключ
     @Id
@@ -34,6 +34,9 @@ public class BlackLictedRefreshToken {
 
     @Column(nullable = false)
     private UUID sessionId;
+
+    @Column(name = "fingerprint_hash", columnDefinition = "TEXT", nullable = false)
+    private String fingerprintHash;
 
     // Время, когда этот токен был СОЗДАН
     // (мы возьмем его из expiresAt - ttl)
@@ -53,8 +56,8 @@ public class BlackLictedRefreshToken {
     @Column(nullable = false)
     private RevocationReason reason;
 
-    public BlackLictedRefreshToken setUp(AuthSession sessionToRevoke, Instant revokedAt, RevocationReason reason) {
-        return BlackLictedRefreshToken.builder()
+    public BlackListedRefreshToken setUp(AuthSession sessionToRevoke, Instant revokedAt, RevocationReason reason) {
+        return BlackListedRefreshToken.builder()
                 .token(sessionToRevoke.getAccessToken())
                 .userId(sessionToRevoke.getUserId())
                 .sessionId(sessionToRevoke.getId())

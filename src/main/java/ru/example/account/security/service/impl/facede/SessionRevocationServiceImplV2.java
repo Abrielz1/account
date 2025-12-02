@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.example.account.security.entity.AuthSession;
-import ru.example.account.security.entity.BlackLictedRefreshToken;
+import ru.example.account.security.entity.BlackListedRefreshToken;
 import ru.example.account.security.entity.BlacklistedAccessToken;
 import ru.example.account.security.entity.RevocationReason;
 import ru.example.account.security.entity.RevokedSessionArchive;
@@ -65,7 +65,7 @@ public class SessionRevocationServiceImplV2 implements SessionRevocationServiceF
         });
 
         BlacklistedAccessToken blacklistedAccessToken = new BlacklistedAccessToken();
-        BlackLictedRefreshToken blackLictedRefreshToken = new BlackLictedRefreshToken();
+        BlackListedRefreshToken blackLictedRefreshToken = new BlackListedRefreshToken();
 
         // 3. АРХИВАЦИЯ СЕССИИ и ОБОИХ ТОКЕНОВ В POSTGRES
 

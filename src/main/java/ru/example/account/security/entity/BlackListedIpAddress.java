@@ -19,7 +19,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class BlackListedIpAddress {
+public class BlackListedIpAddress { // todo
 
     @Id
     @Column(name = "id")

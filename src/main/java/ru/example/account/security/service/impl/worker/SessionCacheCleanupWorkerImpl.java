@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.example.account.security.entity.AuthSession;
-import ru.example.account.security.entity.BlackLictedRefreshToken;
+import ru.example.account.security.entity.BlackListedRefreshToken;
 import ru.example.account.security.entity.BlacklistedAccessToken;
 import ru.example.account.security.entity.RevocationReason;
 import ru.example.account.security.repository.BlacklistedAccessTokenRepository;
@@ -34,7 +34,7 @@ public class SessionCacheCleanupWorkerImpl implements SessionCacheCleanupWorker 
         this.blacklistCommandWorker.blacklistAccessToken(sessionToRevoke.getAccessToken());
 
         BlacklistedAccessToken blacklistedAccessToken = new BlacklistedAccessToken();
-        BlackLictedRefreshToken blackLictedRefreshToken = new BlackLictedRefreshToken();
+        BlackListedRefreshToken blackLictedRefreshToken = new BlackListedRefreshToken();
 
         blacklistedAccessToken.setUp(sessionToRevoke, Instant.now(), revocationReason);
         blackLictedRefreshToken.setUp(sessionToRevoke, Instant.now(), revocationReason);

@@ -15,12 +15,7 @@ import lombok.ToString;
 import java.time.Instant;
 import java.util.UUID;
 
-/**
- * Персистентный, "холодный" черный список ACCESS-токенов.
- * Служит "источником правды" и страховкой на случай падения Redis.
- * Запись сюда означает, что токен скомпрометирован и не может быть использован НИКОГДА.
- */
-@Table(name = "black_listed_access_tokens", schema = "security")
+@Table(name = "white_listed_access_tokens", schema = "security")
 @Entity
 @Getter
 @Setter
@@ -28,7 +23,7 @@ import java.util.UUID;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class BlacklistedAccessToken {
+public class WhiteListedAccessesToken {
 
     /**
      * Сам Access-токен. Является первичным ключом для мгновенного поиска.
@@ -67,10 +62,13 @@ public class BlacklistedAccessToken {
     private Instant originalExpiryDate;
 
     /**
-     * Точное время, когда токен был помещен в черный список.
+     * Точное время, когда токен был отозван.
      */
-    @Column(name = "revoked_at", nullable = false)
+    @Column(name = "revoked_at")
     private Instant revokedAt;
+
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive;
 
     /**
      * Причина, по которой токен был отозван.
@@ -79,17 +77,4 @@ public class BlacklistedAccessToken {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private RevocationReason reason;
-
-    public BlacklistedAccessToken setUp(AuthSession session, Instant revokedAt, RevocationReason reason) {
-
-        return BlacklistedAccessToken.builder()
-                .token(session.getAccessToken())
-                .userId(session.getUserId())
-                .sessionId(session.getId())
-                .createdAt(session.getCreatedAt())
-                .originalExpiryDate(session.getExpiresAt())
-                .revokedAt(revokedAt)
-                .reason(reason)
-                .build();
-    }
 }

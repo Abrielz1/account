@@ -38,7 +38,6 @@ CREATE TABLE users (
                        id                     BIGSERIAL PRIMARY KEY,
                        user_type              VARCHAR(31) NOT NULL, -- Колонка-дискриминатор ('EMPLOYEE', 'CUSTOMER')
                        username               VARCHAR(255) NOT NULL UNIQUE,
-                       password               VARCHAR(255) NOT NULL,
                        date_of_birth          DATE NOT NULL,
                        last_login_timestamp   TIMESTAMPTZ,
                        enabled                BOOLEAN DEFAULT FALSE,
@@ -69,6 +68,7 @@ CREATE TABLE user_roles (
 -- Контактные данные (тоже связаны с базовым user)
 CREATE TABLE email_data ( /* ... id, email, user_id ... */ );
 CREATE TABLE phone_data ( /* ... id, phone, user_id ... */ );
+CREATE TABLE password_data ( /* ... id, phone, user_id ... */ );
 
 
 -- Счета
