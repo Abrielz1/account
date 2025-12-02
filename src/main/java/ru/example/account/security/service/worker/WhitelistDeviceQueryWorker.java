@@ -4,7 +4,7 @@ package ru.example.account.security.service.worker;
  * QUERY-ВОРКЕР. "Пограничник".
  * Умеет ТОЛЬКО, сука, отвечать на вопрос: "Этот, девайс - НАШ или ЧУЖОЙ?"
  */
-public interface WhitelistQueryWorker {
+public interface WhitelistDeviceQueryWorker {
     /**
      * Главный, метод проверки "свой-чужой".
      * Реализует эшелонированную, проверку (Redis -> Postgres).

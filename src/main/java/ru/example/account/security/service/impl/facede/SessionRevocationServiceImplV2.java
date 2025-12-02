@@ -17,7 +17,7 @@ import ru.example.account.security.repository.RevokedSessionArchiveRepository;
 import ru.example.account.security.repository.SessionAuditLogRepository;
 import ru.example.account.security.service.SessionQueryService;
 import ru.example.account.security.service.facade.SessionRevocationServiceFacade;
-import ru.example.account.security.service.worker.BlacklistCommandWorker;
+import ru.example.account.security.service.worker.BlacklistAccessTokenCommandWorker;
 import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -41,7 +41,7 @@ public class SessionRevocationServiceImplV2 implements SessionRevocationServiceF
 
     private final BlacklistedRefreshTokenRepository blacklistedRefreshTokenRepository;
 
-    private final BlacklistCommandWorker blacklistCommandWorker;
+    private final BlacklistAccessTokenCommandWorker blacklistCommandWorker;
 
     @Override
     public boolean revokeAndArchive(AuthSession sessionToRevoke, SessionStatus status, RevocationReason reason) {
@@ -77,8 +77,8 @@ public class SessionRevocationServiceImplV2 implements SessionRevocationServiceF
         this.blacklistedAccessTokenRepository.save(blacklistedAccessToken.setUp(sessionToRevoke, now, reason));
 
         // 4. БЛЭКЛИСТИНГ ACCESS TOKEN'А и REFRESH TOKEN'А В REDIS
-        this.blacklistCommandWorker.blacklistRefreshToken(sessionToRevoke.getRefreshToken());
-        this.blacklistCommandWorker.blacklistAccessToken(sessionToRevoke.getAccessToken());
+        //  this.blacklistCommandWorker.blacklistRefreshToken(sessionToRevoke.getRefreshToken());
+     //   this.blacklistCommandWorker.blacklistAccessToken(sessionToRevoke.getAccessToken(), r);
 
         // 5. ЗАЧИСТКА ХРАНИЛИЩ
         this.activeSessionCacheRepository.deleteById(sessionToRevoke.getRefreshToken());

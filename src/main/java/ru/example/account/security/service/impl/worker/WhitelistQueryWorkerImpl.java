@@ -9,7 +9,7 @@ import org.springframework.util.StringUtils;
 import ru.example.account.security.jwt.JwtUtils;
 import ru.example.account.security.repository.RedisRepository;
 import ru.example.account.security.repository.TrustedFingerprintRepository;
-import ru.example.account.security.service.worker.WhitelistQueryWorker;
+import ru.example.account.security.service.worker.WhitelistDeviceQueryWorker;
 import ru.example.account.shared.util.RedisKeyBuilderHelper;
 import ru.example.account.shared.util.WhitelistCacheWarmer;
 import java.util.Objects;
@@ -17,7 +17,7 @@ import java.util.Objects;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class WhitelistQueryWorkerImpl implements WhitelistQueryWorker {
+public class WhitelistQueryWorkerImpl implements WhitelistDeviceQueryWorker {
 
     private final RedisRepository<String, String> redisRepository;
 

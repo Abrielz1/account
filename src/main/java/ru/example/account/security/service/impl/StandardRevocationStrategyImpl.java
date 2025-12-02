@@ -11,7 +11,8 @@ import ru.example.account.security.entity.RevokedClientData;
 import ru.example.account.security.repository.AuthSessionRepository;
 import ru.example.account.security.repository.RevokedDataRepository;
 import ru.example.account.security.service.worker.ActiveSessionCacheCommandWorker;
-import ru.example.account.security.service.worker.BlacklistCommandWorker;
+import ru.example.account.security.service.worker.BlacklistAccessTokenCommandWorker;
+import ru.example.account.security.service.worker.BlacklistRefreshTokenCommandWorker;
 import ru.example.account.security.service.worker.IdGenerationService;
 import ru.example.account.security.service.RevocationStrategy;
 import ru.example.account.shared.exception.exceptions.SessionNotFoundException;
@@ -26,7 +27,9 @@ public class StandardRevocationStrategyImpl implements RevocationStrategy {
 
     private final IdGenerationService idGenerationService;
 
-    private final BlacklistCommandWorker blacklistCommandWorker;
+    private final BlacklistAccessTokenCommandWorker blacklistAccessTokenCommandWorker;
+
+    private final BlacklistRefreshTokenCommandWorker blacklistRefreshTokenCommandWorker;
 
     private final AuthSessionRepository authSessionRepository;
 
@@ -58,8 +61,8 @@ public class StandardRevocationStrategyImpl implements RevocationStrategy {
         this.revokedDataRepository.save(data);
 
         this.activeSessionCacheCommandWorker.deleteSessionById(currentSession.getId());
-        this.blacklistCommandWorker.blacklistAccessToken(currentSession.getAccessToken());
-        this.blacklistCommandWorker.blacklistRefreshToken(currentSession.getRefreshToken());
+        this.blacklistAccessTokenCommandWorker.blacklistAccessToken(currentSession, revocationReason);
+        this.blacklistRefreshTokenCommandWorker.blacklistRefreshToken(currentSession.getRefreshToken());
 
         currentSession.revoke(revocationReason, currentSession.getStatus());
 

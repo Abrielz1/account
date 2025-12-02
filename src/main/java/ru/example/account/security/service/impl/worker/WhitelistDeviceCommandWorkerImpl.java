@@ -4,27 +4,21 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.example.account.security.entity.TrustedFingerprint;
 import ru.example.account.security.entity.UserFingerprintProfile;
 import ru.example.account.security.jwt.JwtUtils;
-import ru.example.account.security.repository.RedisRepository;
-import ru.example.account.security.repository.TrustedFingerprintRepository;
 import ru.example.account.security.repository.UserFingerprintProfileRepository;
 import ru.example.account.security.service.worker.FingerprintService;
-import ru.example.account.security.service.worker.WhitelistCommandWorker;
-import ru.example.account.shared.exception.exceptions.FingerPrintNotFoundEception;
+import ru.example.account.security.service.worker.WhitelistDeviceCommandWorker;
 import ru.example.account.shared.util.FingerprintProfileHelper;
 import ru.example.account.shared.util.WhitelistCacheWarmer;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class WhitelistCommandWorkerImpl implements WhitelistCommandWorker {
-
-    private final RedisRepository<String, String> redisRepository;
-
-    private final TrustedFingerprintRepository trustedFingerprintRepository;
+public class WhitelistDeviceCommandWorkerImpl implements WhitelistDeviceCommandWorker {
 
     private final UserFingerprintProfileRepository userFingerprintProfileRepository;
 
@@ -38,6 +32,7 @@ public class WhitelistCommandWorkerImpl implements WhitelistCommandWorker {
     // Проверяем в обоих базах по хешу в токенах, наличие устройства в белом списке
 
     @Override
+    @Transactional(value = "businessTransactionManager", propagation = Propagation.REQUIRES_NEW)
     public boolean trustDevice(Long userId, HttpServletRequest request, String accessToken) {
 
         final String newFingerPrint = this.fingerprintService.generateUsersFingerprint(request);
@@ -63,28 +58,6 @@ public class WhitelistCommandWorkerImpl implements WhitelistCommandWorker {
 
         this.whitelistCacheWarmer.warmUpCache(newDeviceFingerPrintHash, accessToken);
 
-        return true;
-    }
-
-    @Override
-    @Transactional(value = "businessTransactionManager")
-    public boolean unTrustDevice(String fingerprint) {
-        final String key = this.jwtUtils.createFingerprintHash(fingerprint);
-
-        if (!this.redisRepository.exists(key)) {
-            log.trace("");
-            throw new IllegalArgumentException("");
-        }
-
-        this.redisRepository.delete(key);
-        TrustedFingerprint trustedFingerprintFromDb = this.trustedFingerprintRepository.findByFingerPrint(fingerprint).orElseThrow(() -> {
-            log.error("No given trusted fingerprint registered in db");
-            return new FingerPrintNotFoundEception("No given trusted fingerprint registered in db");
-        });
-
-        trustedFingerprintFromDb.setTrusted(false);
-
-        this.trustedFingerprintRepository.save(trustedFingerprintFromDb);
         return true;
     }
 }

@@ -1,25 +1,23 @@
 package ru.example.account.security.service.worker;
 
+import ru.example.account.security.entity.AuthSession;
+import ru.example.account.security.entity.RevocationReason;
+
 /**
  * COMMAND-ВОРКЕР.
  * Умеет ТОЛЬКО, добавлять токены в "горячий" черный список Redis.
  * Он, НИЧЕГО не знает о том, как их "проверять".
  */
-public interface BlacklistCommandWorker {
+public interface BlacklistAccessTokenCommandWorker {
 
     /**
      * ДОБАВЛЯЕТ access-токен в "горячий" черный список Redis.
      * Не возвращает ничего (void), потому что это "fire-and-forget" команда.
      * Если не получится - он, залогирует, но не уронит весь процесс.
      *
-     * @param accessToken "Сырой" access-токен.
+     * @param session вся сессия целиком.
      */
-    void blacklistAccessToken(String accessToken);
+    void blacklistAccessToken(AuthSession session, RevocationReason reason);
 
-    /**
-     * ДОБАВЛЯЕТ refresh-токен в "горячий" черный список Redis.
-     *
-     * @param refreshToken "Сырой" refresh-токен.
-     */
-    void blacklistRefreshToken(String refreshToken);
+    void blacklistAccessToken(String accessToken);
 }

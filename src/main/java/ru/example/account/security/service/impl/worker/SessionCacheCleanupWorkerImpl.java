@@ -11,7 +11,8 @@ import ru.example.account.security.entity.BlacklistedAccessToken;
 import ru.example.account.security.entity.RevocationReason;
 import ru.example.account.security.repository.BlacklistedAccessTokenRepository;
 import ru.example.account.security.repository.BlacklistedRefreshTokenRepository;
-import ru.example.account.security.service.worker.BlacklistCommandWorker;
+import ru.example.account.security.service.worker.BlacklistAccessTokenCommandWorker;
+import ru.example.account.security.service.worker.BlacklistRefreshTokenCommandWorker;
 import ru.example.account.security.service.worker.SessionCacheCleanupWorker;
 import java.time.Instant;
 
@@ -24,14 +25,16 @@ public class SessionCacheCleanupWorkerImpl implements SessionCacheCleanupWorker 
 
     private final BlacklistedAccessTokenRepository blacklistedAccessTokenRepository;
 
-    private final BlacklistCommandWorker blacklistCommandWorker;
+    private final BlacklistAccessTokenCommandWorker blacklistAccessTokenCommandWorker;
+
+    private final BlacklistRefreshTokenCommandWorker blacklistRefreshTokenCommandWorker;
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public void cleanup(AuthSession sessionToRevoke, RevocationReason revocationReason) {
 
-        this.blacklistCommandWorker.blacklistRefreshToken(sessionToRevoke.getRefreshToken());
-        this.blacklistCommandWorker.blacklistAccessToken(sessionToRevoke.getAccessToken());
+        this.blacklistRefreshTokenCommandWorker.blacklistRefreshToken(sessionToRevoke.getRefreshToken());
+        this.blacklistAccessTokenCommandWorker.blacklistAccessToken(sessionToRevoke, revocationReason);
 
         BlacklistedAccessToken blacklistedAccessToken = new BlacklistedAccessToken();
         BlackListedRefreshToken blackLictedRefreshToken = new BlackListedRefreshToken();
