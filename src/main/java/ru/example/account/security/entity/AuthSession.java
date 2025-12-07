@@ -130,6 +130,8 @@ public class AuthSession {
             throw new IllegalStateException("Cannot revoke an already inactive session: " + this.id);
         }
 
+        this.setRevocationReason(reason);
+        this.setRevokedAt(Instant.now())    ;
         this.setStatus(status);
         this.setExpiresAt(Instant.now());
         this.setRevocationReason(revocationReason);

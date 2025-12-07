@@ -12,9 +12,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import java.time.Instant;
+import java.util.Objects;
 import java.util.UUID;
 
+@Slf4j
 @Table(name = "white_listed_access_tokens", schema = "security")
 @Entity
 @Getter
@@ -77,4 +80,52 @@ public class WhiteListedAccessesToken {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private RevocationReason reason;
+
+    private void setToken(String token) {
+        this.token = token;
+    }
+
+    private void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    private void setSessionId(UUID sessionId) {
+        this.sessionId = sessionId;
+    }
+
+    private void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    private void setFingerprintHash(String fingerprintHash) {
+        this.fingerprintHash = fingerprintHash;
+    }
+
+    private void setOriginalExpiryDate(Instant originalExpiryDate) {
+        this.originalExpiryDate = originalExpiryDate;
+    }
+
+    private void setRevokedAt(Instant revokedAt) {
+        this.revokedAt = revokedAt;
+    }
+
+    private void setActive(Boolean active) {
+        isActive = active;
+    }
+
+    private void setReason(RevocationReason reason) {
+        this.reason = reason;
+    }
+
+    public void revoke(RevocationReason revocationReason, SessionStatus sessionStatus) {
+
+        if (!Objects.equals(SessionStatus.STATUS_ACTIVE, sessionStatus)) {
+            log.warn("[WARN] session MUST be Active to coorect logout!");
+            throw new RuntimeException();
+        }
+
+        this.setRevokedAt(Instant.now());
+        this.setIsActive(false);
+        this.setReason(revocationReason);
+    }
 }

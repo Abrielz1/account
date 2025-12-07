@@ -15,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.example.account.security.entity.AuthSession;
 import ru.example.account.security.entity.RevocationReason;
 import ru.example.account.security.entity.SessionStatus;
+import ru.example.account.security.entity.WhiteListedAccessesToken;
+import ru.example.account.security.entity.WhiteListedRefreshToken;
 import ru.example.account.security.service.strategy.RevocationExecutionChain;
 import ru.example.account.security.service.worker.SessionArchiveWorker;
 import ru.example.account.security.service.worker.SessionCacheCleanupWorker;
@@ -47,6 +49,10 @@ public class StandardRevocationStrategyImpl implements RevocationExecutionChain 
         }
 
         AuthSession backALiveSession = this.entityManager.merge(currentSessionToRevoke);
+        WhiteListedAccessesToken whiteListedAccessesToken = new WhiteListedAccessesToken();
+        whiteListedAccessesToken.revoke(revocationReason, sessionStatus);
+        WhiteListedRefreshToken whiteListedRefreshToken = new WhiteListedRefreshToken();
+        whiteListedRefreshToken.revoke(revocationReason, sessionStatus);
         backALiveSession.revoke(revocationReason, sessionStatus);
 
         this.archiveWorker.archive(backALiveSession, revocationReason, sessionStatus);
