@@ -49,10 +49,16 @@ public class StandardRevocationStrategyImpl implements RevocationExecutionChain 
         }
 
         AuthSession backALiveSession = this.entityManager.merge(currentSessionToRevoke);
+
         WhiteListedAccessesToken whiteListedAccessesToken = new WhiteListedAccessesToken();
-        whiteListedAccessesToken.revoke(revocationReason, sessionStatus);
+        whiteListedAccessesToken.revoke(backALiveSession.getAccessToken(), revocationReason, sessionStatus);
+
+        entityManager.merge(whiteListedAccessesToken);
+
         WhiteListedRefreshToken whiteListedRefreshToken = new WhiteListedRefreshToken();
-        whiteListedRefreshToken.revoke(revocationReason, sessionStatus);
+        whiteListedRefreshToken.revoke(backALiveSession.getRefreshToken(), revocationReason, sessionStatus);
+        entityManager.merge(whiteListedRefreshToken);
+
         backALiveSession.revoke(revocationReason, sessionStatus);
 
         this.archiveWorker.archive(backALiveSession, revocationReason, sessionStatus);

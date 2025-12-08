@@ -14,6 +14,9 @@ import ru.example.account.security.repository.BlacklistedRefreshTokenRepository;
 import ru.example.account.security.service.worker.BlacklistAccessTokenCommandWorker;
 import ru.example.account.security.service.worker.BlacklistRefreshTokenCommandWorker;
 import ru.example.account.security.service.worker.SessionCacheCleanupWorker;
+import ru.example.account.security.service.worker.WhitelistAccessTokenCommandWorker;
+import ru.example.account.security.service.worker.WhitelistRefreshTokenCommandWorker;
+
 import java.time.Instant;
 
 @Slf4j
@@ -29,10 +32,16 @@ public class SessionCacheCleanupWorkerImpl implements SessionCacheCleanupWorker 
 
     private final BlacklistRefreshTokenCommandWorker blacklistRefreshTokenCommandWorker;
 
+    private final WhitelistAccessTokenCommandWorker whitelistAccessTokenCommandWorker;
+
+    private final WhitelistRefreshTokenCommandWorker whitelistRefreshTokenCommandWorker;
+
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public void cleanup(AuthSession sessionToRevoke, RevocationReason revocationReason) {
 
+        this.whitelistAccessTokenCommandWorker.deWhiteListAccessToken(sessionToRevoke.getAccessToken());
+        this.whitelistRefreshTokenCommandWorker.deWhiteListRefreshToken(sessionToRevoke.getRefreshToken());
         this.blacklistRefreshTokenCommandWorker.blacklistRefreshToken(sessionToRevoke.getRefreshToken());
         this.blacklistAccessTokenCommandWorker.blacklistAccessToken(sessionToRevoke, revocationReason);
 

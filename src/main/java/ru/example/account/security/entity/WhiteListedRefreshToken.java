@@ -94,13 +94,14 @@ public class WhiteListedRefreshToken {
         this.reason = reason;
     }
 
-    public void revoke(RevocationReason revocationReason, SessionStatus sessionStatus) {
+    public void revoke(String refreshToken, RevocationReason revocationReason, SessionStatus sessionStatus) {
 
         if (!Objects.equals(SessionStatus.STATUS_ACTIVE, sessionStatus)) {
             log.warn("[WARN] session MUST be Active to coorect logout!");
             throw new RuntimeException();
         }
 
+        this.setToken(refreshToken);
         this.setRevokedAt(Instant.now());
         this.setIsActive(false);
         this.setReason(revocationReason);

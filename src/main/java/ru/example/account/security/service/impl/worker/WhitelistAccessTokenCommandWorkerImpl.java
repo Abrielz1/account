@@ -45,4 +45,19 @@ public class WhitelistAccessTokenCommandWorkerImpl implements WhitelistAccessTok
             log.error(REDIS_DOWN_MESSAGE + "whitelist access token.", exception);
         }
     }
+
+    @Override
+    public void deWhiteListAccessToken(String accessToken) {
+
+        if (!StringUtils.hasText(accessToken)) {
+            log.error(ERROR_NULL_OR_EMPTY_KEY_MESSAGE);
+            throw new IllegalArgumentException(ERROR_NULL_OR_EMPTY_KEY_MESSAGE);
+        }
+
+        try {
+            this.redisRepository.delete(this.redisKeyBuilderHelper.buildRefreshKey(accessToken));
+        } catch (RedisConnectionFailureException exception) {
+            log.error(REDIS_DOWN_MESSAGE + "blacklist access token.", exception);
+        }
+    }
 }

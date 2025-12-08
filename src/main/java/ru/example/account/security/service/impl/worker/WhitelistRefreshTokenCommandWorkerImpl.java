@@ -42,4 +42,18 @@ public class WhitelistRefreshTokenCommandWorkerImpl implements WhitelistRefreshT
             log.error(REDIS_DOWN_MESSAGE + "blacklist access token.", exception);
         }
     }
+
+    @Override
+    public void deWhiteListRefreshToken(String refreshToken) {
+        if (!StringUtils.hasText(refreshToken)) {
+            log.error(ERROR_NULL_OR_EMPTY_KEY_MESSAGE);
+            throw new IllegalArgumentException(ERROR_NULL_OR_EMPTY_KEY_MESSAGE);
+        }
+
+        try {
+            this.redisRepository.delete(this.redisKeyBuilderHelper.buildRefreshKey(refreshToken));
+        } catch (RedisConnectionFailureException exception) {
+            log.error(REDIS_DOWN_MESSAGE + "blacklist access token.", exception);
+        }
+    }
 }
