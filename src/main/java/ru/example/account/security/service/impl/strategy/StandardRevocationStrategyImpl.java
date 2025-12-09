@@ -17,9 +17,12 @@ import ru.example.account.security.entity.RevocationReason;
 import ru.example.account.security.entity.SessionStatus;
 import ru.example.account.security.entity.WhiteListedAccessesToken;
 import ru.example.account.security.entity.WhiteListedRefreshToken;
+import ru.example.account.security.repository.WhiteListAccessTokenRepository;
+import ru.example.account.security.repository.WhiteListRefreshTokenRepository;
 import ru.example.account.security.service.strategy.RevocationExecutionChain;
 import ru.example.account.security.service.worker.SessionArchiveWorker;
 import ru.example.account.security.service.worker.SessionCacheCleanupWorker;
+import ru.example.account.shared.exception.exceptions.ObjectNotFoundException;
 import ru.example.account.shared.exception.exceptions.RevocationFailedException;
 
 @Slf4j
@@ -33,6 +36,10 @@ public class StandardRevocationStrategyImpl implements RevocationExecutionChain 
     private final SessionArchiveWorker archiveWorker;
 
     private final SessionCacheCleanupWorker cleanupWorker;
+
+    private final WhiteListAccessTokenRepository whiteListAccessTokenRepository;
+
+    private final WhiteListRefreshTokenRepository whiteListRefreshTokenRepository;
 
     @Override
     @Retryable(
@@ -50,14 +57,22 @@ public class StandardRevocationStrategyImpl implements RevocationExecutionChain 
 
         AuthSession backALiveSession = this.entityManager.merge(currentSessionToRevoke);
 
-        WhiteListedAccessesToken whiteListedAccessesToken = new WhiteListedAccessesToken();
+        WhiteListedAccessesToken whiteListedAccessesToken = whiteListAccessTokenRepository.findByToken(currentSessionToRevoke.getAccessToken())
+                .orElseThrow(() -> {
+                    log.warn("[WARN] session with access token {} is not fond!", currentSessionToRevoke.getAccessToken());
+                    return new ObjectNotFoundException("session with access token is not fond!");
+                });
+
         whiteListedAccessesToken.revoke(backALiveSession.getAccessToken(), revocationReason, sessionStatus);
 
-        entityManager.merge(whiteListedAccessesToken);
+        WhiteListedRefreshToken whiteListedRefreshToken = this.whiteListRefreshTokenRepository.findByToken(currentSessionToRevoke.getRefreshToken())
+                .orElseThrow(() -> {
+                    log.warn("[WARN] session with access token {} is not fond!", currentSessionToRevoke.getRefreshToken());
+                    return new ObjectNotFoundException("session with refreshToken is not fond!");
+                });
 
-        WhiteListedRefreshToken whiteListedRefreshToken = new WhiteListedRefreshToken();
         whiteListedRefreshToken.revoke(backALiveSession.getRefreshToken(), revocationReason, sessionStatus);
-        entityManager.merge(whiteListedRefreshToken);
+
 
         backALiveSession.revoke(revocationReason, sessionStatus);
 

@@ -4,8 +4,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import ru.example.account.security.entity.WhiteListedAccessesToken;
 
+import java.util.Optional;
+
 @Repository
 public interface WhiteListAccessTokenRepository extends JpaRepository<WhiteListedAccessesToken, String> {
+    Optional<WhiteListedAccessesToken> findByToken(String token);
 
     boolean existsByToken(String accessToken);
 }
