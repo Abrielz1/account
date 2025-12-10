@@ -37,7 +37,7 @@ public class WhitelistAccessTokenCommandWorkerImpl implements WhitelistAccessTok
 
         try {
             this.redisRepository.save(
-                    this.redisKeyBuilderHelper.buildRefreshKey(refreshToken),
+                    this.redisKeyBuilderHelper.buildAccessKey(refreshToken),
                     KEY_STATUS_WHITELISTED,
                     redisKeys.getTtl().getBannedRefreshToken()
             );
@@ -55,7 +55,7 @@ public class WhitelistAccessTokenCommandWorkerImpl implements WhitelistAccessTok
         }
 
         try {
-            this.redisRepository.delete(this.redisKeyBuilderHelper.buildRefreshKey(accessToken));
+            this.redisRepository.delete(this.redisKeyBuilderHelper.buildAccessKey(accessToken));
         } catch (RedisConnectionFailureException exception) {
             log.error(REDIS_DOWN_MESSAGE + "blacklist access token.", exception);
         }

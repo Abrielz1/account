@@ -52,7 +52,6 @@ public class StandardRevocationStrategyImpl implements RevocationExecutionChain 
 
         if (currentSessionToRevoke.getStatus() != SessionStatus.STATUS_ACTIVE) {
             log.warn("[WARN] Session {} is already inactive. Skipping.", currentSessionToRevoke.getId());
-
         }
 
         AuthSession backALiveSession = this.entityManager.merge(currentSessionToRevoke);
