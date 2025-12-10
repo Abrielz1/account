@@ -62,7 +62,8 @@ public class BlackListedRefreshToken {
                 .userId(sessionToRevoke.getUserId())
                 .sessionId(sessionToRevoke.getId())
                 .createdAt(sessionToRevoke.getCreatedAt())
-                .originalExpiryDate(sessionToRevoke.getExpiresAt())
+                .fingerprintHash(sessionToRevoke.getFingerprintHash())
+                .originalExpiryDate(sessionToRevoke.getCreatedAt() == null ? Instant.now() : sessionToRevoke.getCreatedAt())
                 .revokedAt(revokedAt)
                 .reason(reason)
                 .build();
