@@ -1,4 +1,4 @@
-package ru.example.account.security.api.controller;
+package ru.example.account.security.api.controller.secutiry;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;

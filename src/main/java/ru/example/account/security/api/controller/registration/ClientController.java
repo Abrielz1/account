@@ -1,4 +1,4 @@
-package ru.example.account.user.api.controller;
+package ru.example.account.security.api.controller.registration;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,13 +9,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import ru.example.account.security.model.request.UserRegisterRequestDto;
 import ru.example.account.user.model.response.CreateUserAccountDetailResponseDto;
-import ru.example.account.user.service.ClientService;
 
 @Slf4j
 @Tag(name = "Client oriented controller", description = "Clients management")
@@ -25,14 +23,13 @@ import ru.example.account.user.service.ClientService;
 @RequiredArgsConstructor
 public class ClientController {
 
-    private final ClientService clientService;
-
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.OK)
     public CreateUserAccountDetailResponseDto registerUser(@Valid @RequestBody UserRegisterRequestDto request,
                                                            HttpServletRequest httpRequest ) {
         log.info("User registration attempt: {}", request.email());
-        return clientService.registerNewUser(request, httpRequest);
+       // return clientService.registerNewUser(request, httpRequest);
+        return null;
     }
 }
 

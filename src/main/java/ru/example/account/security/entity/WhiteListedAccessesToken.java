@@ -32,7 +32,7 @@ public class WhiteListedAccessesToken {
      * Сам Access-токен. Является первичным ключом для мгновенного поиска.
      */
     @Id
-    @Column(name = "token")
+    @Column(name = "token", nullable = false, unique = true)
     private String token;
 
     /**
@@ -46,7 +46,7 @@ public class WhiteListedAccessesToken {
      * ID сессии, в рамках которой был выпущен этот токен.
      * Позволяет связать скомпрометированный токен с конкретной сессией.
      */
-    @Column(name = "session_id", nullable = false)
+    @Column(name = "session_id", nullable = false, unique = true)
     private UUID sessionId;
 
     /**
@@ -67,7 +67,7 @@ public class WhiteListedAccessesToken {
     /**
      * Точное время, когда токен был отозван.
      */
-    @Column(name = "revoked_at")
+    @Column(name = "revoked_at", nullable = false)
     private Instant revokedAt;
 
     @Column(name = "is_active", nullable = false)
@@ -80,10 +80,6 @@ public class WhiteListedAccessesToken {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private RevocationReason reason;
-
-    private void setToken(String token) {
-        this.token = token;
-    }
 
     private void setUserId(Long userId) {
         this.userId = userId;
@@ -124,7 +120,6 @@ public class WhiteListedAccessesToken {
             throw new RuntimeException();
         }
 
-        this.setToken(accessToken);
         this.setRevokedAt(Instant.now());
         this.setIsActive(false);
         this.setReason(revocationReason);

@@ -30,12 +30,13 @@ public class WhiteListedRefreshToken {
 
     // Сам токен - это и есть первичный ключ
     @Id
+    @Column(name = "token", nullable = false, unique = true)
     private String token;
 
-    @Column(nullable = false)
+    @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(nullable = false)
+    @Column(name = "session_id", nullable = false, unique = true)
     private UUID sessionId;
 
     @Column(name = "fingerprint_hash", columnDefinition = "TEXT", nullable = false)
@@ -43,7 +44,7 @@ public class WhiteListedRefreshToken {
 
     // Время, когда этот токен был СОЗДАН
     // (мы возьмем его из expiresAt - ttl)
-    @Column(nullable = false)
+    @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
     // Время, когда этот токен должен был ИСТЕЧЬ
@@ -61,10 +62,6 @@ public class WhiteListedRefreshToken {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private RevocationReason reason;
-
-    private void setToken(String token) {
-        this.token = token;
-    }
 
     private void setUserId(Long userId) {
         this.userId = userId;
@@ -101,7 +98,6 @@ public class WhiteListedRefreshToken {
             throw new RuntimeException();
         }
 
-        this.setToken(refreshToken);
         this.setRevokedAt(Instant.now());
         this.setIsActive(false);
         this.setReason(revocationReason);

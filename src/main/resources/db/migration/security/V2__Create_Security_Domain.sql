@@ -35,13 +35,16 @@ DO $$ BEGIN CREATE TYPE security.banned_entity_type_enum AS ENUM (
 
 -- <<<--- ТВОИ "ПОТЕРЯННЫЕ" ENUM-ы для Админских Ордеров ---
 DO $$ BEGIN CREATE TYPE security.order_type_enum AS ENUM (
-    'FREEZE_ACCOUNT', 'UNFREEZE_ACCOUNT', 'CLOSE_ACCOUNT', 'BAN_USER', 'UNBAN_USER', 'REVOKE_ALL_SESSIONS'
+    'VERIFY_REGISTRATION', 'FREEZE_ACCOUNT', 'UNFREEZE_ACCOUNT', 'CLOSE_ACCOUNT', 'BAN_USER', 'UNBAN_USER', 'REVOKE_ALL_SESSIONS'
     ); EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 DO $$ BEGIN CREATE TYPE security.order_basis_enum AS ENUM (
     'INTERNAL_REQUEST', 'COURT_ORDER', 'LAW_ENFORCEMENT_REQUEST', 'TOP_MANAGEMENT_DIRECTIVE'
     ); EXCEPTION WHEN duplicate_object THEN null; END $$;
 
+DO $$ BEGIN CREATE TYPE security.registration_status_enum AS ENUM (
+    'PENDING_EMAIL_VERIFICATION', 'PENDING_SECURITY_APPROVAL', 'APPROVED, REJECTED', 'FINALIZED, EXPIRED'
+    ); EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 -- =================================================================================
 --      РАЗДЕЛ 2: СОЗДАЕМ ВСЕ ТАБЛИЦЫ
@@ -321,11 +324,31 @@ CREATE TABLE IF NOT EXISTS security.black_listed_refresh_tokens (
 
 COMMENT ON TABLE security.black_listed_refresh_tokens IS 'Персистентный, "холодный" черный список Refresh-токенов. Служит "источником правды" для быстрой проверки и аудита скомпрометированных токенов.';
 
-CREATE TABLE IF NOT EXISTS white_listed_access_tokens();
-COMMENT ON TABLE security.white_listed_access_tokens IS '';
+CREATE TABLE IF NOT EXISTS white_listed_access_tokens(
+    token                   VARCHAR PRIMARY KEY UNIQUE NOT NULL,
+    user_id                 BIGINT NOT NULL,
+    sessionId               uuid NOT NULL,
+    fingerprint_hash        VARCHAR NOT NULL,
+    created_at              TIMESTAMPTZ NOT NULL,
+    original_expiry_date    TIMESTAMPTZ NOT NULL,
+    revoked_at              TIMESTAMPTZ NOT NULL,
+    is_active               BOOLEAN NOT NULL DEFAULT false,
+    reason                  security.revocation_reason_enum NOT NULL
+);
+COMMENT ON TABLE security.white_listed_access_tokens IS 'мат вьюха для акцесс токена, что б не тащить всю сессию';
 
-CREATE TABLE IF NOT EXISTS white_listed_refresh_tokens();
-COMMENT ON TABLE security.white_listed_refresh_tokens IS '';
+CREATE TABLE IF NOT EXISTS white_listed_refresh_tokens(
+   token                   VARCHAR PRIMARY KEY UNIQUE NOT NULL,
+   user_id                 BIGINT NOT NULL,
+   sessionId               uuid NOT NULL,
+   fingerprint_hash        VARCHAR NOT NULL,
+   created_at              TIMESTAMPTZ NOT NULL,
+   original_expiry_date    TIMESTAMPTZ NOT NULL,
+   revoked_at              TIMESTAMPTZ NOT NULL,
+   is_active               BOOLEAN NOT NULL DEFAULT false,
+   reason                  security.revocation_reason_enum NOT NULL
+);
+COMMENT ON TABLE security.white_listed_refresh_tokens IS 'мат вьюха для ркфреш токена, что б не тащить всю сессию';
 
 COMMENT ON TABLE security.blocked_targets IS 'Централизованная,  "Книга Приговоров". Главная таблица банов.';
 -- =================================================================================

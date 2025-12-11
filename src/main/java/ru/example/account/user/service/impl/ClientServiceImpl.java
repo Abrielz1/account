@@ -77,7 +77,7 @@ public class ClientServiceImpl implements ClientService {
             }
         }
 
-        newClient.setPassword(passwordEncoder.encode(request.password()));
+      //  newClient.setPassword(passwordEncoder.encode(request.password()));
 
         newClient.addEmail(request.email());
         newClient.addPhone(request.phoneNumber());
