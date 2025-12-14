@@ -51,6 +51,42 @@ DO $$ BEGIN CREATE TYPE security.registration_status_enum AS ENUM (
 --
 -- =================================================================================
 
+-- Таблица 0 -- Тут лежит зашифрованный юзер, 24 часа, если не подтвердил, ьаблица ставится в блок.
+
+CREATE TABLE IF NOT EXISTS security.registration_requests(
+                                                             id                      UUID PRIMARY KEY,
+                                                             status                  security.registration_status_enum NOT NULL,
+
+                                                             is_email_sent           BOOLEAN DEFAULT FALSE NOT NULL,
+                                                             is_email_verified       BOOLEAN DEFAULT FALSE NOT NULL,
+                                                             is_security_approved    BOOLEAN DEFAULT FALSE NOT NULL,
+                                                             is_finalized            BOOLEAN DEFAULT FALSE NOT NULL, -- рега прошла подтверждение email
+                                                             is_expired              BOOLEAN DEFAULT FALSE NOT NULL, -- 24 ссылка не кликнута, тогда в TRUE
+                                                             is_rejected             BOOLEAN DEFAULT FALSE NOT NULL,
+                                                             is_blocked              BOOLEAN DEFAULT FALSE NOT NULL, -- админ или сб поставила бан
+                                                             is_deleted              BOOLEAN DEFAULT FALSE NOT NULL, -- если рега прошла успешно
+
+    -- Пароль - ХЭШ те (bcrypt)
+                                                             password_hash           TEXT NOT NULL,
+
+    -- ХРАНИМ ХЭШ те
+                                                             email_hash              TEXT NOT NULL UNIQUE, -- Хэш SHA-256 + соль
+                                                             phone_hash              TEXT UNIQUE,
+                                                             username                VARCHAR(255) NOT NULL UNIQUE,
+
+    -- Токен для подтверждения по почте
+                                                             verification_token      TEXT NOT NULL UNIQUE,
+    -- дедлайн подтверждения 1 сутки!                                                         expires_at              TIMESTAMPTZ NOT NULL,
+
+    -- Метаданные для аудита
+                                                             created_at              TIMESTAMPTZ NOT NULL,
+                                                             fingerprint_hash        TEXT,
+                                                             ip_address              VARCHAR(45)
+
+
+);
+COMMENT ON TABLE security.registration_requests IS 'таблицка для потенциального клиента или сотрудника, хранит хеши, деействует 24 часа, потом блочится или удалятся софтово';
+
 -- Таблица 1: Активные сессии
 CREATE TABLE IF NOT EXISTS security.auth_sessions (
                                                       id                      UUID PRIMARY KEY,
@@ -429,19 +465,23 @@ CREATE INDEX IF NOT EXISTS idx_blacklist_refresh_token_session_id ON security.bl
 CREATE INDEX IF NOT EXISTS idx_blacklist_access_token_session_id ON security.black_listed_access_tokens(session_id);
 
 
-CREATE INDEX IF NOT EXISTS idx_whiteliste_access_token_user_id ON security.white_listed_access_tokens(user_id);
+CREATE INDEX IF NOT EXISTS idx_white_listed_access_token_user_id ON security.white_listed_access_tokens(user_id);
 
-CREATE INDEX IF NOT EXISTS idx_whiteliste_access_token_session_id ON security.white_listed_access_tokens(session_id);
+CREATE INDEX IF NOT EXISTS idxwhite_listed_access_token_session_id ON security.white_listed_access_tokens(session_id);
 
-CREATE INDEX IF NOT EXISTS idx_whitelisted_access_token_is_active ON  security.white_listed_access_tokens(is_active);
+CREATE INDEX IF NOT EXISTS idx_white_listed_access_token_is_active ON  security.white_listed_access_tokens(is_active);
 
-CREATE INDEX IF NOT EXISTS idx_whitelisted_access_token_session_id ON security.white_listed_access_tokens(session_id);
+CREATE INDEX IF NOT EXISTS idx_white_listed_access_token_session_id ON security.white_listed_access_tokens(session_id);
 
 
-CREATE INDEX IF NOT EXISTS idx_whiteliste_refresh_token_user_id ON security.white_listed_refresh_tokens(user_id);
+CREATE INDEX IF NOT EXISTS idx_white_listed_refresh_token_user_id ON security.white_listed_refresh_tokens(user_id);
 
-CREATE INDEX IF NOT EXISTS idx_whiteliste_refresh_token_session_id ON security.white_listed_refresh_tokens(session_id);
+CREATE INDEX IF NOT EXISTS idx_white_listed_refresh_token_session_id ON security.white_listed_refresh_tokens(session_id);
 
-CREATE INDEX IF NOT EXISTS idx_whitelisted_refresh_token_is_active ON  security.white_listed_refresh_tokens(is_active);
+CREATE INDEX IF NOT EXISTS idx_white_listed_refresh_token_is_active ON  security.white_listed_refresh_tokens(is_active);
 
-CREATE INDEX IF NOT EXISTS idx_whitelisted_refresh_token_session_id ON security.white_listed_refresh_tokens(session_id);
+CREATE INDEX IF NOT EXISTS idx_white_listed_refresh_token_session_id ON security.white_listed_refresh_tokens(session_id);
+
+
+CREATE INDEX IF NOT EXISTS idx_reg_req_email_hash ON security.registration_requests(email_hash);
+CREATE INDEX IF NOT EXISTS idx_reg_req_verification_token ON security.registration_requests(verification_token);
