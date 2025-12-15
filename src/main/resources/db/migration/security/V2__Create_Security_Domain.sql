@@ -51,7 +51,7 @@ DO $$ BEGIN CREATE TYPE security.registration_status_enum AS ENUM (
 --
 -- =================================================================================
 
--- Таблица 0 -- Тут лежит зашифрованный юзер, 24 часа, если не подтвердил, ьаблица ставится в блок.
+-- Таблица 0 -- Тут лежит зашифрованный юзер, 24 часа, если не подтвердил, таблица ставится в блок.
 
 CREATE TABLE IF NOT EXISTS security.registration_requests(
                                                              id                      UUID PRIMARY KEY,
@@ -68,20 +68,20 @@ CREATE TABLE IF NOT EXISTS security.registration_requests(
 
     -- Пароль - ХЭШ те (bcrypt)
                                                              password_hash           TEXT NOT NULL,
-
-    -- ХРАНИМ ХЭШ те
                                                              email_hash              TEXT NOT NULL UNIQUE, -- Хэш SHA-256 + соль
-                                                             phone_hash              TEXT UNIQUE,
-                                                             username                VARCHAR(255) NOT NULL UNIQUE,
+                                                             phone_hash              TEXT NOT NULL UNIQUE,
+                                                             usernamee_hash          TEXT NOT NULL UNIQUE,
 
     -- Токен для подтверждения по почте
                                                              verification_token      TEXT NOT NULL UNIQUE,
-    -- дедлайн подтверждения 1 сутки!                                                         expires_at              TIMESTAMPTZ NOT NULL,
-
+    -- дедлайн подтверждения 1 сутки!
+                                                            expires_at               TIMESTAMPTZ NOT NULL,
     -- Метаданные для аудита
                                                              created_at              TIMESTAMPTZ NOT NULL,
-                                                             fingerprint_hash        TEXT,
-                                                             ip_address              VARCHAR(45)
+                                                             fingerprint_hash        TEXT NOT NULL,
+                                                             fingerprint             TEXT NOT NULL,
+                                                             ip_address_hash         TEXT NOT NULL,
+                                                             ip_address              VARCHAR(46) NOT NULL -- ip должен быть зашифрован!
 
 
 );
