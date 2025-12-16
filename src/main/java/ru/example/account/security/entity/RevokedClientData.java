@@ -16,6 +16,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.dialect.PostgreSQLEnumJdbcType;
+import ru.example.account.security.entity.enums.RevocationReason;
 import ru.example.account.shared.util.AesCryptoConverter;
 
 import java.time.Instant;

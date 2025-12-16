@@ -6,8 +6,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.example.account.security.entity.AuthSession;
-import ru.example.account.security.entity.RevocationReason;
-import ru.example.account.security.entity.SessionStatus;
+import ru.example.account.security.entity.enums.RevocationReason;
+import ru.example.account.security.entity.enums.SessionStatus;
 import ru.example.account.security.service.SessionQueryService;
 import ru.example.account.security.service.facade.RedAlertRevocationStrategy;
 import ru.example.account.security.service.orcestrator.SessionRevocationOrchestrator;
@@ -16,7 +16,7 @@ import ru.example.account.security.service.strategy.StandardMassRevocationStrate
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import static ru.example.account.security.entity.SessionStatus.STATUS_ACTIVE;
+import static ru.example.account.security.entity.enums.SessionStatus.STATUS_ACTIVE;
 
 @Slf4j
 @Service

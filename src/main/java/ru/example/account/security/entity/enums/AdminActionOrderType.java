@@ -1,4 +1,4 @@
-package ru.example.account.security.entity;
+package ru.example.account.security.entity.enums;
 
 public enum AdminActionOrderType {
     FREEZE_ACCOUNT,

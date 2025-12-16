@@ -1,6 +1,6 @@
 package ru.example.account.security.service.facade;
 
-import ru.example.account.security.entity.RevocationReason;
+import ru.example.account.security.entity.enums.RevocationReason;
 import ru.example.account.security.principal.AppUserDetails;
 import ru.example.account.user.model.response.ActivationClientAccountRequest;
 import java.time.ZonedDateTime;

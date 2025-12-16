@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS security.registration_requests(
                                                              password_hash           TEXT NOT NULL,
                                                              email_hash              TEXT NOT NULL UNIQUE, -- Хэш SHA-256 + соль
                                                              phone_hash              TEXT NOT NULL UNIQUE,
-                                                             usernamee_hash          TEXT NOT NULL UNIQUE,
+                                                             username_hash          TEXT NOT NULL UNIQUE,
 
     -- Токен для подтверждения по почте
                                                              verification_token      TEXT NOT NULL UNIQUE,
@@ -79,7 +79,6 @@ CREATE TABLE IF NOT EXISTS security.registration_requests(
     -- Метаданные для аудита
                                                              created_at              TIMESTAMPTZ NOT NULL,
                                                              fingerprint_hash        TEXT NOT NULL,
-                                                             fingerprint             TEXT NOT NULL,
                                                              ip_address_hash         TEXT NOT NULL,
                                                              ip_address              VARCHAR(46) NOT NULL -- ip должен быть зашифрован!
 
@@ -485,3 +484,5 @@ CREATE INDEX IF NOT EXISTS idx_white_listed_refresh_token_session_id ON security
 
 CREATE INDEX IF NOT EXISTS idx_reg_req_email_hash ON security.registration_requests(email_hash);
 CREATE INDEX IF NOT EXISTS idx_reg_req_verification_token ON security.registration_requests(verification_token);
+
+CREATE INDEX IF NOT EXISTS idx_reg_req_expires_at ON security.registration_requests(expires_at) WHERE is_expired = false;

@@ -3,7 +3,7 @@ package ru.example.account.security.service.impl.worker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.example.account.security.entity.BlockedEntityType;
+import ru.example.account.security.entity.enums.BlockedEntityType;
 import ru.example.account.security.repository.BlockedTargetRepository;
 import ru.example.account.security.service.worker.BlockQueryWorker;
 import java.time.ZonedDateTime;

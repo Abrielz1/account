@@ -6,7 +6,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
-import ru.example.account.security.entity.BlockedEntityType;
+import ru.example.account.security.entity.enums.BlockedEntityType;
 import ru.example.account.security.repository.BannedEntityRepository;
 import ru.example.account.security.principal.AppUserDetails;
 import ru.example.account.shared.exception.exceptions.AccessDeniedException;

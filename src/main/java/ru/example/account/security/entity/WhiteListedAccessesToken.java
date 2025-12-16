@@ -13,6 +13,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import ru.example.account.security.entity.enums.RevocationReason;
+import ru.example.account.security.entity.enums.SessionStatus;
+
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;

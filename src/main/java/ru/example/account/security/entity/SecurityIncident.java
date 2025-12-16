@@ -18,6 +18,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.Where;
+import ru.example.account.security.entity.enums.IncidentType;
+
 import java.time.ZonedDateTime;
 import java.util.HashSet;
 import java.util.Set;

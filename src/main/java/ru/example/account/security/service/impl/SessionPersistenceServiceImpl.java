@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.example.account.security.entity.AuthSession;
 import ru.example.account.security.entity.ActiveSessionCache;
 import ru.example.account.security.entity.SessionAuditLog;
-import ru.example.account.security.entity.SessionStatus;
+import ru.example.account.security.entity.enums.SessionStatus;
 import ru.example.account.security.jwt.JwtUtils;
 import ru.example.account.security.repository.ActiveSessionCacheRepository;
 import ru.example.account.security.repository.AuthSessionRepository;

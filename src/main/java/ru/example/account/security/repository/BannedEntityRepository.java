@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import ru.example.account.security.entity.BannedEntity;
-import ru.example.account.security.entity.BlockedEntityType;
+import ru.example.account.security.entity.enums.BlockedEntityType;
 
 @Repository
 public interface BannedEntityRepository extends JpaRepository<BannedEntity, Long> {

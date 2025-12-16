@@ -2,6 +2,8 @@ package ru.example.account.security.entity;
 
 import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
+import ru.example.account.security.entity.enums.EventType;
+
 import java.io.Serializable;
 import java.util.Map;
 import java.util.UUID;

@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.example.account.security.entity.AuthSession;
-import ru.example.account.security.entity.RevocationReason;
+import ru.example.account.security.entity.enums.RevocationReason;
 import ru.example.account.security.entity.RevokedClientData;
 import ru.example.account.security.repository.AuthSessionRepository;
 import ru.example.account.security.repository.RevokedDataRepository;

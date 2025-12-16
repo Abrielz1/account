@@ -1,7 +1,7 @@
 package ru.example.account.security.service;
 
 import ru.example.account.security.entity.AuthSession;
-import ru.example.account.security.entity.SessionStatus;
+import ru.example.account.security.entity.enums.SessionStatus;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;

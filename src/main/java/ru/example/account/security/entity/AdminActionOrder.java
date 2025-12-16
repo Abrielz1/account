@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.dialect.PostgreSQLEnumJdbcType;
+import ru.example.account.security.entity.enums.AdminActionOrderBasis;
+import ru.example.account.security.entity.enums.AdminActionOrderType;
 import ru.example.account.shared.util.AesCryptoConverter;
 import java.time.Instant;
 import java.util.UUID;

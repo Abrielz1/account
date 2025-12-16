@@ -1,12 +1,11 @@
 package ru.example.account.security.service.worker;
 
-import ru.example.account.security.entity.BlockReason;
-import ru.example.account.security.entity.BlockedEntityType;
+import ru.example.account.security.entity.enums.BlockReason;
+import ru.example.account.security.entity.enums.BlockedEntityType;
 import ru.example.account.security.entity.BlockedTarget;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Optional;
-import java.util.UUID;
 
 /**
  * Worker (Command Side of CQRS).

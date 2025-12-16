@@ -17,6 +17,8 @@ import org.hibernate.annotations.JdbcType;
 import org.hibernate.annotations.Where;
 import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 import org.hibernate.proxy.HibernateProxy;
+import ru.example.account.security.entity.enums.RevocationReason;
+import ru.example.account.security.entity.enums.SessionStatus;
 import ru.example.account.shared.util.AesCryptoConverter;
 import java.time.Instant;
 import java.util.Objects;

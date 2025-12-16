@@ -1,7 +1,7 @@
 package ru.example.account.security.service.worker;
 
 import ru.example.account.security.entity.AuthSession;
-import ru.example.account.security.entity.RevocationReason;
+import ru.example.account.security.entity.enums.RevocationReason;
 
 /**
  *  Performs all cleanup operations in the "hot" in-memory storage (Redis).

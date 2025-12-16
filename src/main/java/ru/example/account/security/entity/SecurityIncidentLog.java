@@ -19,6 +19,8 @@ import lombok.Setter;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 import org.hibernate.proxy.HibernateProxy;
+import ru.example.account.security.entity.enums.IncidentType;
+
 import java.time.ZonedDateTime;
 import java.util.HashSet;
 import java.util.Map;

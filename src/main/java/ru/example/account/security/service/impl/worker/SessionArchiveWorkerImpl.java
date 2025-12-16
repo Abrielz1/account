@@ -8,9 +8,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.example.account.security.entity.AuthSession;
-import ru.example.account.security.entity.RevocationReason;
+import ru.example.account.security.entity.enums.RevocationReason;
 import ru.example.account.security.entity.RevokedSessionArchive;
-import ru.example.account.security.entity.SessionStatus;
+import ru.example.account.security.entity.enums.SessionStatus;
 import ru.example.account.security.repository.RevokedSessionArchiveRepository;
 import ru.example.account.security.service.worker.SessionArchiveWorker;
 

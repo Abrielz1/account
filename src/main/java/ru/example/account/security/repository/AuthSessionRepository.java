@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import ru.example.account.security.entity.AuthSession;
-import ru.example.account.security.entity.SessionStatus;
+import ru.example.account.security.entity.enums.SessionStatus;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;

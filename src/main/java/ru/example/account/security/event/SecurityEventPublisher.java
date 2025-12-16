@@ -4,7 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
-import ru.example.account.security.entity.EventType;
+import ru.example.account.security.entity.enums.EventType;
 import ru.example.account.security.entity.SecurityEvent;
 import java.io.Serializable;
 import java.util.Collections;

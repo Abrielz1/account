@@ -9,7 +9,7 @@ import org.springframework.util.StringUtils;
 import ru.example.account.security.configuration.RedisKeysProperties;
 import ru.example.account.security.entity.AuthSession;
 import ru.example.account.security.entity.BlacklistedAccessToken;
-import ru.example.account.security.entity.RevocationReason;
+import ru.example.account.security.entity.enums.RevocationReason;
 import ru.example.account.security.repository.BlacklistAccessTokenRepository;
 import ru.example.account.security.repository.RedisRepository;
 import ru.example.account.security.service.worker.BlacklistAccessTokenCommandWorker;

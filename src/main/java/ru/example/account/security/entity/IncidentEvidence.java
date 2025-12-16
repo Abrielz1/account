@@ -19,6 +19,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.Where;
+import ru.example.account.security.entity.enums.BlockedEntityType;
 import ru.example.account.shared.util.AesCryptoConverter;
 
 @Table(name = "security_incident_details", schema = "security")

@@ -1,6 +1,6 @@
 package ru.example.account.security.service;
 
-import ru.example.account.security.entity.RevocationReason;
+import ru.example.account.security.entity.enums.RevocationReason;
 
 public interface RevocationStrategy { // todo под снос!
 

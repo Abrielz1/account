@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.example.account.security.entity.AuthSession;
 import ru.example.account.security.entity.BlackListedRefreshToken;
 import ru.example.account.security.entity.BlacklistedAccessToken;
-import ru.example.account.security.entity.RevocationReason;
+import ru.example.account.security.entity.enums.RevocationReason;
 import ru.example.account.security.repository.BlacklistedAccessTokenRepository;
 import ru.example.account.security.repository.BlacklistedRefreshTokenRepository;
 import ru.example.account.security.service.worker.BlacklistAccessTokenCommandWorker;

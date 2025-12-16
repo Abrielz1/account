@@ -3,8 +3,8 @@ package ru.example.account.security.service.impl.facede;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.example.account.security.entity.RevocationReason;
-import ru.example.account.security.entity.SessionStatus;
+import ru.example.account.security.entity.enums.RevocationReason;
+import ru.example.account.security.entity.enums.SessionStatus;
 import ru.example.account.security.service.facade.RedAlertRevocationStrategy;
 
 import java.util.concurrent.CompletableFuture;

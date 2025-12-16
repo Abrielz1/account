@@ -1,8 +1,8 @@
 package ru.example.account.security.service.worker;
 
 import ru.example.account.security.entity.AuthSession;
-import ru.example.account.security.entity.RevocationReason;
-import ru.example.account.security.entity.SessionStatus;
+import ru.example.account.security.entity.enums.RevocationReason;
+import ru.example.account.security.entity.enums.SessionStatus;
 
 /**
  *  Performs all archival operations. Its sole responsibility is to write
