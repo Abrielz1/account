@@ -1,4 +1,4 @@
-package ru.example.account.security.configuration;
+package ru.example.account.exchange.configuration;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.AsyncConfigurer;

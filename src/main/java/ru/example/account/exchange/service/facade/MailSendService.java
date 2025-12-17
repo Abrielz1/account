@@ -1,4 +1,4 @@
-package ru.example.account.security.service.facade;
+package ru.example.account.exchange.service.facade;
 
 import ru.example.account.security.entity.enums.RevocationReason;
 import ru.example.account.security.principal.AppUserDetails;

@@ -1,12 +1,12 @@
-package ru.example.account.security.service.impl.facede;
+package ru.example.account.exchange.service.facade.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import ru.example.account.exchange.service.facade.MailSendService;
 import ru.example.account.security.entity.enums.RevocationReason;
 import ru.example.account.security.principal.AppUserDetails;
-import ru.example.account.security.service.facade.MailSendService;
 import org.springframework.mail.javamail.JavaMailSender;
 import ru.example.account.user.model.response.ActivationClientAccountRequest;
 import java.time.ZonedDateTime;
@@ -52,5 +52,4 @@ public class MailSendServiceImpl implements MailSendService {
     public void sendReplayAttackNotification(String refreshToken, String accessesToken, String fingerprint, String ipAddress, String userAgent, AppUserDetails currentUser) {
 
     }
-
 }

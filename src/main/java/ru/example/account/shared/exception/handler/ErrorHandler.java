@@ -15,7 +15,6 @@ import ru.example.account.shared.exception.exceptions.BadRequestException;
 import ru.example.account.shared.exception.exceptions.ProcessingInterruptedException;
 import ru.example.account.shared.exception.exceptions.SessionNotFoundException;
 import ru.example.account.shared.exception.exceptions.UserNotFoundException;
-
 import java.util.Objects;
 
 @Slf4j
