@@ -43,7 +43,7 @@ DO $$ BEGIN CREATE TYPE security.order_basis_enum AS ENUM (
     ); EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 DO $$ BEGIN CREATE TYPE security.registration_status_enum AS ENUM (
-    'PENDING_EMAIL_VERIFICATION', 'PENDING_SECURITY_APPROVAL', 'APPROVED, REJECTED', 'FINALIZED, EXPIRED'
+     'CREATED','REJECTED', 'FINALIZED'    -- рега прошла подтверждение email иначе отказ
     ); EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 -- =================================================================================
@@ -60,9 +60,9 @@ CREATE TABLE IF NOT EXISTS security.registration_requests(
                                                              is_email_sent           BOOLEAN DEFAULT FALSE NOT NULL,
                                                              is_email_verified       BOOLEAN DEFAULT FALSE NOT NULL,
                                                              is_security_approved    BOOLEAN DEFAULT FALSE NOT NULL,
-                                                             is_finalized            BOOLEAN DEFAULT FALSE NOT NULL, -- рега прошла подтверждение email
+
                                                              is_expired              BOOLEAN DEFAULT FALSE NOT NULL, -- 24 ссылка не кликнута, тогда в TRUE
-                                                             is_rejected             BOOLEAN DEFAULT FALSE NOT NULL,
+
                                                              is_blocked              BOOLEAN DEFAULT FALSE NOT NULL, -- админ или сб поставила бан
                                                              is_deleted              BOOLEAN DEFAULT FALSE NOT NULL, -- если рега прошла успешно
 

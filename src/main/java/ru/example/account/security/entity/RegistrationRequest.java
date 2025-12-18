@@ -10,6 +10,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.annotations.Where;
@@ -23,6 +24,7 @@ import java.util.UUID;
 @Table(name = "registration_requests", schema = "security")
 @Where(clause = "is_deleted = false")
 @Entity
+@Setter
 @Getter
 @Builder
 @ToString
@@ -76,7 +78,7 @@ public class RegistrationRequest {
     private Instant expiresAt;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
+    private Instant createdAt; // + 24 часа от момента реги
 
     @Column(name = "fingerprint_hash", nullable = false, updatable = false)
     private String fingerprintHash;
@@ -89,7 +91,7 @@ public class RegistrationRequest {
 
     @Enumerated(EnumType.STRING)
     @JdbcType(PostgreSQLEnumJdbcType.class)
-    @Column(name = "", nullable = false)
+    @Column(name = "registration_status_enum", nullable = false)
     private RegistrationStatus registrationStatus;
 
     @Override

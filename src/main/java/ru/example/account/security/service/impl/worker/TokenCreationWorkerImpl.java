@@ -5,18 +5,21 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.example.account.security.dto.in.ClientRegisterRequestDto;
 import ru.example.account.security.service.worker.TokenCreationWorker;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import ru.example.account.shared.util.String2CRConverter;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class TokenCreationWorkerImpl implements TokenCreationWorker {
 
+    private final String SALT = "^&GOUYGOU%R&(*^FUTUY6ythrV&TDF08i9h8070bRUCVOTIY%DTFCVDcb2zOb";
+
     private static final String HEADER = "HVTd6J*y%_";
 
     private static final String TAIL = "_NdhfKid*";
+
+
+    private final String2CRConverter string2CRConverter;
 
     @Override
     public String createToken(ClientRegisterRequestDto request) {
@@ -27,31 +30,9 @@ public class TokenCreationWorkerImpl implements TokenCreationWorker {
               .append(request.phone())
               .append("_")
               .append(request.email())
-              .append("_");
+              .append("_")
+              .append(SALT);
 
-
-        String resultToken;
-
-        try {
-            resultToken = this.convertByteArrayToHexString(MessageDigest.getInstance("SHA-1")
-                    .digest(result.toString().getBytes(StandardCharsets.UTF_8)));
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
-
-        return resultToken;
-    }
-
-    private String convertByteArrayToHexString(byte[] arrayBytes) {
-
-        var stringBuffer = new StringBuilder();
-
-        for (byte arrayByte : arrayBytes) {
-            stringBuffer.append(Integer.toString((arrayByte & 0xff) + 0x100, 16)
-                    .substring(1));
-        }
-
-
-        return HEADER + stringBuffer + TAIL;
+        return HEADER + this.string2CRConverter.convertIntoCRC(result.toString()) + TAIL;
     }
 }

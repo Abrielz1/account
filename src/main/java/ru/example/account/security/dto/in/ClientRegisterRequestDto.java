@@ -10,6 +10,11 @@ import ru.example.account.shared.marker.OnCreate;
 import java.time.LocalDate;
 
 public record ClientRegisterRequestDto(
+
+        @NotBlank
+        @Size(min = 8, max = 32, message = "password length must be between size of 8 and 32")
+        String password,
+
         @NotBlank
         @Email(message = "supplied email must me valid",groups = OnCreate.class)
         String email,
