@@ -22,10 +22,24 @@ public class SessionFingerprint {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
+    @Column(name = "fingerprint_hash", nullable = false)
     private String fingerprintHash;
+
+    @Column(name = "ip_address")
     private String ipAddress;
+
+    @Column(name = "user_agent")
     private String userAgent;
 
-    @Column(nullable = false)
+    @Column(name = "created_at", nullable = false)
     private Instant createdAt;
+
+    @Column(name = "is_disabled", nullable = false)
+    private boolean isDisabled;
+
+    @Column(name = "is_blacklisted", nullable = false)
+    private boolean isBlacklisted;
+
+    @Column(name = "is_deleted", nullable = false)
+    private boolean isDeleted;
 }

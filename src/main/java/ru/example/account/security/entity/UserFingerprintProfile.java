@@ -49,14 +49,14 @@ public class UserFingerprintProfile {
     @Column(name = "last_updated_at", nullable = false)
     private ZonedDateTime lastUpdatedAt;
 
+    @Column(name = "is_deleted", nullable = false)
+    @Builder.Default
+    private boolean isDeleted = false;
+
     @Version
     @Column(name = "version", nullable = false)
     @Builder.Default
     private Long version = 0L;
-
-    @Column(name = "is_deleted", nullable = false)
-    @Builder.Default
-    private boolean isDeleted = false;
 
     @Override
     public final boolean equals(Object o) {

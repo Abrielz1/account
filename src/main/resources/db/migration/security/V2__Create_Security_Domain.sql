@@ -144,6 +144,7 @@ CREATE TABLE IF NOT EXISTS security.user_fingerprint_profiles (
     -- Временные метки для аудита самого профиля
                                                                   created_at              TIMESTAMPTZ NOT NULL,
                                                                   last_updated_at         TIMESTAMPTZ NOT NULL,
+                                                                  is_deleted              BOOLEAN NOT NULL DEFAULT FALSE,
                                                                   version                 BIGINT DEFAULT 0 NOT NULL
 );
 COMMENT ON TABLE security.user_fingerprint_profiles IS 'Родительская сущность-профиль для группировки доверенных устройств пользователя.';
@@ -160,6 +161,8 @@ CREATE TABLE IF NOT EXISTS security.trusted_fingerprints (
     -- --- "ИДЕНТИФИКАТОРЫ" УСТРОЙСТВА ---
     -- Сам хэш фингерпринта. Должен быть уникальным в рамках ОДНОГО пользователя.
                                                              fingerprint             TEXT NOT NULL,
+
+                                                             fingerprint_hash        TEXT NOT NULL ,
 
     -- --- "ЧЕЛОВЕЧЕСКАЯ" ИНФОРМАЦИЯ (для UI "Мои устройства") ---
     -- "Мой iPhone 15 Pro", "Рабочий ноутбук Dell"
@@ -210,9 +213,12 @@ CREATE TABLE IF NOT EXISTS security.security_incidents_log (
     -- ... (все поля, как и были: id, incident_type, user_id...)
                                                                id                      BIGSERIAL PRIMARY KEY,
                                                                incident_type           security.incident_type_enum NOT NULL,
-                                                               user_id                 BIGINT,
+                                                               session_id              UUID NOT NULL,
+                                                               user_id                 BIGINT NOT NULL,
                                                                incident_timestamp      TIMESTAMPTZ NOT NULL,
-                                                               status                  VARCHAR(50) DEFAULT 'DETECTED' NOT NULL
+                                                               status                  VARCHAR(50) DEFAULT 'DETECTED' NOT NULL,
+                                                               ip_address              VARCHAR(48)
+
 );
 COMMENT ON TABLE security.security_incidents_log IS 'Журнал зафиксированных атак и аномалий.';
 
@@ -245,7 +251,7 @@ CREATE TABLE IF NOT EXISTS security.banned_entities (
                                                         banned_by_employee_id   BIGINT,
                                                         is_active               BOOLEAN DEFAULT true,
 
-                                                        UNIQUE (entity_type, entity_value) WHERE is_active = true
+                                                        UNIQUE (entity_type, entity_value) -- WHERE is_active = true
 );
 COMMENT ON TABLE security.banned_entities IS 'Централизованная таблица блокировок (банхаммер).';
 
@@ -279,7 +285,27 @@ CREATE TABLE IF NOT EXISTS security.admin_action_orders (
 );
 COMMENT ON TABLE security.admin_action_orders IS 'Журнал административных приказов для выполнения СБ.';
 
--- ТАБЛИЦА 12:СВЯЗЬ!
+-- ТАБЛИЦА-СПИСОК 12: "ПРИГОВОРОВ": Blocked Targets
+CREATE TABLE IF NOT EXISTS security.blocked_targets (
+                                                        id                      BIGSERIAL PRIMARY KEY,
+    -- ТИП того, ЧТО, мы баним (IP, USER_ID, etc)
+                                                        target_type             security.banned_entity_type_enum NOT NULL,
+    --ЗНАЧЕНИЕ того, ЧТО, мы баним (сам "1.2.3.4")
+                                                        target_value            TEXT NOT NULL,
+                                                        expires_at              TIMESTAMPTZ, -- null = бан навсегда
+                                                        reason                  TEXT, -- "Replay Attack", "Manual Ban by Admin"
+    --ID "уголовного дела", которое спровоцировало этот бан. СЛАБАЯ, СВЯЗЬ.
+                                                        triggering_incident_id  BIGINT REFERENCES security.security_incidents(id), -- Слабая, связь
+                                                        affected_user_id        BIGINT, --КАКОЙ, ЮЗЕР был "целью" этой атаки? (может быть null)
+                                                        affected_session_id     UUID,-- null = навсегда
+                                                        is_deleted              BOOLEAN DEFAULT FALSE NOT NULL, -- софт удаление
+
+                                                        UNIQUE (target_type, target_value) -- WHERE (is_deleted = false)   -- НЕЛЬЗЯ иметь ДВА АКТИВНЫХ бана на ОДНУ И ТУ ЖЕ ЦЕЛЬ
+);
+
+COMMENT ON TABLE security.blocked_targets IS 'Централизованная,  "Книга Приговоров". Главная таблица банов.';
+
+-- ТАБЛИЦА 13:СВЯЗЬ!
 CREATE TABLE IF NOT EXISTS security.incident_to_block_links (
                                                                 incident_id         BIGINT NOT NULL REFERENCES security.security_incidents(id) ON DELETE CASCADE,
                                                                 blocked_target_id   BIGINT NOT NULL REFERENCES security.blocked_targets(id) ON DELETE CASCADE,
@@ -287,23 +313,6 @@ CREATE TABLE IF NOT EXISTS security.incident_to_block_links (
 );
 COMMENT ON TABLE security.incident_to_block_links IS 'СВЯЗУЮЩИЙ, "МОСТ" между "Делами" и "Приговорами. Главная таблица банов."';
 
--- ТАБЛИЦА-СПИСОК 13: "ПРИГОВОРОВ": Blocked Targets
-CREATE TABLE IF NOT EXISTS security.blocked_targets (
-                                                        id                      BIGSERIAL PRIMARY KEY,
-                                                        -- ТИП того, ЧТО, мы баним (IP, USER_ID, etc)
-                                                        target_type             security.banned_entity_type_enum NOT NULL,
-                                                        --ЗНАЧЕНИЕ того, ЧТО, мы баним (сам "1.2.3.4")
-                                                        target_value            TEXT NOT NULL,
-                                                        expires_at              TIMESTAMPTZ, -- null = бан навсегда
-                                                        reason                  TEXT, -- "Replay Attack", "Manual Ban by Admin"
-                                                        --ID "уголовного дела", которое спровоцировало этот бан. СЛАБАЯ, СВЯЗЬ.
-                                                        triggering_incident_id  BIGINT REFERENCES security.security_incidents(id), -- Слабая, связь
-                                                       affected_user_id        BIGINT, --КАКОЙ, ЮЗЕР был "целью" этой атаки? (может быть null)
-                                                        affected_session_id     UUID,-- null = навсегда
-                                                        is_deleted              BOOLEAN DEFAULT FALSE NOT NULL, -- софт удаление
-
-                                                        UNIQUE (target_type, target_value) WHERE (is_deleted = false)   -- НЕЛЬЗЯ иметь ДВА АКТИВНЫХ бана на ОДНУ И ТУ ЖЕ ЦЕЛЬ
-);
 COMMENT ON TABLE security.incident_to_block_links IS 'СВЯЗУЮЩИЙ, "МОСТ" между "Делами" и "Приговорами"';
 
 -- ТАБЛИЦА 14: "ВЕЩДОКОВ" (Чистая, и со ссылкой ТОЛЬКО на Инцидент)
@@ -327,7 +336,8 @@ CREATE TABLE IF NOT EXISTS security.black_listed_access_tokens (
                                                                  created_at              TIMESTAMPTZ NOT NULL,
                                                                  original_expiry_date    TIMESTAMPTZ NOT NULL,
                                                                  revoked_at              TIMESTAMPTZ NOT NULL,
-                                                                 reason                  security.revocation_reason_enum NOT NULL
+                                                                 reason                  security.revocation_reason_enum NOT NULL,
+                                                                 fingerprint_hash        TEXT NOT NULL
 );
 COMMENT ON TABLE security.black_listed_access_tokens IS 'Персистентный, "холодный" черный список Access-токенов для быстрой проверки и аудита.';
 
@@ -363,12 +373,13 @@ CREATE TABLE IF NOT EXISTS white_listed_access_tokens(
     token                   VARCHAR PRIMARY KEY UNIQUE NOT NULL,
     user_id                 BIGINT NOT NULL,
     sessionId               uuid NOT NULL,
-    fingerprint_hash        VARCHAR NOT NULL,
+    fingerprint_hash        TEXT NOT NULL,
     created_at              TIMESTAMPTZ NOT NULL,
     original_expiry_date    TIMESTAMPTZ NOT NULL,
     revoked_at              TIMESTAMPTZ NOT NULL,
     is_active               BOOLEAN NOT NULL DEFAULT false,
-    reason                  security.revocation_reason_enum NOT NULL
+    reason                  security.revocation_reason_enum NOT NULL,
+    session_id              UUID
 );
 COMMENT ON TABLE security.white_listed_access_tokens IS 'мат вьюха для акцесс токена, что б не тащить всю сессию';
 
@@ -376,16 +387,29 @@ CREATE TABLE IF NOT EXISTS white_listed_refresh_tokens(
    token                   VARCHAR PRIMARY KEY UNIQUE NOT NULL,
    user_id                 BIGINT NOT NULL,
    sessionId               uuid NOT NULL,
-   fingerprint_hash        VARCHAR NOT NULL,
+   fingerprint_hash        TEXT NOT NULL,
    created_at              TIMESTAMPTZ NOT NULL,
    original_expiry_date    TIMESTAMPTZ NOT NULL,
    revoked_at              TIMESTAMPTZ NOT NULL,
    is_active               BOOLEAN NOT NULL DEFAULT false,
-   reason                  security.revocation_reason_enum NOT NULL
+   reason                  security.revocation_reason_enum NOT NULL,
+   session_id              UUID
 );
 COMMENT ON TABLE security.white_listed_refresh_tokens IS 'мат вьюха для ркфреш токена, что б не тащить всю сессию';
 
-COMMENT ON TABLE security.blocked_targets IS 'Централизованная,  "Книга Приговоров". Главная таблица банов.';
+CREATE TABLE IF NOT EXISTS security.session_fingerprints(
+    session_id UUID,
+    user_id BIGINT NOT NULL,
+    fingerprint_hash TEXT NOT NULL,
+    ip_address VARCHAR(45) NOT NULL,
+    user_agent TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL,
+    is_disabled BOOLEAN NOT NULL DEFAULT FALSE,
+    is_blacklisted BOOLEAN NOT NULL DEFAULT FALSE,
+    is_deleted BOOLEAN NOT NULL DEFAULT FALSE
+);
+COMMENT ON TABLE security.session_fingerprints IS 'тут архив фингер принтов';
+
 -- =================================================================================
 --      РАЗДЕЛ 3: СОЗДАЕМ ВСЕ ИНДЕКСЫ В КОНЦЕ
 --      (Для лучшей читаемости и управления)
@@ -466,7 +490,7 @@ CREATE INDEX IF NOT EXISTS idx_blacklist_access_token_session_id ON security.bla
 
 CREATE INDEX IF NOT EXISTS idx_white_listed_access_token_user_id ON security.white_listed_access_tokens(user_id);
 
-CREATE INDEX IF NOT EXISTS idxwhite_listed_access_token_session_id ON security.white_listed_access_tokens(session_id);
+CREATE INDEX IF NOT EXISTS id_xwhite_listed_access_token_session_id ON security.white_listed_access_tokens(session_id);
 
 CREATE INDEX IF NOT EXISTS idx_white_listed_access_token_is_active ON  security.white_listed_access_tokens(is_active);
 

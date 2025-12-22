@@ -46,10 +46,10 @@ public class SecurityIncidentLog {
     @JdbcType(PostgreSQLEnumJdbcType.class)
     private IncidentType incidentType;
 
-    @Column(name = "user_id")
+    @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(name = "session_id")
+    @Column(name = "session_id", nullable = false)
     private UUID sessionId;
 
     // --- СВЯЗЬ One-to-Many ("ОДИН Инцидент -> МНОГО Деталей") ---

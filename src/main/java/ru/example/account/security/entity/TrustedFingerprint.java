@@ -81,7 +81,7 @@ public class TrustedFingerprint {
     @Builder.Default
     private Long version = 0L;
 
-    // --- "Слоновьи", Hibernate-безопасные equals/hashCode, основанные на СУРРОГАТНОМ PK ---
+    // --- NB безопасные equals/hashCode на суррогатном PK ---
     @Override
     public final boolean equals(Object o) {
         if (this == o) return true;
