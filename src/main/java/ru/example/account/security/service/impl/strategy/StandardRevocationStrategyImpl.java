@@ -62,7 +62,7 @@ public class StandardRevocationStrategyImpl implements RevocationExecutionChain 
                     return new ObjectNotFoundException("session with access token is not fond!");
                 });
 
-        whiteListedAccessesToken.revoke(backALiveSession.getAccessToken(), revocationReason, sessionStatus);
+        whiteListedAccessesToken.revoke(revocationReason);
 
         WhiteListedRefreshToken whiteListedRefreshToken = this.whiteListRefreshTokenRepository.findByToken(currentSessionToRevoke.getRefreshToken())
                 .orElseThrow(() -> {
@@ -70,7 +70,7 @@ public class StandardRevocationStrategyImpl implements RevocationExecutionChain 
                     return new ObjectNotFoundException("session with refreshToken is not fond!");
                 });
 
-        whiteListedRefreshToken.revoke(backALiveSession.getRefreshToken(), revocationReason, sessionStatus);
+        whiteListedRefreshToken.revoke(revocationReason);
 
 
         backALiveSession.revoke(revocationReason, sessionStatus);
