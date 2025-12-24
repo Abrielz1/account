@@ -1,20 +1,23 @@
 package ru.example.account.shared.util;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import ru.example.account.security.jwt.JwtUtils;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class String2CRConverter {
 
+    private final JwtUtils jwtUtils;
+
     public String convertIntoCRC(String teargetString) {
+
         try {
-             return this.convertByteArrayToHexString(MessageDigest.getInstance("SHA-1")
-                    .digest(teargetString.getBytes(StandardCharsets.UTF_8)));
-        } catch (NoSuchAlgorithmException e) {
+
+             return this.jwtUtils.createFingerprintHash(teargetString);
+        } catch (RuntimeException e) {
             throw new RuntimeException(e);
         }
     }

@@ -33,6 +33,6 @@ public class TokenCreationWorkerImpl implements TokenCreationWorker {
               .append("_")
               .append(SALT);
 
-        return HEADER + this.string2CRConverter.convertIntoCRC(result.toString()) + TAIL;
+        return HEADER + this.string2CRConverter.convertIntoCRC(HEADER + result + TAIL) + TAIL;
     }
 }

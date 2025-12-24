@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import ru.example.account.security.dto.in.ClientRegisterRequestDto;
-import ru.example.account.security.model.request.UserRegisterRequestDto;
-import ru.example.account.user.model.response.CreateUserAccountDetailResponseDto;
+import ru.example.account.security.dto.out.ClientRegistrationRequestedResponceDto;
+import ru.example.account.security.service.facade.ClientRegistrationService;
 
 @Slf4j
 @Tag(name = "Client oriented controller", description = "Clients management")
@@ -24,13 +24,15 @@ import ru.example.account.user.model.response.CreateUserAccountDetailResponseDto
 @RequiredArgsConstructor
 public class ClientController {
 
+    private final ClientRegistrationService clientRegistrationService;
+
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.OK)
-    public CreateUserAccountDetailResponseDto registerUser(@Valid @RequestBody ClientRegisterRequestDto request,
-                                                           HttpServletRequest httpRequest) {
-       // log.info("User registration attempt: {}", request.email());
+    public ClientRegistrationRequestedResponceDto registerUser(@Valid @RequestBody ClientRegisterRequestDto request,
+                                                               HttpServletRequest httpRequest) {
 
-        return null;
+        log.info("User registration attempt: {}", request.email());
+        return this.clientRegistrationService.register(request, httpRequest);
     }
 }
 

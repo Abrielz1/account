@@ -4,6 +4,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Bean;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
@@ -40,6 +42,8 @@ public class ClientRegistrationServiceImpl implements ClientRegistrationService 
 
     private final ClientRegistrationRepository clientRegistrationRepository;
 
+    private final BCryptPasswordEncoder bCryptPasswordEncoder;
+
     private static final String LINK = ""; // url для подтверждения реги
 
     @Override
@@ -52,7 +56,7 @@ public class ClientRegistrationServiceImpl implements ClientRegistrationService 
         RegistrationRequest newClientRequest = RegistrationRequest.builder()
                 .id(UUID.randomUUID())
                 .emailHash(this.string2CRConverter.convertIntoCRC(request.email()))
-                .passwordHash(this.string2CRConverter.convertIntoCRC(request.password()))
+                .passwordHash(this.bCryptPasswordEncoder.encode(request.password()))
                 .phoneHash(this.string2CRConverter.convertIntoCRC(request.phone()))
                 .usernameHash(this.string2CRConverter.convertIntoCRC(request.userName()))
                 .verificationToken(token)
@@ -76,4 +80,9 @@ public class ClientRegistrationServiceImpl implements ClientRegistrationService 
                 your registration pending email verification please proceed into your email account and follow given link
                  """);
     }
-}
+
+    @Bean
+    public BCryptPasswordEncoder create() {
+        return new BCryptPasswordEncoder();
+    }
+ }
