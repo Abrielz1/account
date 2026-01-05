@@ -12,8 +12,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import ru.example.account.security.dto.in.ClientEmailConfirmationAttemptDto;
 import ru.example.account.security.dto.in.ClientRegisterRequestDto;
 import ru.example.account.security.dto.out.ClientRegistrationRequestedResponceDto;
+import ru.example.account.security.dto.out.SuccessfullyEmailConfirmationDTO;
 import ru.example.account.security.service.facade.ClientRegistrationService;
 
 @Slf4j
@@ -31,8 +33,17 @@ public class ClientController {
     public ClientRegistrationRequestedResponceDto registerUser(@Valid @RequestBody ClientRegisterRequestDto request,
                                                                HttpServletRequest httpRequest) {
 
-        log.info("User registration attempt: {}", request.email());
+        log.info("Client registration attempt: {}", request.email());
         return this.clientRegistrationService.register(request, httpRequest);
+    }
+
+    @PostMapping("")
+    @ResponseStatus(HttpStatus.OK)
+    public SuccessfullyEmailConfirmationDTO emailConfirmation(@Valid @RequestBody ClientEmailConfirmationAttemptDto request,
+                                                              HttpServletRequest httpRequest) {
+
+        log.info("Client begin email confirmation attempt: {}", request.userEmailToConfirm());
+        return this.clientRegistrationService.emailConfirmation(request, httpRequest);
     }
 }
 

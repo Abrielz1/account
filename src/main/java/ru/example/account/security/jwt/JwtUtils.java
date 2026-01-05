@@ -8,6 +8,7 @@ import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.SignatureException;
 import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
@@ -34,6 +35,7 @@ import java.util.UUID;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class JwtUtils {
 
     private final String ROLES = "roles";
@@ -51,10 +53,11 @@ public class JwtUtils {
 
     private SecretKey secretKey;
 
-    private IdGenerationService idGenerationService;
+    private final IdGenerationService idGenerationService;
 
     @PostConstruct
     public void init() {
+
         if (rawSecret == null || rawSecret.isBlank()) {
             throw new IllegalArgumentException("JWT secret is not configured in application properties (app.jwt.secret)");
         }
@@ -172,6 +175,7 @@ public class JwtUtils {
         if (rawFingerprint == null || rawFingerprint.isBlank()) {
             return "";
         }
+
         try {
             Mac sha256_HMAC = Mac.getInstance("HmacSHA256");
             sha256_HMAC.init(secretKey); // Используем тот же секрет, что и для JWT!
