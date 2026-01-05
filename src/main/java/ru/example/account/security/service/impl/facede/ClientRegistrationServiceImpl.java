@@ -23,6 +23,7 @@ import ru.example.account.security.repository.ClientRegistrationRepository;
 import ru.example.account.security.service.facade.ClientRegistrationService;
 import ru.example.account.security.service.worker.FingerprintService;
 import ru.example.account.security.service.worker.TokenCreationWorker;
+import ru.example.account.shared.exception.exceptions.BadRequestException;
 import ru.example.account.shared.exception.exceptions.UserNotFoundException;
 import ru.example.account.shared.util.String2CRConverter;
 import java.time.Duration;
@@ -100,6 +101,26 @@ public class ClientRegistrationServiceImpl implements ClientRegistrationService 
                             log.warn("[WARN] client was not fond");
                             return new UserNotFoundException("client was not fond");
                         });
+
+        if (unconfirmedClient.getExpiresAt().toEpochMilli() < Instant.now().toEpochMilli()) {
+            unconfirmedClient.setIsExpired(true);
+            log.warn("[WARN] client tries to confirm email but it too late");
+            // applicationEventPublisher.publishEvent(); // client wes moved it to expired group client must contact Bank security
+            // applicationEventPublisher.publishEvent(); // Bank security was informed about incident
+        }
+
+        if (unconfirmedClient.getIsExpired()) {
+            log.warn("[WARN]");
+            // applicationEventPublisher.publishEvent(); // client wes moved it to expired group client must contact Bank security
+            // applicationEventPublisher.publishEvent(); // Bank security was informed about incident
+            throw new BadRequestException("");
+        }
+
+        if (unconfirmedClient.getIsBlocked()) {
+            log.warn("[WARN]");
+            // applicationEventPublisher.publishEvent(); // Bank security was informed about incident
+            throw new BadRequestException("");
+        }
 
         unconfirmedClient.setIsEmailVerified(true);
        // applicationEventPublisher.publishEvent();
